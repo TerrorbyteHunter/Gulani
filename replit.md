@@ -1,6 +1,6 @@
-# [Project name]
+# Gulani Marketplace
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Gulani is a mobile-first Lusaka marketplace for discovering products from local vendors, checking out as a guest or account holder, and tracking local or sourced orders.
 
 ## Run & Operate
 
@@ -22,15 +22,23 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/gulani-marketplace` — customer storefront, checkout, order history, vendor application, vendor portal, and operations dashboard.
+- `artifacts/api-server/src/routes/marketplace.ts` — Phase 1 catalog, cart, checkout, orders, vendor, and admin endpoints.
+- `lib/api-spec/openapi.yaml` — source of truth for the shared API contract.
+- `lib/api-client-react/src/generated` and `lib/api-zod/src/generated` — generated client hooks and validation schemas.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The app is API-first: the web storefront consumes generated React Query hooks from the shared OpenAPI contract.
+- Payment options are limited to MTN Mobile Money, Airtel Money, and Visa in the launch UI; cash on delivery is intentionally excluded.
+- Delivery is constrained to Lusaka in the checkout contract, with a configurable-feeling fee rule and free delivery above ZMW 600.
+- Vendor fulfillment and sourced/import fulfillment share the same product and order surfaces, with the fulfillment mode carried on the product and cart item.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Customers can browse/search categories and products, choose variants, add to a multi-vendor cart, and check out as a guest.
+- Customers can view confirmation and order timelines, and vendors can apply through the storefront.
+- Vendor and admin dashboards expose the Phase 1 operational queues and summary metrics.
 
 ## User preferences
 
@@ -38,7 +46,9 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Regenerate the API client and Zod schemas after every OpenAPI change with `pnpm --filter @workspace/api-spec run codegen`.
+- The current API route data is seeded in memory for the first build; wire it to the provisioned PostgreSQL schema before production use.
+- The payment flow currently confirms the selected method as a demo flow; connect the chosen gateway after the launch provider decision is made.
 
 ## Pointers
 

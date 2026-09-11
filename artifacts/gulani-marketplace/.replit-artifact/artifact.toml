@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Gulani Marketplace"
+description = "A mobile-first Zambian marketplace for discovering products from local vendors, checking out as a guest or account holder, and tracking vendor-fulfilled and sourced orders across Lusaka."
+version = "1.0.0"
+id = "artifacts/gulani-marketplace"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22359
+
+[services.development]
+run = "pnpm --filter @workspace/gulani-marketplace run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/gulani-marketplace", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/gulani-marketplace/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22359"
+BASE_PATH = "/"

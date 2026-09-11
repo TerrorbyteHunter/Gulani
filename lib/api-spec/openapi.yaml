@@ -3,13 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Gulani marketplace API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: catalog
+    description: Product discovery
+  - name: cart
+    description: Shopping cart
+  - name: checkout
+    description: Checkout and payment initiation
+  - name: orders
+    description: Customer orders
+  - name: vendors
+    description: Vendor applications and portal
+  - name: admin
+    description: Marketplace operations
 paths:
   /healthz:
     get:
@@ -24,7 +36,272 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /catalog/summary:
+    get:
+      operationId: getCatalogSummary
+      tags: [catalog]
+      summary: Get storefront summary
+      responses:
+        "200":
+          description: Storefront summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogSummary"
+  /catalog/categories:
+    get:
+      operationId: listCategories
+      tags: [catalog]
+      summary: List product categories
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+  /catalog/products:
+    get:
+      operationId: listProducts
+      tags: [catalog]
+      summary: Search and filter products
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [relevance, newest, price_asc, price_desc, top_rated]
+            default: relevance
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 24
+      responses:
+        "200":
+          description: Product results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+  /catalog/products/{productId}:
+    get:
+      operationId: getProduct
+      tags: [catalog]
+      summary: Get product details
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /cart:
+    get:
+      operationId: getCart
+      tags: [cart]
+      summary: Get the current shopping cart
+      responses:
+        "200":
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+    post:
+      operationId: addCartItem
+      tags: [cart]
+      summary: Add a product variant to the cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItemInput"
+      responses:
+        "201":
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+  /cart/items/{itemId}:
+    patch:
+      operationId: updateCartItem
+      tags: [cart]
+      summary: Update cart quantity
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItemUpdate"
+      responses:
+        "200":
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+    delete:
+      operationId: removeCartItem
+      tags: [cart]
+      summary: Remove a cart item
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "200":
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+  /checkout:
+    post:
+      operationId: createCheckout
+      tags: [checkout]
+      summary: Place a paid order
+      description: Initiates a mobile-money or Visa payment. Cash on delivery is not supported.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "201":
+          description: Checkout created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List customer orders
+      responses:
+        "200":
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get order details
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /vendors/applications:
+    post:
+      operationId: submitVendorApplication
+      tags: [vendors]
+      summary: Submit a vendor application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorApplicationInput"
+      responses:
+        "201":
+          description: Application received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorApplication"
+  /vendor/dashboard:
+    get:
+      operationId: getVendorDashboard
+      tags: [vendors]
+      summary: Get vendor portal summary
+      responses:
+        "200":
+          description: Vendor dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorDashboard"
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Get operations dashboard summary
+      responses:
+        "200":
+          description: Admin dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
 components:
+  parameters:
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      schema:
+        type: string
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      schema:
+        type: string
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +310,195 @@ components:
           type: string
       required:
         - status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    Category:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        productCount: { type: integer }
+        imageUrl: { type: string }
+      required: [id, name, slug, productCount, imageUrl]
+    ProductVariant:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        price: { type: number }
+        compareAtPrice: { type: ["number", "null"] }
+        sku: { type: string }
+        stockQty: { type: integer }
+      required: [id, name, price, sku, stockQty]
+    Product:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        category: { type: string }
+        vendorName: { type: string }
+        vendorRating: { type: number }
+        price: { type: number }
+        compareAtPrice: { type: ["number", "null"] }
+        currency: { type: string }
+        imageUrl: { type: string }
+        badge: { type: ["string", "null"] }
+        fulfillment: { type: string, enum: [local, sourced] }
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductVariant"
+      required: [id, title, slug, description, category, vendorName, vendorRating, price, currency, imageUrl, fulfillment, variants]
+    CatalogSummary:
+      type: object
+      properties:
+        featured:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        trending:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+        lusakaDeliveryMessage: { type: string }
+      required: [featured, trending, categories, lusakaDeliveryMessage]
+    CartItem:
+      type: object
+      properties:
+        id: { type: string }
+        productId: { type: string }
+        title: { type: string }
+        vendorName: { type: string }
+        imageUrl: { type: string }
+        variantName: { type: string }
+        unitPrice: { type: number }
+        quantity: { type: integer }
+        fulfillment: { type: string, enum: [local, sourced] }
+      required: [id, productId, title, vendorName, imageUrl, variantName, unitPrice, quantity, fulfillment]
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+        subtotal: { type: number }
+        deliveryFee: { type: number }
+        total: { type: number }
+        currency: { type: string }
+      required: [items, subtotal, deliveryFee, total, currency]
+    CartItemInput:
+      type: object
+      properties:
+        productId: { type: string }
+        variantId: { type: string }
+        quantity: { type: integer, minimum: 1, maximum: 20 }
+      required: [productId, variantId, quantity]
+    CartItemUpdate:
+      type: object
+      properties:
+        quantity: { type: integer, minimum: 1, maximum: 20 }
+      required: [quantity]
+    CheckoutInput:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        phone: { type: string, minLength: 7 }
+        fullName: { type: string, minLength: 2 }
+        address: { type: string, minLength: 5 }
+        deliveryZone: { type: string, enum: [lusaka] }
+        paymentMethod: { type: string, enum: [mtn_mobile_money, airtel_money, visa] }
+        paymentPhone: { type: ["string", "null"] }
+      required: [email, phone, fullName, address, deliveryZone, paymentMethod]
+    CheckoutResult:
+      type: object
+      properties:
+        orderId: { type: string }
+        orderNumber: { type: string }
+        paymentStatus: { type: string, enum: [pending, confirmed, failed] }
+        nextAction: { type: ["string", "null"] }
+      required: [orderId, orderNumber, paymentStatus]
+    OrderItem:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        imageUrl: { type: string }
+        vendorName: { type: string }
+        quantity: { type: integer }
+        unitPrice: { type: number }
+      required: [id, title, imageUrl, vendorName, quantity, unitPrice]
+    Order:
+      type: object
+      properties:
+        id: { type: string }
+        orderNumber: { type: string }
+        status: { type: string }
+        createdAt: { type: string }
+        total: { type: number }
+        currency: { type: string }
+        deliveryAddress: { type: string }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+      required: [id, orderNumber, status, createdAt, total, currency, deliveryAddress, items]
+    VendorApplicationInput:
+      type: object
+      properties:
+        businessName: { type: string, minLength: 2 }
+        contactName: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        phone: { type: string, minLength: 7 }
+        category: { type: string }
+        description: { type: string, minLength: 10 }
+      required: [businessName, contactName, email, phone, category, description]
+    VendorApplication:
+      type: object
+      properties:
+        id: { type: string }
+        businessName: { type: string }
+        status: { type: string, enum: [pending, approved, rejected] }
+        submittedAt: { type: string }
+      required: [id, businessName, status, submittedAt]
+    VendorDashboard:
+      type: object
+      properties:
+        vendorName: { type: string }
+        pendingOrders: { type: integer }
+        productsLive: { type: integer }
+        revenueThisMonth: { type: number }
+        rating: { type: number }
+        recentOrders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+      required: [vendorName, pendingOrders, productsLive, revenueThisMonth, rating, recentOrders]
+    AdminDashboard:
+      type: object
+      properties:
+        ordersToday: { type: integer }
+        salesToday: { type: number }
+        pendingVendorApplications: { type: integer }
+        openSupportTickets: { type: integer }
+        fulfillmentQueue:
+          type: array
+          items:
+            type: object
+            properties:
+              label: { type: string }
+              count: { type: integer }
+            required: [label, count]
+      required: [ordersToday, salesToday, pendingVendorApplications, openSupportTickets, fulfillmentQueue]
 
