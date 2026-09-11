@@ -269,6 +269,196 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminDashboard"
+  /admin/orders:
+    get:
+      operationId: listAdminOrders
+      tags: [admin]
+      summary: List all marketplace orders
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Operations order list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminOrder"
+  /admin/orders/{orderId}/status:
+    patch:
+      operationId: updateAdminOrderStatus
+      tags: [admin]
+      summary: Update an order's fulfillment status
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminOrderStatusUpdate"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOrder"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /admin/vendor-applications:
+    get:
+      operationId: listAdminVendorApplications
+      tags: [admin]
+      summary: List vendor applications
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+      responses:
+        "200":
+          description: Vendor applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminVendorApplication"
+  /admin/vendor-applications/{applicationId}/status:
+    patch:
+      operationId: updateVendorApplicationStatus
+      tags: [admin]
+      summary: Approve or reject a vendor application
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorApplicationStatusUpdate"
+      responses:
+        "200":
+          description: Updated vendor application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminVendorApplication"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /admin/support-tickets:
+    get:
+      operationId: listSupportTickets
+      tags: [admin]
+      summary: List support tickets
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, in_progress, resolved]
+      responses:
+        "200":
+          description: Support tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupportTicket"
+  /admin/support-tickets/{ticketId}:
+    patch:
+      operationId: updateSupportTicket
+      tags: [admin]
+      summary: Update a support ticket
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportTicketUpdate"
+      responses:
+        "200":
+          description: Updated support ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /admin/fulfillment:
+    get:
+      operationId: getFulfillmentOverview
+      tags: [admin]
+      summary: Get fulfillment pipeline
+      responses:
+        "200":
+          description: Fulfillment overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FulfillmentOverview"
+  /admin/sales:
+    get:
+      operationId: getSalesOverview
+      tags: [admin]
+      summary: Get sales overview
+      responses:
+        "200":
+          description: Sales overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalesOverview"
+  /admin/settings:
+    get:
+      operationId: getAdminSettings
+      tags: [admin]
+      summary: Get marketplace settings
+      responses:
+        "200":
+          description: Marketplace settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketplaceSettings"
+    patch:
+      operationId: updateAdminSettings
+      tags: [admin]
+      summary: Update marketplace settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarketplaceSettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketplaceSettings"
 components:
   parameters:
     ProductId:
@@ -501,4 +691,136 @@ components:
               count: { type: integer }
             required: [label, count]
       required: [ordersToday, salesToday, pendingVendorApplications, openSupportTickets, fulfillmentQueue]
+    AdminOrder:
+      type: object
+      properties:
+        id: { type: string }
+        orderNumber: { type: string }
+        customerName: { type: string }
+        vendorName: { type: string }
+        total: { type: number }
+        currency: { type: string }
+        status: { type: string }
+        fulfillment: { type: string, enum: [local, sourced] }
+        placedAt: { type: string }
+        itemCount: { type: integer }
+      required: [id, orderNumber, customerName, vendorName, total, currency, status, fulfillment, placedAt, itemCount]
+    AdminOrderStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PLACED, PAYMENT_CONFIRMED, PACKED, SOURCING, PURCHASED_FROM_SUPPLIER, IN_TRANSIT, CUSTOMS_CLEARANCE, RECEIVED_LOCAL_WAREHOUSE, SHIPPED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED]
+      required: [status]
+    AdminVendorApplication:
+      type: object
+      properties:
+        id: { type: string }
+        businessName: { type: string }
+        contactName: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        category: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [pending, approved, rejected] }
+        submittedAt: { type: string }
+      required: [id, businessName, contactName, email, phone, category, description, status, submittedAt]
+    VendorApplicationStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+      required: [status]
+    SupportTicket:
+      type: object
+      properties:
+        id: { type: string }
+        subject: { type: string }
+        customerName: { type: string }
+        category: { type: string, enum: [order, payment, account, product] }
+        priority: { type: string, enum: [low, normal, high, urgent] }
+        status: { type: string, enum: [open, in_progress, resolved] }
+        assignedTo: { type: ["string", "null"] }
+        lastMessage: { type: string }
+        updatedAt: { type: string }
+      required: [id, subject, customerName, category, priority, status, assignedTo, lastMessage, updatedAt]
+    SupportTicketUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [open, in_progress, resolved] }
+        assignedTo: { type: ["string", "null"] }
+      required: [status]
+    FulfillmentOverview:
+      type: object
+      properties:
+        queues:
+          type: array
+          items:
+            $ref: "#/components/schemas/FulfillmentQueueItem"
+        sourcedOrders: { type: integer }
+        localOrders: { type: integer }
+        delayedOrders: { type: integer }
+      required: [queues, sourcedOrders, localOrders, delayedOrders]
+    FulfillmentQueueItem:
+      type: object
+      properties:
+        status: { type: string }
+        label: { type: string }
+        count: { type: integer }
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminOrder"
+      required: [status, label, count, orders]
+    SalesOverview:
+      type: object
+      properties:
+        totalSales: { type: number }
+        totalOrders: { type: integer }
+        averageOrderValue: { type: number }
+        commission: { type: number }
+        byDay:
+          type: array
+          items:
+            type: object
+            properties:
+              label: { type: string }
+              sales: { type: number }
+              orders: { type: integer }
+            required: [label, sales, orders]
+        byCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              label: { type: string }
+              sales: { type: number }
+            required: [label, sales]
+      required: [totalSales, totalOrders, averageOrderValue, commission, byDay, byCategory]
+    MarketplaceSettings:
+      type: object
+      properties:
+        storeName: { type: string }
+        defaultCurrency: { type: string }
+        deliveryZone: { type: string }
+        standardDeliveryFee: { type: number }
+        freeDeliveryThreshold: { type: number }
+        vatRate: { type: number }
+        vendorCommissionRate: { type: number }
+        supportEmail: { type: string }
+        maintenanceMode: { type: boolean }
+      required: [storeName, defaultCurrency, deliveryZone, standardDeliveryFee, freeDeliveryThreshold, vatRate, vendorCommissionRate, supportEmail, maintenanceMode]
+    MarketplaceSettingsUpdate:
+      type: object
+      properties:
+        storeName: { type: string, minLength: 2 }
+        defaultCurrency: { type: string }
+        deliveryZone: { type: string }
+        standardDeliveryFee: { type: number, minimum: 0 }
+        freeDeliveryThreshold: { type: number, minimum: 0 }
+        vatRate: { type: number, minimum: 0, maximum: 100 }
+        vendorCommissionRate: { type: number, minimum: 0, maximum: 100 }
+        supportEmail: { type: string, format: email }
+        maintenanceMode: { type: boolean }
 

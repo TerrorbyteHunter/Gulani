@@ -21,6 +21,9 @@ import type {
 
 import type {
   AdminDashboard,
+  AdminOrder,
+  AdminOrderStatusUpdate,
+  AdminVendorApplication,
   BadRequestResponse,
   Cart,
   CartItemInput,
@@ -29,13 +32,23 @@ import type {
   Category,
   CheckoutInput,
   CheckoutResult,
+  FulfillmentOverview,
   HealthStatus,
+  ListAdminOrdersParams,
+  ListAdminVendorApplicationsParams,
   ListProductsParams,
+  ListSupportTicketsParams,
+  MarketplaceSettings,
+  MarketplaceSettingsUpdate,
   NotFoundResponse,
   Order,
   Product,
+  SalesOverview,
+  SupportTicket,
+  SupportTicketUpdate,
   VendorApplication,
   VendorApplicationInput,
+  VendorApplicationStatusUpdate,
   VendorDashboard
 } from './api.schemas';
 
@@ -1271,4 +1284,842 @@ export function useGetAdminDashboard<TData = Awaited<ReturnType<typeof getAdminD
 
 
 
+
+export const getListAdminOrdersUrl = (params?: ListAdminOrdersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/orders?${stringifiedParams}` : `/api/admin/orders`
+}
+
+/**
+ * @summary List all marketplace orders
+ */
+export const listAdminOrders = async (params?: ListAdminOrdersParams, options?: Parameters<typeof customFetch>[1]): Promise<AdminOrder[]> => {
+
+  return customFetch<AdminOrder[]>(getListAdminOrdersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminOrdersQueryKey = (params?: ListAdminOrdersParams,) => {
+    return [
+    `/api/admin/orders`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAdminOrdersQueryOptions = <TData = Awaited<ReturnType<typeof listAdminOrders>>, TError = ErrorType<unknown>>(params?: ListAdminOrdersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminOrdersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminOrders>>> = ({ signal }) => listAdminOrders(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminOrders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminOrders>>>
+export type ListAdminOrdersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all marketplace orders
+ */
+
+export function useListAdminOrders<TData = Awaited<ReturnType<typeof listAdminOrders>>, TError = ErrorType<unknown>>(
+ params?: ListAdminOrdersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminOrdersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateAdminOrderStatusUrl = (orderId: string,) => {
+
+
+
+
+  return `/api/admin/orders/${orderId}/status`
+}
+
+/**
+ * @summary Update an order's fulfillment status
+ */
+export const updateAdminOrderStatus = async (orderId: string,
+    adminOrderStatusUpdate: AdminOrderStatusUpdate, options?: Parameters<typeof customFetch>[1]): Promise<AdminOrder> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AdminOrder>(getUpdateAdminOrderStatusUrl(orderId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminOrderStatusUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdminOrderStatusMutationKey = () => ['updateAdminOrderStatus'] as const;
+
+export const getUpdateAdminOrderStatusMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminOrderStatus>>, TError,UpdateAdminOrderStatusMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminOrderStatus>>, TError,UpdateAdminOrderStatusMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAdminOrderStatusMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminOrderStatus>>, UpdateAdminOrderStatusMutationVariables> = (props) => {
+          const {orderId,data} = props ?? {};
+
+          return  updateAdminOrderStatus(orderId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminOrderStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminOrderStatus>>>
+    export type UpdateAdminOrderStatusMutationBody = BodyType<AdminOrderStatusUpdate>
+    export type UpdateAdminOrderStatusMutationError = ErrorType<NotFoundResponse>
+    export type UpdateAdminOrderStatusMutationVariables = {orderId: string;data: BodyType<AdminOrderStatusUpdate>}
+
+    /**
+ * @summary Update an order's fulfillment status
+ */
+export const useUpdateAdminOrderStatus = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminOrderStatus>>, TError,UpdateAdminOrderStatusMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminOrderStatus>>,
+        TError,
+        UpdateAdminOrderStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAdminOrderStatusMutationOptions(options));
+    }
+
+export const getListAdminVendorApplicationsUrl = (params?: ListAdminVendorApplicationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/vendor-applications?${stringifiedParams}` : `/api/admin/vendor-applications`
+}
+
+/**
+ * @summary List vendor applications
+ */
+export const listAdminVendorApplications = async (params?: ListAdminVendorApplicationsParams, options?: Parameters<typeof customFetch>[1]): Promise<AdminVendorApplication[]> => {
+
+  return customFetch<AdminVendorApplication[]>(getListAdminVendorApplicationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminVendorApplicationsQueryKey = (params?: ListAdminVendorApplicationsParams,) => {
+    return [
+    `/api/admin/vendor-applications`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAdminVendorApplicationsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminVendorApplications>>, TError = ErrorType<unknown>>(params?: ListAdminVendorApplicationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminVendorApplications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminVendorApplicationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminVendorApplications>>> = ({ signal }) => listAdminVendorApplications(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminVendorApplications>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminVendorApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminVendorApplications>>>
+export type ListAdminVendorApplicationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List vendor applications
+ */
+
+export function useListAdminVendorApplications<TData = Awaited<ReturnType<typeof listAdminVendorApplications>>, TError = ErrorType<unknown>>(
+ params?: ListAdminVendorApplicationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminVendorApplications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminVendorApplicationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateVendorApplicationStatusUrl = (applicationId: string,) => {
+
+
+
+
+  return `/api/admin/vendor-applications/${applicationId}/status`
+}
+
+/**
+ * @summary Approve or reject a vendor application
+ */
+export const updateVendorApplicationStatus = async (applicationId: string,
+    vendorApplicationStatusUpdate: VendorApplicationStatusUpdate, options?: Parameters<typeof customFetch>[1]): Promise<AdminVendorApplication> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AdminVendorApplication>(getUpdateVendorApplicationStatusUrl(applicationId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorApplicationStatusUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateVendorApplicationStatusMutationKey = () => ['updateVendorApplicationStatus'] as const;
+
+export const getUpdateVendorApplicationStatusMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorApplicationStatus>>, TError,UpdateVendorApplicationStatusMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVendorApplicationStatus>>, TError,UpdateVendorApplicationStatusMutationVariables, TContext> => {
+
+const mutationKey = getUpdateVendorApplicationStatusMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVendorApplicationStatus>>, UpdateVendorApplicationStatusMutationVariables> = (props) => {
+          const {applicationId,data} = props ?? {};
+
+          return  updateVendorApplicationStatus(applicationId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVendorApplicationStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateVendorApplicationStatus>>>
+    export type UpdateVendorApplicationStatusMutationBody = BodyType<VendorApplicationStatusUpdate>
+    export type UpdateVendorApplicationStatusMutationError = ErrorType<NotFoundResponse>
+    export type UpdateVendorApplicationStatusMutationVariables = {applicationId: string;data: BodyType<VendorApplicationStatusUpdate>}
+
+    /**
+ * @summary Approve or reject a vendor application
+ */
+export const useUpdateVendorApplicationStatus = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorApplicationStatus>>, TError,UpdateVendorApplicationStatusMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVendorApplicationStatus>>,
+        TError,
+        UpdateVendorApplicationStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateVendorApplicationStatusMutationOptions(options));
+    }
+
+export const getListSupportTicketsUrl = (params?: ListSupportTicketsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/support-tickets?${stringifiedParams}` : `/api/admin/support-tickets`
+}
+
+/**
+ * @summary List support tickets
+ */
+export const listSupportTickets = async (params?: ListSupportTicketsParams, options?: Parameters<typeof customFetch>[1]): Promise<SupportTicket[]> => {
+
+  return customFetch<SupportTicket[]>(getListSupportTicketsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSupportTicketsQueryKey = (params?: ListSupportTicketsParams,) => {
+    return [
+    `/api/admin/support-tickets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListSupportTicketsQueryOptions = <TData = Awaited<ReturnType<typeof listSupportTickets>>, TError = ErrorType<unknown>>(params?: ListSupportTicketsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSupportTickets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSupportTicketsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSupportTickets>>> = ({ signal }) => listSupportTickets(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSupportTickets>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSupportTicketsQueryResult = NonNullable<Awaited<ReturnType<typeof listSupportTickets>>>
+export type ListSupportTicketsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List support tickets
+ */
+
+export function useListSupportTickets<TData = Awaited<ReturnType<typeof listSupportTickets>>, TError = ErrorType<unknown>>(
+ params?: ListSupportTicketsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSupportTickets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSupportTicketsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateSupportTicketUrl = (ticketId: string,) => {
+
+
+
+
+  return `/api/admin/support-tickets/${ticketId}`
+}
+
+/**
+ * @summary Update a support ticket
+ */
+export const updateSupportTicket = async (ticketId: string,
+    supportTicketUpdate: SupportTicketUpdate, options?: Parameters<typeof customFetch>[1]): Promise<SupportTicket> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SupportTicket>(getUpdateSupportTicketUrl(ticketId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(supportTicketUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateSupportTicketMutationKey = () => ['updateSupportTicket'] as const;
+
+export const getUpdateSupportTicketMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportTicket>>, TError,UpdateSupportTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSupportTicket>>, TError,UpdateSupportTicketMutationVariables, TContext> => {
+
+const mutationKey = getUpdateSupportTicketMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSupportTicket>>, UpdateSupportTicketMutationVariables> = (props) => {
+          const {ticketId,data} = props ?? {};
+
+          return  updateSupportTicket(ticketId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSupportTicketMutationResult = NonNullable<Awaited<ReturnType<typeof updateSupportTicket>>>
+    export type UpdateSupportTicketMutationBody = BodyType<SupportTicketUpdate>
+    export type UpdateSupportTicketMutationError = ErrorType<NotFoundResponse>
+    export type UpdateSupportTicketMutationVariables = {ticketId: string;data: BodyType<SupportTicketUpdate>}
+
+    /**
+ * @summary Update a support ticket
+ */
+export const useUpdateSupportTicket = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportTicket>>, TError,UpdateSupportTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSupportTicket>>,
+        TError,
+        UpdateSupportTicketMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateSupportTicketMutationOptions(options));
+    }
+
+export const getGetFulfillmentOverviewUrl = () => {
+
+
+
+
+  return `/api/admin/fulfillment`
+}
+
+/**
+ * @summary Get fulfillment pipeline
+ */
+export const getFulfillmentOverview = async ( options?: Parameters<typeof customFetch>[1]): Promise<FulfillmentOverview> => {
+
+  return customFetch<FulfillmentOverview>(getGetFulfillmentOverviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFulfillmentOverviewQueryKey = () => {
+    return [
+    `/api/admin/fulfillment`
+    ] as const;
+    }
+
+
+export const getGetFulfillmentOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getFulfillmentOverview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFulfillmentOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFulfillmentOverviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFulfillmentOverview>>> = ({ signal }) => getFulfillmentOverview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFulfillmentOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFulfillmentOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getFulfillmentOverview>>>
+export type GetFulfillmentOverviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get fulfillment pipeline
+ */
+
+export function useGetFulfillmentOverview<TData = Awaited<ReturnType<typeof getFulfillmentOverview>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFulfillmentOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFulfillmentOverviewQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSalesOverviewUrl = () => {
+
+
+
+
+  return `/api/admin/sales`
+}
+
+/**
+ * @summary Get sales overview
+ */
+export const getSalesOverview = async ( options?: Parameters<typeof customFetch>[1]): Promise<SalesOverview> => {
+
+  return customFetch<SalesOverview>(getGetSalesOverviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSalesOverviewQueryKey = () => {
+    return [
+    `/api/admin/sales`
+    ] as const;
+    }
+
+
+export const getGetSalesOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getSalesOverview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSalesOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSalesOverviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSalesOverview>>> = ({ signal }) => getSalesOverview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSalesOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSalesOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getSalesOverview>>>
+export type GetSalesOverviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get sales overview
+ */
+
+export function useGetSalesOverview<TData = Awaited<ReturnType<typeof getSalesOverview>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSalesOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSalesOverviewQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAdminSettingsUrl = () => {
+
+
+
+
+  return `/api/admin/settings`
+}
+
+/**
+ * @summary Get marketplace settings
+ */
+export const getAdminSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<MarketplaceSettings> => {
+
+  return customFetch<MarketplaceSettings>(getGetAdminSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminSettingsQueryKey = () => {
+    return [
+    `/api/admin/settings`
+    ] as const;
+    }
+
+
+export const getGetAdminSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminSettings>>> = ({ signal }) => getAdminSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminSettings>>>
+export type GetAdminSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get marketplace settings
+ */
+
+export function useGetAdminSettings<TData = Awaited<ReturnType<typeof getAdminSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateAdminSettingsUrl = () => {
+
+
+
+
+  return `/api/admin/settings`
+}
+
+/**
+ * @summary Update marketplace settings
+ */
+export const updateAdminSettings = async (marketplaceSettingsUpdate: MarketplaceSettingsUpdate, options?: Parameters<typeof customFetch>[1]): Promise<MarketplaceSettings> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<MarketplaceSettings>(getUpdateAdminSettingsUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(marketplaceSettingsUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdminSettingsMutationKey = () => ['updateAdminSettings'] as const;
+
+export const getUpdateAdminSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminSettings>>, TError,UpdateAdminSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminSettings>>, TError,UpdateAdminSettingsMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAdminSettingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminSettings>>, UpdateAdminSettingsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateAdminSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminSettings>>>
+    export type UpdateAdminSettingsMutationBody = BodyType<MarketplaceSettingsUpdate>
+    export type UpdateAdminSettingsMutationError = ErrorType<unknown>
+    export type UpdateAdminSettingsMutationVariables = {data: BodyType<MarketplaceSettingsUpdate>}
+
+    /**
+ * @summary Update marketplace settings
+ */
+export const useUpdateAdminSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminSettings>>, TError,UpdateAdminSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminSettings>>,
+        TError,
+        UpdateAdminSettingsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAdminSettingsMutationOptions(options));
+    }
 

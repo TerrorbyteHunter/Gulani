@@ -229,6 +229,209 @@ export interface AdminDashboard {
   fulfillmentQueue: AdminDashboardFulfillmentQueueItem[];
 }
 
+export type AdminOrderFulfillment = typeof AdminOrderFulfillment[keyof typeof AdminOrderFulfillment];
+
+
+export const AdminOrderFulfillment = {
+  local: 'local',
+  sourced: 'sourced',
+} as const;
+
+export interface AdminOrder {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  vendorName: string;
+  total: number;
+  currency: string;
+  status: string;
+  fulfillment: AdminOrderFulfillment;
+  placedAt: string;
+  itemCount: number;
+}
+
+export type AdminOrderStatusUpdateStatus = typeof AdminOrderStatusUpdateStatus[keyof typeof AdminOrderStatusUpdateStatus];
+
+
+export const AdminOrderStatusUpdateStatus = {
+  PLACED: 'PLACED',
+  PAYMENT_CONFIRMED: 'PAYMENT_CONFIRMED',
+  PACKED: 'PACKED',
+  SOURCING: 'SOURCING',
+  PURCHASED_FROM_SUPPLIER: 'PURCHASED_FROM_SUPPLIER',
+  IN_TRANSIT: 'IN_TRANSIT',
+  CUSTOMS_CLEARANCE: 'CUSTOMS_CLEARANCE',
+  RECEIVED_LOCAL_WAREHOUSE: 'RECEIVED_LOCAL_WAREHOUSE',
+  SHIPPED: 'SHIPPED',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export interface AdminOrderStatusUpdate {
+  status: AdminOrderStatusUpdateStatus;
+}
+
+export type AdminVendorApplicationStatus = typeof AdminVendorApplicationStatus[keyof typeof AdminVendorApplicationStatus];
+
+
+export const AdminVendorApplicationStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface AdminVendorApplication {
+  id: string;
+  businessName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  category: string;
+  description: string;
+  status: AdminVendorApplicationStatus;
+  submittedAt: string;
+}
+
+export type VendorApplicationStatusUpdateStatus = typeof VendorApplicationStatusUpdateStatus[keyof typeof VendorApplicationStatusUpdateStatus];
+
+
+export const VendorApplicationStatusUpdateStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface VendorApplicationStatusUpdate {
+  status: VendorApplicationStatusUpdateStatus;
+}
+
+export type SupportTicketCategory = typeof SupportTicketCategory[keyof typeof SupportTicketCategory];
+
+
+export const SupportTicketCategory = {
+  order: 'order',
+  payment: 'payment',
+  account: 'account',
+  product: 'product',
+} as const;
+
+export type SupportTicketPriority = typeof SupportTicketPriority[keyof typeof SupportTicketPriority];
+
+
+export const SupportTicketPriority = {
+  low: 'low',
+  normal: 'normal',
+  high: 'high',
+  urgent: 'urgent',
+} as const;
+
+export type SupportTicketStatus = typeof SupportTicketStatus[keyof typeof SupportTicketStatus];
+
+
+export const SupportTicketStatus = {
+  open: 'open',
+  in_progress: 'in_progress',
+  resolved: 'resolved',
+} as const;
+
+export interface SupportTicket {
+  id: string;
+  subject: string;
+  customerName: string;
+  category: SupportTicketCategory;
+  priority: SupportTicketPriority;
+  status: SupportTicketStatus;
+  /** @nullable */
+  assignedTo: string | null;
+  lastMessage: string;
+  updatedAt: string;
+}
+
+export type SupportTicketUpdateStatus = typeof SupportTicketUpdateStatus[keyof typeof SupportTicketUpdateStatus];
+
+
+export const SupportTicketUpdateStatus = {
+  open: 'open',
+  in_progress: 'in_progress',
+  resolved: 'resolved',
+} as const;
+
+export interface SupportTicketUpdate {
+  status: SupportTicketUpdateStatus;
+  /** @nullable */
+  assignedTo?: string | null;
+}
+
+export interface FulfillmentQueueItem {
+  status: string;
+  label: string;
+  count: number;
+  orders: AdminOrder[];
+}
+
+export interface FulfillmentOverview {
+  queues: FulfillmentQueueItem[];
+  sourcedOrders: number;
+  localOrders: number;
+  delayedOrders: number;
+}
+
+export type SalesOverviewByDayItem = {
+  label: string;
+  sales: number;
+  orders: number;
+};
+
+export type SalesOverviewByCategoryItem = {
+  label: string;
+  sales: number;
+};
+
+export interface SalesOverview {
+  totalSales: number;
+  totalOrders: number;
+  averageOrderValue: number;
+  commission: number;
+  byDay: SalesOverviewByDayItem[];
+  byCategory: SalesOverviewByCategoryItem[];
+}
+
+export interface MarketplaceSettings {
+  storeName: string;
+  defaultCurrency: string;
+  deliveryZone: string;
+  standardDeliveryFee: number;
+  freeDeliveryThreshold: number;
+  vatRate: number;
+  vendorCommissionRate: number;
+  supportEmail: string;
+  maintenanceMode: boolean;
+}
+
+export interface MarketplaceSettingsUpdate {
+  /** @minLength 2 */
+  storeName?: string;
+  defaultCurrency?: string;
+  deliveryZone?: string;
+  /** @minimum 0 */
+  standardDeliveryFee?: number;
+  /** @minimum 0 */
+  freeDeliveryThreshold?: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  vatRate?: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  vendorCommissionRate?: number;
+  supportEmail?: string;
+  maintenanceMode?: boolean;
+}
+
 /**
  * Resource not found
  */
@@ -259,5 +462,36 @@ export const ListProductsSort = {
   price_asc: 'price_asc',
   price_desc: 'price_desc',
   top_rated: 'top_rated',
+} as const;
+
+export type ListAdminOrdersParams = {
+status?: string;
+search?: string;
+};
+
+export type ListAdminVendorApplicationsParams = {
+status?: ListAdminVendorApplicationsStatus;
+};
+
+export type ListAdminVendorApplicationsStatus = typeof ListAdminVendorApplicationsStatus[keyof typeof ListAdminVendorApplicationsStatus];
+
+
+export const ListAdminVendorApplicationsStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export type ListSupportTicketsParams = {
+status?: ListSupportTicketsStatus;
+};
+
+export type ListSupportTicketsStatus = typeof ListSupportTicketsStatus[keyof typeof ListSupportTicketsStatus];
+
+
+export const ListSupportTicketsStatus = {
+  open: 'open',
+  in_progress: 'in_progress',
+  resolved: 'resolved',
 } as const;
 

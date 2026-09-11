@@ -10,7 +10,16 @@ import {
   GetOrderParams,
   GetOrderResponse,
   GetAdminDashboardResponse,
+  GetAdminSettingsResponse,
+  GetFulfillmentOverviewResponse,
+  GetSalesOverviewResponse,
   GetVendorDashboardResponse,
+  ListAdminOrdersQueryParams,
+  ListAdminOrdersResponse,
+  ListAdminVendorApplicationsQueryParams,
+  ListAdminVendorApplicationsResponse,
+  ListSupportTicketsQueryParams,
+  ListSupportTicketsResponse,
   ListCategoriesResponse,
   ListProductsQueryParams,
   ListProductsResponse,
@@ -20,10 +29,25 @@ import {
   SubmitVendorApplicationResponse,
   UpdateCartItemBody,
   UpdateCartItemParams,
+  UpdateAdminOrderStatusBody,
+  UpdateAdminOrderStatusParams,
+  UpdateAdminOrderStatusResponse,
+  UpdateAdminSettingsBody,
+  UpdateAdminSettingsResponse,
+  UpdateSupportTicketBody,
+  UpdateSupportTicketParams,
+  UpdateSupportTicketResponse,
+  UpdateVendorApplicationStatusBody,
+  UpdateVendorApplicationStatusParams,
+  UpdateVendorApplicationStatusResponse,
   type Cart as CartData,
   type CartItem,
   type Order as OrderData,
   type Product as ProductData,
+  type AdminOrder,
+  type AdminVendorApplication,
+  type MarketplaceSettings,
+  type SupportTicket,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -166,7 +190,148 @@ const categories = [
 
 let cart: Cart = { items: [], subtotal: 0, deliveryFee: 0, total: 0, currency: "ZMW" };
 const orders: Order[] = [];
-const vendorApplications: Array<{ id: string; businessName: string; status: "pending" | "approved" | "rejected"; submittedAt: string }> = [];
+const adminOrders: AdminOrder[] = [
+  {
+    id: "ord-1001",
+    orderNumber: "GUL-2026-000917",
+    customerName: "Mwaka Phiri",
+    vendorName: "Mosi Home",
+    total: 825,
+    currency: "ZMW",
+    status: "PACKED",
+    fulfillment: "local",
+    placedAt: "2026-09-11T08:34:00.000Z",
+    itemCount: 2,
+  },
+  {
+    id: "ord-1002",
+    orderNumber: "GUL-2026-000918",
+    customerName: "Chanda Mwale",
+    vendorName: "Noma Living",
+    total: 690,
+    currency: "ZMW",
+    status: "SOURCING",
+    fulfillment: "sourced",
+    placedAt: "2026-09-11T09:12:00.000Z",
+    itemCount: 1,
+  },
+  {
+    id: "ord-1003",
+    orderNumber: "GUL-2026-000919",
+    customerName: "Thandiwe Banda",
+    vendorName: "Kaya Botanics",
+    total: 330,
+    currency: "ZMW",
+    status: "OUT_FOR_DELIVERY",
+    fulfillment: "local",
+    placedAt: "2026-09-11T10:05:00.000Z",
+    itemCount: 3,
+  },
+  {
+    id: "ord-1004",
+    orderNumber: "GUL-2026-000920",
+    customerName: "Lombe Zulu",
+    vendorName: "Copper & Clay",
+    total: 350,
+    currency: "ZMW",
+    status: "CUSTOMS_CLEARANCE",
+    fulfillment: "sourced",
+    placedAt: "2026-09-10T16:45:00.000Z",
+    itemCount: 1,
+  },
+];
+const vendorApplications: AdminVendorApplication[] = [
+  {
+    id: "app-1001",
+    businessName: "Chalo Ceramics",
+    contactName: "Chipo Chalo",
+    email: "hello@chaloceramics.zm",
+    phone: "+260 97 441 8821",
+    category: "Home & Living",
+    description: "Hand-shaped ceramic tableware and planters made in Lusaka.",
+    status: "pending",
+    submittedAt: "2026-09-11T07:48:00.000Z",
+  },
+  {
+    id: "app-1002",
+    businessName: "Munda Pantry",
+    contactName: "Mwamba Tembo",
+    email: "orders@mundapantry.zm",
+    phone: "+260 96 130 2290",
+    category: "Food & Pantry",
+    description: "Small-batch pantry staples, spice blends, and preserves.",
+    status: "pending",
+    submittedAt: "2026-09-10T14:20:00.000Z",
+  },
+  {
+    id: "app-1003",
+    businessName: "Bemba Streetwear",
+    contactName: "Tapiwa Mulenga",
+    email: "studio@bembastreetwear.zm",
+    phone: "+260 95 332 0041",
+    category: "Fashion",
+    description: "Everyday pieces inspired by contemporary Zambian street culture.",
+    status: "approved",
+    submittedAt: "2026-09-09T11:05:00.000Z",
+  },
+];
+const supportTickets: SupportTicket[] = [
+  {
+    id: "ticket-1001",
+    subject: "My order has not moved from sourcing",
+    customerName: "Chanda Mwale",
+    category: "order",
+    priority: "high",
+    status: "open",
+    assignedTo: null,
+    lastMessage: "Could you please confirm when the supplier expects to ship?",
+    updatedAt: "2026-09-11T11:20:00.000Z",
+  },
+  {
+    id: "ticket-1002",
+    subject: "Mobile Money payment reversed",
+    customerName: "Mwaka Phiri",
+    category: "payment",
+    priority: "urgent",
+    status: "in_progress",
+    assignedTo: "Finance desk",
+    lastMessage: "The amount was deducted but my order still says pending.",
+    updatedAt: "2026-09-11T10:47:00.000Z",
+  },
+  {
+    id: "ticket-1003",
+    subject: "Can I change my delivery address?",
+    customerName: "Thandiwe Banda",
+    category: "order",
+    priority: "normal",
+    status: "open",
+    assignedTo: "Customer service",
+    lastMessage: "I will be at a different address this afternoon.",
+    updatedAt: "2026-09-11T09:16:00.000Z",
+  },
+  {
+    id: "ticket-1004",
+    subject: "Product arrived with a damaged box",
+    customerName: "Lombe Zulu",
+    category: "product",
+    priority: "normal",
+    status: "resolved",
+    assignedTo: "Customer service",
+    lastMessage: "Thanks for arranging the replacement.",
+    updatedAt: "2026-09-10T15:02:00.000Z",
+  },
+];
+let adminSettings: MarketplaceSettings = {
+  storeName: "Gulani Marketplace",
+  defaultCurrency: "ZMW",
+  deliveryZone: "Lusaka",
+  standardDeliveryFee: 45,
+  freeDeliveryThreshold: 600,
+  vatRate: 16,
+  vendorCommissionRate: 12,
+  supportEmail: "support@gulani.zm",
+  maintenanceMode: false,
+};
 
 function calculateCart(): Cart {
   const subtotal = cart.items.reduce((sum: number, item: CartItem) => sum + item.unitPrice * item.quantity, 0);
@@ -285,6 +450,18 @@ router.post("/checkout", (req, res) => {
     })),
   };
   orders.unshift(order);
+  adminOrders.unshift({
+    id: order.id,
+    orderNumber: order.orderNumber,
+    customerName: body.fullName,
+    vendorName: cart.items[0]?.vendorName ?? "Multiple vendors",
+    total: order.total,
+    currency: order.currency,
+    status: order.status,
+    fulfillment: cart.items.some((item) => item.fulfillment === "sourced") ? "sourced" : "local",
+    placedAt: order.createdAt,
+    itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+  });
   cart = { items: [], subtotal: 0, deliveryFee: 0, total: 0, currency: "ZMW" };
   return res.status(201).json({
     orderId,
@@ -310,9 +487,132 @@ router.post("/vendors/applications", (req, res) => {
     businessName: body.businessName,
     status: "pending" as const,
     submittedAt: new Date().toISOString(),
+    contactName: body.contactName,
+    email: body.email,
+    phone: body.phone,
+    category: body.category,
+    description: body.description,
   };
   vendorApplications.push(application);
   return res.status(201).json(SubmitVendorApplicationResponse.parse(application));
+});
+
+router.get("/admin/orders", (req, res) => {
+  const params = ListAdminOrdersQueryParams.parse(req.query);
+  let result = [...adminOrders];
+  if (params.status) result = result.filter((order) => order.status === params.status);
+  if (params.search) {
+    const search = params.search.toLowerCase();
+    result = result.filter((order) =>
+      [order.orderNumber, order.customerName, order.vendorName].some((value) =>
+        value.toLowerCase().includes(search),
+      ),
+    );
+  }
+  return res.json(ListAdminOrdersResponse.parse(result));
+});
+
+router.patch("/admin/orders/:orderId/status", (req, res) => {
+  const { orderId } = UpdateAdminOrderStatusParams.parse(req.params);
+  const { status } = UpdateAdminOrderStatusBody.parse(req.body);
+  const order = adminOrders.find((entry) => entry.id === orderId);
+  if (!order) return res.status(404).json({ error: "Order not found" });
+  order.status = status;
+  const customerOrder = orders.find((entry) => entry.id === orderId);
+  if (customerOrder) customerOrder.status = status;
+  return res.json(UpdateAdminOrderStatusResponse.parse(order));
+});
+
+router.get("/admin/vendor-applications", (req, res) => {
+  const params = ListAdminVendorApplicationsQueryParams.parse(req.query);
+  const result = params.status
+    ? vendorApplications.filter((application) => application.status === params.status)
+    : vendorApplications;
+  return res.json(ListAdminVendorApplicationsResponse.parse(result));
+});
+
+router.patch("/admin/vendor-applications/:applicationId/status", (req, res) => {
+  const { applicationId } = UpdateVendorApplicationStatusParams.parse(req.params);
+  const { status } = UpdateVendorApplicationStatusBody.parse(req.body);
+  const application = vendorApplications.find((entry) => entry.id === applicationId);
+  if (!application) return res.status(404).json({ error: "Vendor application not found" });
+  application.status = status;
+  return res.json(UpdateVendorApplicationStatusResponse.parse(application));
+});
+
+router.get("/admin/support-tickets", (req, res) => {
+  const params = ListSupportTicketsQueryParams.parse(req.query);
+  const result = params.status
+    ? supportTickets.filter((ticket) => ticket.status === params.status)
+    : supportTickets;
+  return res.json(ListSupportTicketsResponse.parse(result));
+});
+
+router.patch("/admin/support-tickets/:ticketId", (req, res) => {
+  const { ticketId } = UpdateSupportTicketParams.parse(req.params);
+  const body = UpdateSupportTicketBody.parse(req.body);
+  const ticket = supportTickets.find((entry) => entry.id === ticketId);
+  if (!ticket) return res.status(404).json({ error: "Support ticket not found" });
+  ticket.status = body.status;
+  ticket.assignedTo = body.assignedTo ?? ticket.assignedTo;
+  ticket.updatedAt = new Date().toISOString();
+  return res.json(UpdateSupportTicketResponse.parse(ticket));
+});
+
+router.get("/admin/fulfillment", (_req, res) => {
+  const queueDefinitions = [
+    { status: "PACKED", label: "Awaiting shipment" },
+    { status: "SOURCING", label: "Sourcing in progress" },
+    { status: "IN_TRANSIT", label: "International transit" },
+    { status: "CUSTOMS_CLEARANCE", label: "Customs & clearance" },
+    { status: "OUT_FOR_DELIVERY", label: "Out for delivery" },
+  ];
+  const queues = queueDefinitions.map((definition) => {
+    const matching = adminOrders.filter((order) => order.status === definition.status);
+    return { ...definition, count: matching.length, orders: matching };
+  });
+  return res.json(GetFulfillmentOverviewResponse.parse({
+    queues,
+    sourcedOrders: adminOrders.filter((order) => order.fulfillment === "sourced").length,
+    localOrders: adminOrders.filter((order) => order.fulfillment === "local").length,
+    delayedOrders: adminOrders.filter((order) => ["CUSTOMS_CLEARANCE", "IN_TRANSIT"].includes(order.status)).length,
+  }));
+});
+
+router.get("/admin/sales", (_req, res) => {
+  const totalSales = adminOrders.reduce((sum, order) => sum + order.total, 0);
+  const byCategory = [
+    { label: "Home & Living", sales: 1515 },
+    { label: "Fashion", sales: 480 },
+    { label: "Wellness", sales: 330 },
+    { label: "Kitchen", sales: 350 },
+  ];
+  return res.json(GetSalesOverviewResponse.parse({
+    totalSales,
+    totalOrders: adminOrders.length,
+    averageOrderValue: adminOrders.length ? Math.round(totalSales / adminOrders.length) : 0,
+    commission: Math.round(totalSales * (adminSettings.vendorCommissionRate / 100)),
+    byDay: [
+      { label: "Mon", sales: 1640, orders: 3 },
+      { label: "Tue", sales: 2280, orders: 4 },
+      { label: "Wed", sales: 1910, orders: 3 },
+      { label: "Thu", sales: 2740, orders: 5 },
+      { label: "Fri", sales: totalSales, orders: adminOrders.length },
+      { label: "Sat", sales: 0, orders: 0 },
+      { label: "Sun", sales: 0, orders: 0 },
+    ],
+    byCategory,
+  }));
+});
+
+router.get("/admin/settings", (_req, res) => {
+  return res.json(GetAdminSettingsResponse.parse(adminSettings));
+});
+
+router.patch("/admin/settings", (req, res) => {
+  const changes = UpdateAdminSettingsBody.parse(req.body);
+  adminSettings = { ...adminSettings, ...changes };
+  return res.json(UpdateAdminSettingsResponse.parse(adminSettings));
 });
 
 router.get("/vendor/dashboard", (_req, res) => {
