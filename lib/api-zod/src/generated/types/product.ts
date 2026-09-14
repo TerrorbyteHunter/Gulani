@@ -24,5 +24,10 @@ export interface Product {
   /** @nullable */
   badge?: string | null;
   fulfillment: ProductFulfillment;
+  source?: string;
+  /** @nullable */
+  sourceProductId?: string | null;
+  basePrice?: number;
+  markupRate?: number;
   variants: ProductVariant[];
 }

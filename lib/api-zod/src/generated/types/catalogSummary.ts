@@ -12,5 +12,5 @@ export interface CatalogSummary {
   featured: Product[];
   trending: Product[];
   categories: Category[];
-  lusakaDeliveryMessage: string;
+  marketplaceMessage: string;
 }

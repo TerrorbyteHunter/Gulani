@@ -459,6 +459,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MarketplaceSettings"
+  /admin/pricing-rules:
+    get:
+      operationId: listPricingRules
+      tags: [admin]
+      summary: List catalog pricing rules
+      responses:
+        "200":
+          description: Pricing rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PricingRule"
+  /admin/pricing-rules/{ruleId}:
+    patch:
+      operationId: updatePricingRule
+      tags: [admin]
+      summary: Update a catalog pricing rule
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PricingRuleUpdate"
+      responses:
+        "200":
+          description: Updated pricing rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingRule"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
   parameters:
     ProductId:
@@ -522,6 +562,8 @@ components:
         name: { type: string }
         price: { type: number }
         compareAtPrice: { type: ["number", "null"] }
+        basePrice: { type: number }
+        markupRate: { type: number }
         sku: { type: string }
         stockQty: { type: integer }
       required: [id, name, price, sku, stockQty]
@@ -541,6 +583,10 @@ components:
         imageUrl: { type: string }
         badge: { type: ["string", "null"] }
         fulfillment: { type: string, enum: [local, sourced] }
+        source: { type: string }
+        sourceProductId: { type: ["string", "null"] }
+        basePrice: { type: number }
+        markupRate: { type: number }
         variants:
           type: array
           items:
@@ -561,8 +607,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Category"
-        lusakaDeliveryMessage: { type: string }
-      required: [featured, trending, categories, lusakaDeliveryMessage]
+        marketplaceMessage: { type: string }
+      required: [featured, trending, categories, marketplaceMessage]
     CartItem:
       type: object
       properties:
@@ -607,7 +653,7 @@ components:
         phone: { type: string, minLength: 7 }
         fullName: { type: string, minLength: 2 }
         address: { type: string, minLength: 5 }
-        deliveryZone: { type: string, enum: [lusaka] }
+        deliveryZone: { type: string, minLength: 2 }
         paymentMethod: { type: string, enum: [mtn_mobile_money, airtel_money, visa] }
         paymentPhone: { type: ["string", "null"] }
       required: [email, phone, fullName, address, deliveryZone, paymentMethod]
@@ -823,4 +869,19 @@ components:
         vendorCommissionRate: { type: number, minimum: 0, maximum: 100 }
         supportEmail: { type: string, format: email }
         maintenanceMode: { type: boolean }
+    PricingRule:
+      type: object
+      properties:
+        id: { type: string }
+        source: { type: string }
+        label: { type: string }
+        markupRate: { type: number, minimum: 0, maximum: 500 }
+        active: { type: boolean }
+        updatedAt: { type: string }
+      required: [id, source, label, markupRate, active, updatedAt]
+    PricingRuleUpdate:
+      type: object
+      properties:
+        markupRate: { type: number, minimum: 0, maximum: 500 }
+        active: { type: boolean }
 

@@ -1,0 +1,1 @@
+- [Global sourced marketplace](catalog-pricing.md) — Gulani is global and source-aware; imported supplier costs are repriced by configurable source-specific markup rules.

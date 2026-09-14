@@ -12,6 +12,8 @@ export interface ProductVariant {
   price: number;
   /** @nullable */
   compareAtPrice?: number | null;
+  basePrice?: number;
+  markupRate?: number;
   sku: string;
   stockQty: number;
 }

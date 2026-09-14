@@ -42,6 +42,8 @@ import type {
   MarketplaceSettingsUpdate,
   NotFoundResponse,
   Order,
+  PricingRule,
+  PricingRuleUpdate,
   Product,
   SalesOverview,
   SupportTicket,
@@ -2121,5 +2123,171 @@ export const useUpdateAdminSettings = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateAdminSettingsMutationOptions(options));
+    }
+
+export const getListPricingRulesUrl = () => {
+
+
+
+
+  return `/api/admin/pricing-rules`
+}
+
+/**
+ * @summary List catalog pricing rules
+ */
+export const listPricingRules = async ( options?: Parameters<typeof customFetch>[1]): Promise<PricingRule[]> => {
+
+  return customFetch<PricingRule[]>(getListPricingRulesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPricingRulesQueryKey = () => {
+    return [
+    `/api/admin/pricing-rules`
+    ] as const;
+    }
+
+
+export const getListPricingRulesQueryOptions = <TData = Awaited<ReturnType<typeof listPricingRules>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPricingRules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPricingRulesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPricingRules>>> = ({ signal }) => listPricingRules({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPricingRules>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPricingRulesQueryResult = NonNullable<Awaited<ReturnType<typeof listPricingRules>>>
+export type ListPricingRulesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List catalog pricing rules
+ */
+
+export function useListPricingRules<TData = Awaited<ReturnType<typeof listPricingRules>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPricingRules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPricingRulesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdatePricingRuleUrl = (ruleId: string,) => {
+
+
+
+
+  return `/api/admin/pricing-rules/${ruleId}`
+}
+
+/**
+ * @summary Update a catalog pricing rule
+ */
+export const updatePricingRule = async (ruleId: string,
+    pricingRuleUpdate: PricingRuleUpdate, options?: Parameters<typeof customFetch>[1]): Promise<PricingRule> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PricingRule>(getUpdatePricingRuleUrl(ruleId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pricingRuleUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdatePricingRuleMutationKey = () => ['updatePricingRule'] as const;
+
+export const getUpdatePricingRuleMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePricingRule>>, TError,UpdatePricingRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePricingRule>>, TError,UpdatePricingRuleMutationVariables, TContext> => {
+
+const mutationKey = getUpdatePricingRuleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePricingRule>>, UpdatePricingRuleMutationVariables> = (props) => {
+          const {ruleId,data} = props ?? {};
+
+          return  updatePricingRule(ruleId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePricingRuleMutationResult = NonNullable<Awaited<ReturnType<typeof updatePricingRule>>>
+    export type UpdatePricingRuleMutationBody = BodyType<PricingRuleUpdate>
+    export type UpdatePricingRuleMutationError = ErrorType<NotFoundResponse>
+    export type UpdatePricingRuleMutationVariables = {ruleId: string;data: BodyType<PricingRuleUpdate>}
+
+    /**
+ * @summary Update a catalog pricing rule
+ */
+export const useUpdatePricingRule = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePricingRule>>, TError,UpdatePricingRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePricingRule>>,
+        TError,
+        UpdatePricingRuleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdatePricingRuleMutationOptions(options));
     }
 

@@ -14,6 +14,7 @@ import {
   GetFulfillmentOverviewResponse,
   GetSalesOverviewResponse,
   GetVendorDashboardResponse,
+  ListPricingRulesResponse,
   ListAdminOrdersQueryParams,
   ListAdminOrdersResponse,
   ListAdminVendorApplicationsQueryParams,
@@ -40,6 +41,9 @@ import {
   UpdateVendorApplicationStatusBody,
   UpdateVendorApplicationStatusParams,
   UpdateVendorApplicationStatusResponse,
+  UpdatePricingRuleBody,
+  UpdatePricingRuleParams,
+  UpdatePricingRuleResponse,
   type Cart as CartData,
   type CartItem,
   type Order as OrderData,
@@ -48,6 +52,7 @@ import {
   type AdminVendorApplication,
   type MarketplaceSettings,
   type SupportTicket,
+  type PricingRule,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -55,6 +60,33 @@ const router: IRouter = Router();
 type Product = ProductData;
 type Cart = CartData;
 type Order = OrderData;
+
+const pricingRules: PricingRule[] = [
+  {
+    id: "rule-default",
+    source: "*",
+    label: "All imported products",
+    markupRate: 35,
+    active: true,
+    updatedAt: "2026-09-11T08:00:00.000Z",
+  },
+  {
+    id: "rule-taobao",
+    source: "taobao",
+    label: "Taobao imports",
+    markupRate: 42,
+    active: true,
+    updatedAt: "2026-09-11T08:00:00.000Z",
+  },
+  {
+    id: "rule-local",
+    source: "local-vendors",
+    label: "Local vendor products",
+    markupRate: 12,
+    active: true,
+    updatedAt: "2026-09-11T08:00:00.000Z",
+  },
+];
 
 const products: Product[] = [
   {
@@ -83,7 +115,7 @@ const products: Product[] = [
     title: "Everyday Linen Set",
     slug: "everyday-linen-set",
     description:
-      "Soft, breathable linen bedding in a relaxed neutral palette, sourced with care and delivered to your door in Lusaka.",
+      "Soft, breathable linen bedding in a relaxed neutral palette, sourced with care and delivered to your door.",
     category: "Home & Living",
     vendorName: "Noma Living",
     vendorRating: 4.7,
@@ -144,7 +176,7 @@ const products: Product[] = [
     title: "Citrus & Cedar Candle",
     slug: "citrus-cedar-candle",
     description:
-      "Hand-poured soy wax with bright citrus top notes and a grounded cedarwood finish. Made in Lusaka.",
+      "Hand-poured soy wax with bright citrus top notes and a grounded cedarwood finish.",
     category: "Wellness",
     vendorName: "Kaya Botanics",
     vendorRating: 4.9,
@@ -180,6 +212,35 @@ const products: Product[] = [
     ],
   },
 ];
+
+const getPricingRule = (source: string) =>
+  pricingRules.find((rule) => rule.source === source && rule.active) ??
+  pricingRules.find((rule) => rule.source === "*" && rule.active);
+
+const repriceCatalog = () => {
+  for (const product of products) {
+    const source = product.source ?? (product.fulfillment === "sourced" ? "taobao" : "local-vendors");
+    const rule = getPricingRule(source);
+    const markupRate = rule?.markupRate ?? 0;
+    const existingRate = product.markupRate ?? markupRate;
+    const basePrice = product.basePrice ?? product.price / (1 + existingRate / 100);
+    product.source = source;
+    product.basePrice = Math.round(basePrice * 100) / 100;
+    product.markupRate = markupRate;
+    product.price = Math.round(basePrice * (1 + markupRate / 100) * 100) / 100;
+    product.variants = product.variants.map((variant) => {
+      const variantBasePrice = variant.basePrice ?? variant.price / (1 + existingRate / 100);
+      return {
+        ...variant,
+        basePrice: Math.round(variantBasePrice * 100) / 100,
+        markupRate,
+        price: Math.round(variantBasePrice * (1 + markupRate / 100) * 100) / 100,
+      };
+    });
+  }
+};
+
+repriceCatalog();
 
 const categories = [
   { id: "c-001", name: "Home & Living", slug: "home-living", productCount: 18, imageUrl: products[0].imageUrl },
@@ -248,7 +309,7 @@ const vendorApplications: AdminVendorApplication[] = [
     email: "hello@chaloceramics.zm",
     phone: "+260 97 441 8821",
     category: "Home & Living",
-    description: "Hand-shaped ceramic tableware and planters made in Lusaka.",
+    description: "Hand-shaped ceramic tableware and planters made by independent makers.",
     status: "pending",
     submittedAt: "2026-09-11T07:48:00.000Z",
   },
@@ -324,7 +385,7 @@ const supportTickets: SupportTicket[] = [
 let adminSettings: MarketplaceSettings = {
   storeName: "Gulani Marketplace",
   defaultCurrency: "ZMW",
-  deliveryZone: "Lusaka",
+  deliveryZone: "Global",
   standardDeliveryFee: 45,
   freeDeliveryThreshold: 600,
   vatRate: 16,
@@ -361,7 +422,7 @@ router.get("/catalog/summary", (_req, res) => {
     featured: products.slice(0, 4),
     trending: products.slice(2, 6),
     categories,
-    lusakaDeliveryMessage: "Delivery across Lusaka from ZMW 45. Free delivery on orders over ZMW 600.",
+    marketplaceMessage: "Discover independent products from local makers and international sourcing partners.",
   }));
 });
 
@@ -557,6 +618,20 @@ router.patch("/admin/support-tickets/:ticketId", (req, res) => {
   ticket.assignedTo = body.assignedTo ?? ticket.assignedTo;
   ticket.updatedAt = new Date().toISOString();
   return res.json(UpdateSupportTicketResponse.parse(ticket));
+});
+
+router.get("/admin/pricing-rules", (_req, res) => {
+  return res.json(ListPricingRulesResponse.parse(pricingRules));
+});
+
+router.patch("/admin/pricing-rules/:ruleId", (req, res) => {
+  const { ruleId } = UpdatePricingRuleParams.parse(req.params);
+  const changes = UpdatePricingRuleBody.parse(req.body);
+  const rule = pricingRules.find((entry) => entry.id === ruleId);
+  if (!rule) return res.status(404).json({ error: "Pricing rule not found" });
+  Object.assign(rule, changes, { updatedAt: new Date().toISOString() });
+  repriceCatalog();
+  return res.json(UpdatePricingRuleResponse.parse(rule));
 });
 
 router.get("/admin/fulfillment", (_req, res) => {

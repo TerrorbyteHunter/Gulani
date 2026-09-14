@@ -5,7 +5,6 @@
  * Gulani marketplace API
  * OpenAPI spec version: 0.1.0
  */
-import type { CheckoutInputDeliveryZone } from './checkoutInputDeliveryZone';
 import type { CheckoutInputPaymentMethod } from './checkoutInputPaymentMethod';
 
 export interface CheckoutInput {
@@ -16,7 +15,8 @@ export interface CheckoutInput {
   fullName: string;
   /** @minLength 5 */
   address: string;
-  deliveryZone: CheckoutInputDeliveryZone;
+  /** @minLength 2 */
+  deliveryZone: string;
   paymentMethod: CheckoutInputPaymentMethod;
   /** @nullable */
   paymentPhone?: string | null;

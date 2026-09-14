@@ -27,6 +27,8 @@ export interface ProductVariant {
   price: number;
   /** @nullable */
   compareAtPrice?: number | null;
+  basePrice?: number;
+  markupRate?: number;
   sku: string;
   stockQty: number;
 }
@@ -55,6 +57,11 @@ export interface Product {
   /** @nullable */
   badge?: string | null;
   fulfillment: ProductFulfillment;
+  source?: string;
+  /** @nullable */
+  sourceProductId?: string | null;
+  basePrice?: number;
+  markupRate?: number;
   variants: ProductVariant[];
 }
 
@@ -62,7 +69,7 @@ export interface CatalogSummary {
   featured: Product[];
   trending: Product[];
   categories: Category[];
-  lusakaDeliveryMessage: string;
+  marketplaceMessage: string;
 }
 
 export type CartItemFulfillment = typeof CartItemFulfillment[keyof typeof CartItemFulfillment];
@@ -111,13 +118,6 @@ export interface CartItemUpdate {
   quantity: number;
 }
 
-export type CheckoutInputDeliveryZone = typeof CheckoutInputDeliveryZone[keyof typeof CheckoutInputDeliveryZone];
-
-
-export const CheckoutInputDeliveryZone = {
-  lusaka: 'lusaka',
-} as const;
-
 export type CheckoutInputPaymentMethod = typeof CheckoutInputPaymentMethod[keyof typeof CheckoutInputPaymentMethod];
 
 
@@ -135,7 +135,8 @@ export interface CheckoutInput {
   fullName: string;
   /** @minLength 5 */
   address: string;
-  deliveryZone: CheckoutInputDeliveryZone;
+  /** @minLength 2 */
+  deliveryZone: string;
   paymentMethod: CheckoutInputPaymentMethod;
   /** @nullable */
   paymentPhone?: string | null;
@@ -430,6 +431,28 @@ export interface MarketplaceSettingsUpdate {
   vendorCommissionRate?: number;
   supportEmail?: string;
   maintenanceMode?: boolean;
+}
+
+export interface PricingRule {
+  id: string;
+  source: string;
+  label: string;
+  /**
+     * @minimum 0
+     * @maximum 500
+     */
+  markupRate: number;
+  active: boolean;
+  updatedAt: string;
+}
+
+export interface PricingRuleUpdate {
+  /**
+     * @minimum 0
+     * @maximum 500
+     */
+  markupRate?: number;
+  active?: boolean;
 }
 
 /**

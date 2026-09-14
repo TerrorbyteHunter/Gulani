@@ -35,11 +35,17 @@ export const GetCatalogSummaryResponse = zod.object({
   "imageUrl": zod.string(),
   "badge": zod.string().nullish(),
   "fulfillment": zod.enum(['local', 'sourced']),
+  "source": zod.string().optional(),
+  "sourceProductId": zod.string().nullish(),
+  "basePrice": zod.number().optional(),
+  "markupRate": zod.number().optional(),
   "variants": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "price": zod.number(),
   "compareAtPrice": zod.number().nullish(),
+  "basePrice": zod.number().optional(),
+  "markupRate": zod.number().optional(),
   "sku": zod.string(),
   "stockQty": zod.number().int()
 }))
@@ -58,11 +64,17 @@ export const GetCatalogSummaryResponse = zod.object({
   "imageUrl": zod.string(),
   "badge": zod.string().nullish(),
   "fulfillment": zod.enum(['local', 'sourced']),
+  "source": zod.string().optional(),
+  "sourceProductId": zod.string().nullish(),
+  "basePrice": zod.number().optional(),
+  "markupRate": zod.number().optional(),
   "variants": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "price": zod.number(),
   "compareAtPrice": zod.number().nullish(),
+  "basePrice": zod.number().optional(),
+  "markupRate": zod.number().optional(),
   "sku": zod.string(),
   "stockQty": zod.number().int()
 }))
@@ -74,7 +86,7 @@ export const GetCatalogSummaryResponse = zod.object({
   "productCount": zod.number().int(),
   "imageUrl": zod.string()
 })),
-  "lusakaDeliveryMessage": zod.string()
+  "marketplaceMessage": zod.string()
 })
 
 
@@ -121,11 +133,17 @@ export const ListProductsResponseItem = zod.object({
   "imageUrl": zod.string(),
   "badge": zod.string().nullish(),
   "fulfillment": zod.enum(['local', 'sourced']),
+  "source": zod.string().optional(),
+  "sourceProductId": zod.string().nullish(),
+  "basePrice": zod.number().optional(),
+  "markupRate": zod.number().optional(),
   "variants": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "price": zod.number(),
   "compareAtPrice": zod.number().nullish(),
+  "basePrice": zod.number().optional(),
+  "markupRate": zod.number().optional(),
   "sku": zod.string(),
   "stockQty": zod.number().int()
 }))
@@ -154,11 +172,17 @@ export const GetProductResponse = zod.object({
   "imageUrl": zod.string(),
   "badge": zod.string().nullish(),
   "fulfillment": zod.enum(['local', 'sourced']),
+  "source": zod.string().optional(),
+  "sourceProductId": zod.string().nullish(),
+  "basePrice": zod.number().optional(),
+  "markupRate": zod.number().optional(),
   "variants": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "price": zod.number(),
   "compareAtPrice": zod.number().nullish(),
+  "basePrice": zod.number().optional(),
+  "markupRate": zod.number().optional(),
   "sku": zod.string(),
   "stockQty": zod.number().int()
 }))
@@ -289,6 +313,8 @@ export const createCheckoutBodyFullNameMin = 2;
 
 export const createCheckoutBodyAddressMin = 5;
 
+export const createCheckoutBodyDeliveryZoneMin = 2;
+
 
 
 export const CreateCheckoutBody = zod.object({
@@ -296,7 +322,7 @@ export const CreateCheckoutBody = zod.object({
   "phone": zod.string().min(createCheckoutBodyPhoneMin),
   "fullName": zod.string().min(createCheckoutBodyFullNameMin),
   "address": zod.string().min(createCheckoutBodyAddressMin),
-  "deliveryZone": zod.enum(['lusaka']),
+  "deliveryZone": zod.string().min(createCheckoutBodyDeliveryZoneMin),
   "paymentMethod": zod.enum(['mtn_mobile_money', 'airtel_money', 'visa']),
   "paymentPhone": zod.string().nullish()
 })
@@ -673,6 +699,57 @@ export const UpdateAdminSettingsResponse = zod.object({
   "vendorCommissionRate": zod.number(),
   "supportEmail": zod.string(),
   "maintenanceMode": zod.boolean()
+})
+
+
+/**
+ * @summary List catalog pricing rules
+ */
+export const listPricingRulesResponseMarkupRateMin = 0;
+export const listPricingRulesResponseMarkupRateMax = 500;
+
+
+
+export const ListPricingRulesResponseItem = zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "label": zod.string(),
+  "markupRate": zod.number().min(listPricingRulesResponseMarkupRateMin).max(listPricingRulesResponseMarkupRateMax),
+  "active": zod.boolean(),
+  "updatedAt": zod.string()
+})
+export const ListPricingRulesResponse = zod.array(ListPricingRulesResponseItem)
+
+
+/**
+ * @summary Update a catalog pricing rule
+ */
+export const UpdatePricingRuleParams = zod.object({
+  "ruleId": zod.coerce.string()
+})
+
+export const updatePricingRuleBodyMarkupRateMin = 0;
+export const updatePricingRuleBodyMarkupRateMax = 500;
+
+
+
+export const UpdatePricingRuleBody = zod.object({
+  "markupRate": zod.number().min(updatePricingRuleBodyMarkupRateMin).max(updatePricingRuleBodyMarkupRateMax).optional(),
+  "active": zod.boolean().optional()
+})
+
+export const updatePricingRuleResponseMarkupRateMin = 0;
+export const updatePricingRuleResponseMarkupRateMax = 500;
+
+
+
+export const UpdatePricingRuleResponse = zod.object({
+  "id": zod.string(),
+  "source": zod.string(),
+  "label": zod.string(),
+  "markupRate": zod.number().min(updatePricingRuleResponseMarkupRateMin).max(updatePricingRuleResponseMarkupRateMax),
+  "active": zod.boolean(),
+  "updatedAt": zod.string()
 })
 
 
