@@ -1,0 +1,149 @@
+And separate flows for:
+
+Cancelled
+Refund requested
+Refunded
+Failed delivery
+Disputed
+
+Each order should show:
+
+Order number
+Customer
+Products
+Quantity
+Amount
+Delivery address
+Payment status
+Order status
+Vendor earnings
+Platform commission
+Shipping fee
+Order date
+Expected delivery
+Tracking number
+
+Allow the vendor to print/download an invoice or packing slip.
+
+4. Customer Management
+
+Vendors should be able to see customers who have purchased from them.
+
+For example:
+
+Customer
+
+Name
+Number/email where appropriate
+Orders
+Total spent
+Last purchase
+Current orders
+Reviews
+
+But I'd avoid exposing unnecessary customer information. The platform should control what personal data vendors can access.
+
+5. Messaging
+
+This is particularly important for your Gulani concept.
+
+You previously wanted:
+
+Customer ↔ Customer Service/Admin
+
+and
+
+Vendor ↔ Customer Service/Admin
+
+I'd also consider:
+
+Customer ↔ Vendor
+
+but with platform moderation and protections.
+
+Features:
+
+Text messages
+Order-linked conversations
+Image attachments
+Automated order messages
+Read/unread status
+Notifications
+Report conversation
+Block/restrict user
+Admin intervention
+
+For example:
+
+Customer: "Is this phone available in black?"
+
+Vendor can respond without the customer having to leave Gulani.
+
+6. Inventory
+
+I'd make inventory its own section rather than burying everything under Products.
+
+Features:
+
+Current stock
+Low-stock threshold
+Out-of-stock products
+Stock adjustments
+Stock history
+Incoming stock
+Reserved stock
+Sold stock
+SKU management
+
+For example:
+
+iPhone 15 Pro
+
+Available: 12
+Reserved: 2
+Sold today: 3
+Low-stock threshold: 5
+
+This becomes very useful once you have many vendors.
+
+7. Payments & Earnings
+
+This is very important for a marketplace.
+
+Vendor should see:
+
+Earnings
+
+Gross sales
+Platform commission
+Shipping fees
+Refunds
+Discounts
+Other deductions
+Net earnings
+
+Then:
+
+Wallet
+
+Available balance
+Pending balance
+Withdrawable balance
+Withdrawal history
+
+Example:
+
+Sales                 K10,000
+Platform commission   -K1,000
+Refunds                -K500
+--------------------------------
+Net earnings           K8,500
+
+Available to withdraw  K6,200
+Pending                 K2,300
+
+Then allow:
+
+Withdraw → Mobile Money / Bank
+
+with admin approval/automatic processing depending on how you eventually build the payment system.

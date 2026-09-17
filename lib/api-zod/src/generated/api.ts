@@ -423,23 +423,854 @@ export const GetVendorDashboardResponse = zod.object({
   "productsLive": zod.number().int(),
   "revenueThisMonth": zod.number(),
   "rating": zod.number(),
+  "totalSales": zod.number(),
+  "todaySales": zod.number(),
+  "ordersAwaitingShipment": zod.number().int(),
+  "completedOrders": zod.number().int(),
+  "cancelledRefundedOrders": zod.number().int(),
+  "productsInStock": zod.number().int(),
+  "lowStockAlerts": zod.number().int(),
+  "unreadCustomerMessages": zod.number().int(),
+  "pendingDisputes": zod.number().int(),
+  "availableBalance": zod.number(),
+  "pendingBalance": zod.number(),
   "recentOrders": zod.array(zod.object({
   "id": zod.string(),
   "orderNumber": zod.string(),
-  "status": zod.string(),
-  "createdAt": zod.string(),
+  "customerName": zod.string(),
+  "customerEmail": zod.string(),
+  "items": zod.array(zod.object({
+  "title": zod.string(),
+  "quantity": zod.number().int(),
+  "unitPrice": zod.number()
+})),
   "total": zod.number(),
   "currency": zod.string(),
   "deliveryAddress": zod.string(),
-  "items": zod.array(zod.object({
+  "paymentStatus": zod.enum(['pending', 'paid', 'failed', 'refunded']),
+  "status": zod.enum(['new', 'confirmed', 'processing', 'ready_for_dispatch', 'shipped', 'delivered', 'completed', 'cancelled', 'refund_requested', 'refunded', 'failed_delivery', 'disputed']),
+  "vendorEarnings": zod.number(),
+  "platformCommission": zod.number(),
+  "shippingFee": zod.number(),
+  "orderDate": zod.string(),
+  "expectedDelivery": zod.string(),
+  "trackingNumber": zod.string().nullable()
+})),
+  "salesChart": zod.array(zod.object({
+  "label": zod.string(),
+  "sales": zod.number(),
+  "orders": zod.number().int()
+})),
+  "customers": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "orders": zod.number().int(),
+  "totalSpent": zod.number(),
+  "lastPurchase": zod.string(),
+  "currentOrders": zod.number().int(),
+  "reviews": zod.number().int()
+})),
+  "inventory": zod.array(zod.object({
+  "productId": zod.string(),
+  "productTitle": zod.string(),
+  "sku": zod.string(),
+  "available": zod.number().int(),
+  "reserved": zod.number().int(),
+  "soldToday": zod.number().int(),
+  "lowStockThreshold": zod.number().int()
+})),
+  "storefront": zod.object({
+  "vendorId": zod.string(),
+  "businessName": zod.string(),
+  "logoUrl": zod.string().nullable(),
+  "bannerUrl": zod.string().nullable(),
+  "description": zod.string(),
+  "contactInformation": zod.string(),
+  "businessHours": zod.string(),
+  "storePolicies": zod.string(),
+  "averageRating": zod.number(),
+  "reviewCount": zod.number().int(),
+  "orderSatisfaction": zod.number(),
+  "approvalStatus": zod.enum(['draft', 'pending_review', 'approved', 'changes_requested'])
+}),
+  "verification": zod.object({
+  "overallStatus": zod.enum(['not_submitted', 'submitted', 'under_review', 'approved', 'rejected', 'more_information_required', 'suspended']),
+  "phoneVerified": zod.boolean(),
+  "emailVerified": zod.boolean(),
+  "idSubmitted": zod.boolean(),
+  "businessDocumentsSubmitted": zod.boolean(),
+  "rejectionReason": zod.string().nullable()
+}),
+  "settings": zod.object({
+  "businessAddress": zod.string(),
+  "pickupLocations": zod.string(),
+  "operatingHours": zod.string(),
+  "shippingSettings": zod.string(),
+  "returnPolicy": zod.string(),
+  "refundPolicy": zod.string(),
+  "notificationSettings": zod.string(),
+  "payoutMethod": zod.string()
+})
+})
+
+
+/**
+ * @summary List products owned by the current vendor
+ */
+export const ListVendorProductsResponseItem = zod.object({
   "id": zod.string(),
   "title": zod.string(),
-  "imageUrl": zod.string(),
-  "vendorName": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number(),
+  "salePrice": zod.number().nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int(),
+  "lowStockThreshold": zod.number().int(),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string(),
+  "views": zod.number().int(),
+  "purchases": zod.number().int(),
+  "returns": zod.number().int()
+})
+export const ListVendorProductsResponse = zod.array(ListVendorProductsResponseItem)
+
+
+/**
+ * @summary Create a vendor product
+ */
+export const createVendorProductBodyTitleMin = 2;
+
+export const createVendorProductBodyDescriptionMin = 10;
+
+export const createVendorProductBodyPriceMin = 0;
+
+export const createVendorProductBodySalePriceMin = 0;
+
+export const createVendorProductBodyStockQtyMin = 0;
+
+export const createVendorProductBodyLowStockThresholdMin = 0;
+
+
+
+export const CreateVendorProductBody = zod.object({
+  "title": zod.string().min(createVendorProductBodyTitleMin),
+  "description": zod.string().min(createVendorProductBodyDescriptionMin),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number().min(createVendorProductBodyPriceMin),
+  "salePrice": zod.number().min(createVendorProductBodySalePriceMin).nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int().min(createVendorProductBodyStockQtyMin),
+  "lowStockThreshold": zod.number().int().min(createVendorProductBodyLowStockThresholdMin),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string()
+})
+
+export const CreateVendorProductResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number(),
+  "salePrice": zod.number().nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int(),
+  "lowStockThreshold": zod.number().int(),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string(),
+  "views": zod.number().int(),
+  "purchases": zod.number().int(),
+  "returns": zod.number().int()
+})
+
+
+/**
+ * @summary Update a vendor product
+ */
+export const UpdateVendorProductParams = zod.object({
+  "productId": zod.coerce.string()
+})
+
+export const updateVendorProductBodyTitleMin = 2;
+
+export const updateVendorProductBodyDescriptionMin = 10;
+
+export const updateVendorProductBodyPriceMin = 0;
+
+export const updateVendorProductBodySalePriceMin = 0;
+
+export const updateVendorProductBodyStockQtyMin = 0;
+
+export const updateVendorProductBodyLowStockThresholdMin = 0;
+
+
+
+export const UpdateVendorProductBody = zod.object({
+  "title": zod.string().min(updateVendorProductBodyTitleMin),
+  "description": zod.string().min(updateVendorProductBodyDescriptionMin),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number().min(updateVendorProductBodyPriceMin),
+  "salePrice": zod.number().min(updateVendorProductBodySalePriceMin).nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int().min(updateVendorProductBodyStockQtyMin),
+  "lowStockThreshold": zod.number().int().min(updateVendorProductBodyLowStockThresholdMin),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string()
+})
+
+export const UpdateVendorProductResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number(),
+  "salePrice": zod.number().nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int(),
+  "lowStockThreshold": zod.number().int(),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string(),
+  "views": zod.number().int(),
+  "purchases": zod.number().int(),
+  "returns": zod.number().int()
+})
+
+
+/**
+ * @summary Archive a vendor product
+ */
+export const ArchiveVendorProductParams = zod.object({
+  "productId": zod.coerce.string()
+})
+
+export const ArchiveVendorProductResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number(),
+  "salePrice": zod.number().nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int(),
+  "lowStockThreshold": zod.number().int(),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string(),
+  "views": zod.number().int(),
+  "purchases": zod.number().int(),
+  "returns": zod.number().int()
+})
+
+
+/**
+ * @summary Apply a bulk product action
+ */
+
+
+
+export const BulkUpdateVendorProductsBody = zod.object({
+  "productIds": zod.array(zod.string()).min(1),
+  "action": zod.enum(['enable', 'disable', 'archive', 'price_update', 'stock_update']),
+  "value": zod.number().optional()
+})
+
+export const BulkUpdateVendorProductsResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number(),
+  "salePrice": zod.number().nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int(),
+  "lowStockThreshold": zod.number().int(),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string(),
+  "views": zod.number().int(),
+  "purchases": zod.number().int(),
+  "returns": zod.number().int()
+})
+export const BulkUpdateVendorProductsResponse = zod.array(BulkUpdateVendorProductsResponseItem)
+
+
+/**
+ * @summary List orders for the current vendor
+ */
+export const ListVendorOrdersResponseItem = zod.object({
+  "id": zod.string(),
+  "orderNumber": zod.string(),
+  "customerName": zod.string(),
+  "customerEmail": zod.string(),
+  "items": zod.array(zod.object({
+  "title": zod.string(),
   "quantity": zod.number().int(),
   "unitPrice": zod.number()
+})),
+  "total": zod.number(),
+  "currency": zod.string(),
+  "deliveryAddress": zod.string(),
+  "paymentStatus": zod.enum(['pending', 'paid', 'failed', 'refunded']),
+  "status": zod.enum(['new', 'confirmed', 'processing', 'ready_for_dispatch', 'shipped', 'delivered', 'completed', 'cancelled', 'refund_requested', 'refunded', 'failed_delivery', 'disputed']),
+  "vendorEarnings": zod.number(),
+  "platformCommission": zod.number(),
+  "shippingFee": zod.number(),
+  "orderDate": zod.string(),
+  "expectedDelivery": zod.string(),
+  "trackingNumber": zod.string().nullable()
+})
+export const ListVendorOrdersResponse = zod.array(ListVendorOrdersResponseItem)
+
+
+/**
+ * @summary Update a vendor order status
+ */
+export const UpdateVendorOrderStatusParams = zod.object({
+  "orderId": zod.coerce.string()
+})
+
+export const UpdateVendorOrderStatusBody = zod.object({
+  "status": zod.enum(['new', 'confirmed', 'processing', 'ready_for_dispatch', 'shipped', 'delivered', 'completed', 'cancelled', 'refund_requested', 'refunded', 'failed_delivery', 'disputed'])
+})
+
+export const UpdateVendorOrderStatusResponse = zod.object({
+  "id": zod.string(),
+  "orderNumber": zod.string(),
+  "customerName": zod.string(),
+  "customerEmail": zod.string(),
+  "items": zod.array(zod.object({
+  "title": zod.string(),
+  "quantity": zod.number().int(),
+  "unitPrice": zod.number()
+})),
+  "total": zod.number(),
+  "currency": zod.string(),
+  "deliveryAddress": zod.string(),
+  "paymentStatus": zod.enum(['pending', 'paid', 'failed', 'refunded']),
+  "status": zod.enum(['new', 'confirmed', 'processing', 'ready_for_dispatch', 'shipped', 'delivered', 'completed', 'cancelled', 'refund_requested', 'refunded', 'failed_delivery', 'disputed']),
+  "vendorEarnings": zod.number(),
+  "platformCommission": zod.number(),
+  "shippingFee": zod.number(),
+  "orderDate": zod.string(),
+  "expectedDelivery": zod.string(),
+  "trackingNumber": zod.string().nullable()
+})
+
+
+/**
+ * @summary List reviews for the current vendor
+ */
+export const listVendorReviewsResponseRatingMax = 5;
+
+
+
+export const ListVendorReviewsResponseItem = zod.object({
+  "id": zod.string(),
+  "productId": zod.string(),
+  "productTitle": zod.string(),
+  "customerName": zod.string(),
+  "rating": zod.number().int().min(1).max(listVendorReviewsResponseRatingMax),
+  "comment": zod.string(),
+  "reply": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "repliedAt": zod.string().nullable()
+})
+export const ListVendorReviewsResponse = zod.array(ListVendorReviewsResponseItem)
+
+
+/**
+ * @summary Reply to a customer review
+ */
+export const ReplyToVendorReviewParams = zod.object({
+  "reviewId": zod.coerce.string()
+})
+
+
+
+
+export const ReplyToVendorReviewBody = zod.object({
+  "reply": zod.string().min(1)
+})
+
+export const replyToVendorReviewResponseRatingMax = 5;
+
+
+
+export const ReplyToVendorReviewResponse = zod.object({
+  "id": zod.string(),
+  "productId": zod.string(),
+  "productTitle": zod.string(),
+  "customerName": zod.string(),
+  "rating": zod.number().int().min(1).max(replyToVendorReviewResponseRatingMax),
+  "comment": zod.string(),
+  "reply": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "repliedAt": zod.string().nullable()
+})
+
+
+/**
+ * @summary List vendor promotions
+ */
+export const ListVendorPromotionsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "type": zod.enum(['percentage', 'fixed', 'buy_x_get_y', 'flash_sale', 'bundle', 'coupon', 'free_shipping']),
+  "value": zod.number(),
+  "code": zod.string().nullable(),
+  "startsAt": zod.string(),
+  "endsAt": zod.string(),
+  "status": zod.enum(['draft', 'scheduled', 'active', 'ended', 'disabled']),
+  "productIds": zod.array(zod.string()),
+  "maximumDiscount": zod.number().nullable()
+})
+export const ListVendorPromotionsResponse = zod.array(ListVendorPromotionsResponseItem)
+
+
+/**
+ * @summary Create a vendor promotion
+ */
+export const createVendorPromotionBodyNameMin = 2;
+
+export const createVendorPromotionBodyValueMin = 0;
+
+export const createVendorPromotionBodyMaximumDiscountMin = 0;
+
+
+
+export const CreateVendorPromotionBody = zod.object({
+  "name": zod.string().min(createVendorPromotionBodyNameMin),
+  "type": zod.enum(['percentage', 'fixed', 'buy_x_get_y', 'flash_sale', 'bundle', 'coupon', 'free_shipping']),
+  "value": zod.number().min(createVendorPromotionBodyValueMin),
+  "code": zod.string().nullable(),
+  "startsAt": zod.string(),
+  "endsAt": zod.string(),
+  "productIds": zod.array(zod.string()),
+  "maximumDiscount": zod.number().min(createVendorPromotionBodyMaximumDiscountMin).nullable()
+})
+
+export const CreateVendorPromotionResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "type": zod.enum(['percentage', 'fixed', 'buy_x_get_y', 'flash_sale', 'bundle', 'coupon', 'free_shipping']),
+  "value": zod.number(),
+  "code": zod.string().nullable(),
+  "startsAt": zod.string(),
+  "endsAt": zod.string(),
+  "status": zod.enum(['draft', 'scheduled', 'active', 'ended', 'disabled']),
+  "productIds": zod.array(zod.string()),
+  "maximumDiscount": zod.number().nullable()
+})
+
+
+/**
+ * @summary Update a vendor promotion
+ */
+export const UpdateVendorPromotionParams = zod.object({
+  "promotionId": zod.coerce.string()
+})
+
+export const updateVendorPromotionBodyValueMin = 0;
+
+
+
+export const UpdateVendorPromotionBody = zod.object({
+  "status": zod.enum(['draft', 'scheduled', 'active', 'ended', 'disabled']).optional(),
+  "value": zod.number().min(updateVendorPromotionBodyValueMin).optional()
+})
+
+export const UpdateVendorPromotionResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "type": zod.enum(['percentage', 'fixed', 'buy_x_get_y', 'flash_sale', 'bundle', 'coupon', 'free_shipping']),
+  "value": zod.number(),
+  "code": zod.string().nullable(),
+  "startsAt": zod.string(),
+  "endsAt": zod.string(),
+  "status": zod.enum(['draft', 'scheduled', 'active', 'ended', 'disabled']),
+  "productIds": zod.array(zod.string()),
+  "maximumDiscount": zod.number().nullable()
+})
+
+
+/**
+ * @summary Get vendor analytics
+ */
+export const GetVendorAnalyticsResponse = zod.object({
+  "sales": zod.array(zod.object({
+  "label": zod.string(),
+  "sales": zod.number(),
+  "orders": zod.number().int()
+})),
+  "mostViewed": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number(),
+  "salePrice": zod.number().nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int(),
+  "lowStockThreshold": zod.number().int(),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string(),
+  "views": zod.number().int(),
+  "purchases": zod.number().int(),
+  "returns": zod.number().int()
+})),
+  "mostPurchased": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number(),
+  "salePrice": zod.number().nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int(),
+  "lowStockThreshold": zod.number().int(),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string(),
+  "views": zod.number().int(),
+  "purchases": zod.number().int(),
+  "returns": zod.number().int()
+})),
+  "newCustomers": zod.number().int(),
+  "returningCustomers": zod.number().int(),
+  "averageOrderValue": zod.number()
+})
+
+
+/**
+ * @summary Get vendor storefront settings
+ */
+export const GetVendorStorefrontResponse = zod.object({
+  "vendorId": zod.string(),
+  "businessName": zod.string(),
+  "logoUrl": zod.string().nullable(),
+  "bannerUrl": zod.string().nullable(),
+  "description": zod.string(),
+  "contactInformation": zod.string(),
+  "businessHours": zod.string(),
+  "storePolicies": zod.string(),
+  "averageRating": zod.number(),
+  "reviewCount": zod.number().int(),
+  "orderSatisfaction": zod.number(),
+  "approvalStatus": zod.enum(['draft', 'pending_review', 'approved', 'changes_requested'])
+})
+
+
+/**
+ * @summary Update vendor storefront settings
+ */
+export const UpdateVendorStorefrontBody = zod.object({
+  "logoUrl": zod.string().nullish(),
+  "bannerUrl": zod.string().nullish(),
+  "description": zod.string().optional(),
+  "contactInformation": zod.string().optional(),
+  "businessHours": zod.string().optional(),
+  "storePolicies": zod.string().optional(),
+  "approvalStatus": zod.enum(['draft', 'pending_review']).optional()
+})
+
+export const UpdateVendorStorefrontResponse = zod.object({
+  "vendorId": zod.string(),
+  "businessName": zod.string(),
+  "logoUrl": zod.string().nullable(),
+  "bannerUrl": zod.string().nullable(),
+  "description": zod.string(),
+  "contactInformation": zod.string(),
+  "businessHours": zod.string(),
+  "storePolicies": zod.string(),
+  "averageRating": zod.number(),
+  "reviewCount": zod.number().int(),
+  "orderSatisfaction": zod.number(),
+  "approvalStatus": zod.enum(['draft', 'pending_review', 'approved', 'changes_requested'])
+})
+
+
+/**
+ * @summary Get a public vendor storefront
+ */
+export const GetPublicVendorStorefrontParams = zod.object({
+  "vendorId": zod.coerce.string()
+})
+
+export const getPublicVendorStorefrontResponseReviewsItemRatingMax = 5;
+
+
+
+export const GetPublicVendorStorefrontResponse = zod.object({
+  "storefront": zod.object({
+  "vendorId": zod.string(),
+  "businessName": zod.string(),
+  "logoUrl": zod.string().nullable(),
+  "bannerUrl": zod.string().nullable(),
+  "description": zod.string(),
+  "contactInformation": zod.string(),
+  "businessHours": zod.string(),
+  "storePolicies": zod.string(),
+  "averageRating": zod.number(),
+  "reviewCount": zod.number().int(),
+  "orderSatisfaction": zod.number(),
+  "approvalStatus": zod.enum(['draft', 'pending_review', 'approved', 'changes_requested'])
+}),
+  "products": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "subcategory": zod.string(),
+  "price": zod.number(),
+  "salePrice": zod.number().nullable(),
+  "sku": zod.string(),
+  "stockQty": zod.number().int(),
+  "lowStockThreshold": zod.number().int(),
+  "status": zod.enum(['draft', 'active', 'out_of_stock', 'disabled', 'archived']),
+  "images": zod.array(zod.string()),
+  "videoUrl": zod.string().nullable(),
+  "variants": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "sku": zod.string(),
+  "price": zod.number(),
+  "stockQty": zod.number().int()
+})),
+  "weight": zod.string(),
+  "dimensions": zod.string(),
+  "shippingInformation": zod.string(),
+  "views": zod.number().int(),
+  "purchases": zod.number().int(),
+  "returns": zod.number().int()
+})),
+  "reviews": zod.array(zod.object({
+  "id": zod.string(),
+  "productId": zod.string(),
+  "productTitle": zod.string(),
+  "customerName": zod.string(),
+  "rating": zod.number().int().min(1).max(getPublicVendorStorefrontResponseReviewsItemRatingMax),
+  "comment": zod.string(),
+  "reply": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "repliedAt": zod.string().nullable()
 }))
-}))
+})
+
+
+/**
+ * @summary Get vendor verification status
+ */
+export const GetVendorVerificationResponse = zod.object({
+  "overallStatus": zod.enum(['not_submitted', 'submitted', 'under_review', 'approved', 'rejected', 'more_information_required', 'suspended']),
+  "phoneVerified": zod.boolean(),
+  "emailVerified": zod.boolean(),
+  "idSubmitted": zod.boolean(),
+  "businessDocumentsSubmitted": zod.boolean(),
+  "rejectionReason": zod.string().nullable()
+})
+
+
+/**
+ * @summary Submit vendor verification information
+ */
+export const UpdateVendorVerificationBody = zod.object({
+  "idSubmitted": zod.boolean().optional(),
+  "businessDocumentsSubmitted": zod.boolean().optional()
+})
+
+export const UpdateVendorVerificationResponse = zod.object({
+  "overallStatus": zod.enum(['not_submitted', 'submitted', 'under_review', 'approved', 'rejected', 'more_information_required', 'suspended']),
+  "phoneVerified": zod.boolean(),
+  "emailVerified": zod.boolean(),
+  "idSubmitted": zod.boolean(),
+  "businessDocumentsSubmitted": zod.boolean(),
+  "rejectionReason": zod.string().nullable()
+})
+
+
+/**
+ * @summary Get vendor settings
+ */
+export const GetVendorSettingsResponse = zod.object({
+  "businessAddress": zod.string(),
+  "pickupLocations": zod.string(),
+  "operatingHours": zod.string(),
+  "shippingSettings": zod.string(),
+  "returnPolicy": zod.string(),
+  "refundPolicy": zod.string(),
+  "notificationSettings": zod.string(),
+  "payoutMethod": zod.string()
+})
+
+
+/**
+ * @summary Update vendor settings
+ */
+export const UpdateVendorSettingsBody = zod.object({
+  "businessAddress": zod.string().optional(),
+  "pickupLocations": zod.string().optional(),
+  "operatingHours": zod.string().optional(),
+  "shippingSettings": zod.string().optional(),
+  "returnPolicy": zod.string().optional(),
+  "refundPolicy": zod.string().optional(),
+  "notificationSettings": zod.string().optional(),
+  "payoutMethod": zod.string().optional()
+})
+
+export const UpdateVendorSettingsResponse = zod.object({
+  "businessAddress": zod.string(),
+  "pickupLocations": zod.string(),
+  "operatingHours": zod.string(),
+  "shippingSettings": zod.string(),
+  "returnPolicy": zod.string(),
+  "refundPolicy": zod.string(),
+  "notificationSettings": zod.string(),
+  "payoutMethod": zod.string()
+})
+
+
+/**
+ * @summary List vendor support tickets
+ */
+export const ListVendorSupportTicketsResponseItem = zod.object({
+  "id": zod.string(),
+  "subject": zod.string(),
+  "category": zod.string(),
+  "status": zod.enum(['open', 'in_progress', 'resolved']),
+  "lastMessage": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListVendorSupportTicketsResponse = zod.array(ListVendorSupportTicketsResponseItem)
+
+
+/**
+ * @summary Create a vendor support ticket
+ */
+export const createVendorSupportTicketBodySubjectMin = 3;
+
+export const createVendorSupportTicketBodyMessageMin = 3;
+
+
+
+export const CreateVendorSupportTicketBody = zod.object({
+  "subject": zod.string().min(createVendorSupportTicketBodySubjectMin),
+  "category": zod.string(),
+  "message": zod.string().min(createVendorSupportTicketBodyMessageMin)
+})
+
+export const CreateVendorSupportTicketResponse = zod.object({
+  "id": zod.string(),
+  "subject": zod.string(),
+  "category": zod.string(),
+  "status": zod.enum(['open', 'in_progress', 'resolved']),
+  "lastMessage": zod.string(),
+  "updatedAt": zod.string()
 })
 
 
@@ -552,6 +1383,100 @@ export const UpdateVendorApplicationStatusResponse = zod.object({
 
 
 /**
+ * @summary List vendor accounts
+ */
+export const ListAdminVendorsQueryParams = zod.object({
+  "accountStatus": zod.enum(['active', 'suspended']).optional()
+})
+
+export const ListAdminVendorsResponseItem = zod.object({
+  "id": zod.string(),
+  "businessName": zod.string(),
+  "contactName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "verificationStatus": zod.enum(['pending', 'approved', 'rejected']),
+  "accountStatus": zod.enum(['active', 'suspended']),
+  "joinedAt": zod.string(),
+  "productCount": zod.number().int(),
+  "orderCount": zod.number().int(),
+  "lastActiveAt": zod.string().nullable()
+})
+export const ListAdminVendorsResponse = zod.array(ListAdminVendorsResponseItem)
+
+
+/**
+ * @summary Update a vendor account
+ */
+export const UpdateAdminVendorParams = zod.object({
+  "vendorId": zod.coerce.string()
+})
+
+export const UpdateAdminVendorBody = zod.object({
+  "accountStatus": zod.enum(['active', 'suspended']).optional(),
+  "verificationStatus": zod.enum(['pending', 'approved', 'rejected']).optional()
+})
+
+export const UpdateAdminVendorResponse = zod.object({
+  "id": zod.string(),
+  "businessName": zod.string(),
+  "contactName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "category": zod.string(),
+  "description": zod.string(),
+  "verificationStatus": zod.enum(['pending', 'approved', 'rejected']),
+  "accountStatus": zod.enum(['active', 'suspended']),
+  "joinedAt": zod.string(),
+  "productCount": zod.number().int(),
+  "orderCount": zod.number().int(),
+  "lastActiveAt": zod.string().nullable()
+})
+
+
+/**
+ * @summary List messages with a vendor
+ */
+export const ListAdminVendorMessagesParams = zod.object({
+  "vendorId": zod.coerce.string()
+})
+
+export const ListAdminVendorMessagesResponseItem = zod.object({
+  "id": zod.string(),
+  "senderType": zod.enum(['admin', 'vendor', 'customer']),
+  "senderName": zod.string(),
+  "body": zod.string(),
+  "sentAt": zod.string()
+})
+export const ListAdminVendorMessagesResponse = zod.array(ListAdminVendorMessagesResponseItem)
+
+
+/**
+ * @summary Send a message to a vendor
+ */
+export const CreateAdminVendorMessageParams = zod.object({
+  "vendorId": zod.coerce.string()
+})
+
+
+
+
+export const CreateAdminVendorMessageBody = zod.object({
+  "body": zod.string().min(1)
+})
+
+export const CreateAdminVendorMessageResponse = zod.object({
+  "id": zod.string(),
+  "senderType": zod.enum(['admin', 'vendor', 'customer']),
+  "senderName": zod.string(),
+  "body": zod.string(),
+  "sentAt": zod.string()
+})
+
+
+/**
  * @summary List support tickets
  */
 export const ListSupportTicketsQueryParams = zod.object({
@@ -594,6 +1519,105 @@ export const UpdateSupportTicketResponse = zod.object({
   "assignedTo": zod.string().nullable(),
   "lastMessage": zod.string(),
   "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary List support ticket messages
+ */
+export const ListSupportTicketMessagesParams = zod.object({
+  "ticketId": zod.coerce.string()
+})
+
+export const ListSupportTicketMessagesResponseItem = zod.object({
+  "id": zod.string(),
+  "senderType": zod.enum(['admin', 'vendor', 'customer']),
+  "senderName": zod.string(),
+  "body": zod.string(),
+  "sentAt": zod.string()
+})
+export const ListSupportTicketMessagesResponse = zod.array(ListSupportTicketMessagesResponseItem)
+
+
+/**
+ * @summary Send a support ticket message
+ */
+export const CreateSupportTicketMessageParams = zod.object({
+  "ticketId": zod.coerce.string()
+})
+
+
+
+
+export const CreateSupportTicketMessageBody = zod.object({
+  "body": zod.string().min(1)
+})
+
+export const CreateSupportTicketMessageResponse = zod.object({
+  "id": zod.string(),
+  "senderType": zod.enum(['admin', 'vendor', 'customer']),
+  "senderName": zod.string(),
+  "body": zod.string(),
+  "sentAt": zod.string()
+})
+
+
+/**
+ * @summary List operations support accounts
+ */
+export const ListSupportAccountsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "email": zod.string().email(),
+  "role": zod.enum(['master_admin', 'support', 'operations', 'finance']),
+  "status": zod.enum(['active', 'suspended']),
+  "createdAt": zod.string()
+})
+export const ListSupportAccountsResponse = zod.array(ListSupportAccountsResponseItem)
+
+
+/**
+ * @summary Create a support account
+ */
+export const createSupportAccountBodyNameMin = 2;
+
+
+
+export const CreateSupportAccountBody = zod.object({
+  "name": zod.string().min(createSupportAccountBodyNameMin),
+  "email": zod.string().email(),
+  "role": zod.enum(['master_admin', 'support', 'operations', 'finance'])
+})
+
+export const CreateSupportAccountResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "email": zod.string().email(),
+  "role": zod.enum(['master_admin', 'support', 'operations', 'finance']),
+  "status": zod.enum(['active', 'suspended']),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a support account
+ */
+export const UpdateSupportAccountParams = zod.object({
+  "accountId": zod.coerce.string()
+})
+
+export const UpdateSupportAccountBody = zod.object({
+  "role": zod.enum(['master_admin', 'support', 'operations', 'finance']).optional(),
+  "status": zod.enum(['active', 'suspended']).optional()
+})
+
+export const UpdateSupportAccountResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "email": zod.string().email(),
+  "role": zod.enum(['master_admin', 'support', 'operations', 'finance']),
+  "status": zod.enum(['active', 'suspended']),
+  "createdAt": zod.string()
 })
 
 

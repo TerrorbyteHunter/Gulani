@@ -208,13 +208,483 @@ export interface VendorApplication {
   submittedAt: string;
 }
 
+export type VendorOrderPaymentStatus = typeof VendorOrderPaymentStatus[keyof typeof VendorOrderPaymentStatus];
+
+
+export const VendorOrderPaymentStatus = {
+  pending: 'pending',
+  paid: 'paid',
+  failed: 'failed',
+  refunded: 'refunded',
+} as const;
+
+export type VendorOrderStatus = typeof VendorOrderStatus[keyof typeof VendorOrderStatus];
+
+
+export const VendorOrderStatus = {
+  new: 'new',
+  confirmed: 'confirmed',
+  processing: 'processing',
+  ready_for_dispatch: 'ready_for_dispatch',
+  shipped: 'shipped',
+  delivered: 'delivered',
+  completed: 'completed',
+  cancelled: 'cancelled',
+  refund_requested: 'refund_requested',
+  refunded: 'refunded',
+  failed_delivery: 'failed_delivery',
+  disputed: 'disputed',
+} as const;
+
+export type VendorOrderItemsItem = {
+  title: string;
+  quantity: number;
+  unitPrice: number;
+};
+
+export interface VendorOrder {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  items: VendorOrderItemsItem[];
+  total: number;
+  currency: string;
+  deliveryAddress: string;
+  paymentStatus: VendorOrderPaymentStatus;
+  status: VendorOrderStatus;
+  vendorEarnings: number;
+  platformCommission: number;
+  shippingFee: number;
+  orderDate: string;
+  expectedDelivery: string;
+  /** @nullable */
+  trackingNumber: string | null;
+}
+
+export interface VendorSalesPoint {
+  label: string;
+  sales: number;
+  orders: number;
+}
+
+export interface VendorCustomer {
+  id: string;
+  name: string;
+  email: string;
+  orders: number;
+  totalSpent: number;
+  lastPurchase: string;
+  currentOrders: number;
+  reviews: number;
+}
+
+export interface VendorInventoryItem {
+  productId: string;
+  productTitle: string;
+  sku: string;
+  available: number;
+  reserved: number;
+  soldToday: number;
+  lowStockThreshold: number;
+}
+
+export type VendorStorefrontApprovalStatus = typeof VendorStorefrontApprovalStatus[keyof typeof VendorStorefrontApprovalStatus];
+
+
+export const VendorStorefrontApprovalStatus = {
+  draft: 'draft',
+  pending_review: 'pending_review',
+  approved: 'approved',
+  changes_requested: 'changes_requested',
+} as const;
+
+export interface VendorStorefront {
+  vendorId: string;
+  businessName: string;
+  /** @nullable */
+  logoUrl: string | null;
+  /** @nullable */
+  bannerUrl: string | null;
+  description: string;
+  contactInformation: string;
+  businessHours: string;
+  storePolicies: string;
+  averageRating: number;
+  reviewCount: number;
+  orderSatisfaction: number;
+  approvalStatus: VendorStorefrontApprovalStatus;
+}
+
+export type VendorVerificationOverallStatus = typeof VendorVerificationOverallStatus[keyof typeof VendorVerificationOverallStatus];
+
+
+export const VendorVerificationOverallStatus = {
+  not_submitted: 'not_submitted',
+  submitted: 'submitted',
+  under_review: 'under_review',
+  approved: 'approved',
+  rejected: 'rejected',
+  more_information_required: 'more_information_required',
+  suspended: 'suspended',
+} as const;
+
+export interface VendorVerification {
+  overallStatus: VendorVerificationOverallStatus;
+  phoneVerified: boolean;
+  emailVerified: boolean;
+  idSubmitted: boolean;
+  businessDocumentsSubmitted: boolean;
+  /** @nullable */
+  rejectionReason: string | null;
+}
+
+export interface VendorSettings {
+  businessAddress: string;
+  pickupLocations: string;
+  operatingHours: string;
+  shippingSettings: string;
+  returnPolicy: string;
+  refundPolicy: string;
+  notificationSettings: string;
+  payoutMethod: string;
+}
+
 export interface VendorDashboard {
   vendorName: string;
   pendingOrders: number;
   productsLive: number;
   revenueThisMonth: number;
   rating: number;
-  recentOrders: Order[];
+  totalSales: number;
+  todaySales: number;
+  ordersAwaitingShipment: number;
+  completedOrders: number;
+  cancelledRefundedOrders: number;
+  productsInStock: number;
+  lowStockAlerts: number;
+  unreadCustomerMessages: number;
+  pendingDisputes: number;
+  availableBalance: number;
+  pendingBalance: number;
+  recentOrders: VendorOrder[];
+  salesChart: VendorSalesPoint[];
+  customers: VendorCustomer[];
+  inventory: VendorInventoryItem[];
+  storefront: VendorStorefront;
+  verification: VendorVerification;
+  settings: VendorSettings;
+}
+
+export type VendorOrderStatusUpdateStatus = typeof VendorOrderStatusUpdateStatus[keyof typeof VendorOrderStatusUpdateStatus];
+
+
+export const VendorOrderStatusUpdateStatus = {
+  new: 'new',
+  confirmed: 'confirmed',
+  processing: 'processing',
+  ready_for_dispatch: 'ready_for_dispatch',
+  shipped: 'shipped',
+  delivered: 'delivered',
+  completed: 'completed',
+  cancelled: 'cancelled',
+  refund_requested: 'refund_requested',
+  refunded: 'refunded',
+  failed_delivery: 'failed_delivery',
+  disputed: 'disputed',
+} as const;
+
+export interface VendorOrderStatusUpdate {
+  status: VendorOrderStatusUpdateStatus;
+}
+
+export interface VendorProductVariant {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  stockQty: number;
+}
+
+export type VendorProductStatus = typeof VendorProductStatus[keyof typeof VendorProductStatus];
+
+
+export const VendorProductStatus = {
+  draft: 'draft',
+  active: 'active',
+  out_of_stock: 'out_of_stock',
+  disabled: 'disabled',
+  archived: 'archived',
+} as const;
+
+export interface VendorProduct {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  subcategory: string;
+  price: number;
+  /** @nullable */
+  salePrice: number | null;
+  sku: string;
+  stockQty: number;
+  lowStockThreshold: number;
+  status: VendorProductStatus;
+  images: string[];
+  /** @nullable */
+  videoUrl: string | null;
+  variants: VendorProductVariant[];
+  weight: string;
+  dimensions: string;
+  shippingInformation: string;
+  views: number;
+  purchases: number;
+  returns: number;
+}
+
+export type VendorProductInputStatus = typeof VendorProductInputStatus[keyof typeof VendorProductInputStatus];
+
+
+export const VendorProductInputStatus = {
+  draft: 'draft',
+  active: 'active',
+  out_of_stock: 'out_of_stock',
+  disabled: 'disabled',
+  archived: 'archived',
+} as const;
+
+export interface VendorProductInput {
+  /** @minLength 2 */
+  title: string;
+  /** @minLength 10 */
+  description: string;
+  category: string;
+  subcategory: string;
+  /** @minimum 0 */
+  price: number;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  salePrice: number | null;
+  sku: string;
+  /** @minimum 0 */
+  stockQty: number;
+  /** @minimum 0 */
+  lowStockThreshold: number;
+  status: VendorProductInputStatus;
+  images: string[];
+  /** @nullable */
+  videoUrl: string | null;
+  variants: VendorProductVariant[];
+  weight: string;
+  dimensions: string;
+  shippingInformation: string;
+}
+
+export type VendorProductBulkUpdateAction = typeof VendorProductBulkUpdateAction[keyof typeof VendorProductBulkUpdateAction];
+
+
+export const VendorProductBulkUpdateAction = {
+  enable: 'enable',
+  disable: 'disable',
+  archive: 'archive',
+  price_update: 'price_update',
+  stock_update: 'stock_update',
+} as const;
+
+export interface VendorProductBulkUpdate {
+  /** @minItems 1 */
+  productIds: string[];
+  action: VendorProductBulkUpdateAction;
+  value?: number;
+}
+
+export interface VendorReview {
+  id: string;
+  productId: string;
+  productTitle: string;
+  customerName: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  comment: string;
+  /** @nullable */
+  reply: string | null;
+  createdAt: string;
+  /** @nullable */
+  repliedAt: string | null;
+}
+
+export interface VendorReviewReply {
+  /** @minLength 1 */
+  reply: string;
+}
+
+export type VendorPromotionType = typeof VendorPromotionType[keyof typeof VendorPromotionType];
+
+
+export const VendorPromotionType = {
+  percentage: 'percentage',
+  fixed: 'fixed',
+  buy_x_get_y: 'buy_x_get_y',
+  flash_sale: 'flash_sale',
+  bundle: 'bundle',
+  coupon: 'coupon',
+  free_shipping: 'free_shipping',
+} as const;
+
+export type VendorPromotionStatus = typeof VendorPromotionStatus[keyof typeof VendorPromotionStatus];
+
+
+export const VendorPromotionStatus = {
+  draft: 'draft',
+  scheduled: 'scheduled',
+  active: 'active',
+  ended: 'ended',
+  disabled: 'disabled',
+} as const;
+
+export interface VendorPromotion {
+  id: string;
+  name: string;
+  type: VendorPromotionType;
+  value: number;
+  /** @nullable */
+  code: string | null;
+  startsAt: string;
+  endsAt: string;
+  status: VendorPromotionStatus;
+  productIds: string[];
+  /** @nullable */
+  maximumDiscount: number | null;
+}
+
+export type VendorPromotionInputType = typeof VendorPromotionInputType[keyof typeof VendorPromotionInputType];
+
+
+export const VendorPromotionInputType = {
+  percentage: 'percentage',
+  fixed: 'fixed',
+  buy_x_get_y: 'buy_x_get_y',
+  flash_sale: 'flash_sale',
+  bundle: 'bundle',
+  coupon: 'coupon',
+  free_shipping: 'free_shipping',
+} as const;
+
+export interface VendorPromotionInput {
+  /** @minLength 2 */
+  name: string;
+  type: VendorPromotionInputType;
+  /** @minimum 0 */
+  value: number;
+  /** @nullable */
+  code: string | null;
+  startsAt: string;
+  endsAt: string;
+  productIds: string[];
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  maximumDiscount: number | null;
+}
+
+export type VendorPromotionUpdateStatus = typeof VendorPromotionUpdateStatus[keyof typeof VendorPromotionUpdateStatus];
+
+
+export const VendorPromotionUpdateStatus = {
+  draft: 'draft',
+  scheduled: 'scheduled',
+  active: 'active',
+  ended: 'ended',
+  disabled: 'disabled',
+} as const;
+
+export interface VendorPromotionUpdate {
+  status?: VendorPromotionUpdateStatus;
+  /** @minimum 0 */
+  value?: number;
+}
+
+export interface VendorAnalytics {
+  sales: VendorSalesPoint[];
+  mostViewed: VendorProduct[];
+  mostPurchased: VendorProduct[];
+  newCustomers: number;
+  returningCustomers: number;
+  averageOrderValue: number;
+}
+
+export type VendorStorefrontUpdateApprovalStatus = typeof VendorStorefrontUpdateApprovalStatus[keyof typeof VendorStorefrontUpdateApprovalStatus];
+
+
+export const VendorStorefrontUpdateApprovalStatus = {
+  draft: 'draft',
+  pending_review: 'pending_review',
+} as const;
+
+export interface VendorStorefrontUpdate {
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  bannerUrl?: string | null;
+  description?: string;
+  contactInformation?: string;
+  businessHours?: string;
+  storePolicies?: string;
+  approvalStatus?: VendorStorefrontUpdateApprovalStatus;
+}
+
+export interface PublicVendorStorefront {
+  storefront: VendorStorefront;
+  products: VendorProduct[];
+  reviews: VendorReview[];
+}
+
+export interface VendorVerificationUpdate {
+  idSubmitted?: boolean;
+  businessDocumentsSubmitted?: boolean;
+}
+
+export interface VendorSettingsUpdate {
+  businessAddress?: string;
+  pickupLocations?: string;
+  operatingHours?: string;
+  shippingSettings?: string;
+  returnPolicy?: string;
+  refundPolicy?: string;
+  notificationSettings?: string;
+  payoutMethod?: string;
+}
+
+export type VendorSupportTicketStatus = typeof VendorSupportTicketStatus[keyof typeof VendorSupportTicketStatus];
+
+
+export const VendorSupportTicketStatus = {
+  open: 'open',
+  in_progress: 'in_progress',
+  resolved: 'resolved',
+} as const;
+
+export interface VendorSupportTicket {
+  id: string;
+  subject: string;
+  category: string;
+  status: VendorSupportTicketStatus;
+  lastMessage: string;
+  updatedAt: string;
+}
+
+export interface VendorSupportTicketInput {
+  /** @minLength 3 */
+  subject: string;
+  category: string;
+  /** @minLength 3 */
+  message: string;
 }
 
 export type AdminDashboardFulfillmentQueueItem = {
@@ -294,6 +764,84 @@ export interface AdminVendorApplication {
   submittedAt: string;
 }
 
+export type AdminVendorVerificationStatus = typeof AdminVendorVerificationStatus[keyof typeof AdminVendorVerificationStatus];
+
+
+export const AdminVendorVerificationStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export type AdminVendorAccountStatus = typeof AdminVendorAccountStatus[keyof typeof AdminVendorAccountStatus];
+
+
+export const AdminVendorAccountStatus = {
+  active: 'active',
+  suspended: 'suspended',
+} as const;
+
+export interface AdminVendor {
+  id: string;
+  businessName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  category: string;
+  description: string;
+  verificationStatus: AdminVendorVerificationStatus;
+  accountStatus: AdminVendorAccountStatus;
+  joinedAt: string;
+  productCount: number;
+  orderCount: number;
+  /** @nullable */
+  lastActiveAt: string | null;
+}
+
+export type AdminVendorUpdateAccountStatus = typeof AdminVendorUpdateAccountStatus[keyof typeof AdminVendorUpdateAccountStatus];
+
+
+export const AdminVendorUpdateAccountStatus = {
+  active: 'active',
+  suspended: 'suspended',
+} as const;
+
+export type AdminVendorUpdateVerificationStatus = typeof AdminVendorUpdateVerificationStatus[keyof typeof AdminVendorUpdateVerificationStatus];
+
+
+export const AdminVendorUpdateVerificationStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface AdminVendorUpdate {
+  accountStatus?: AdminVendorUpdateAccountStatus;
+  verificationStatus?: AdminVendorUpdateVerificationStatus;
+}
+
+export type AdminMessageSenderType = typeof AdminMessageSenderType[keyof typeof AdminMessageSenderType];
+
+
+export const AdminMessageSenderType = {
+  admin: 'admin',
+  vendor: 'vendor',
+  customer: 'customer',
+} as const;
+
+export interface AdminMessage {
+  id: string;
+  senderType: AdminMessageSenderType;
+  senderName: string;
+  body: string;
+  sentAt: string;
+}
+
+export interface CreateAdminMessage {
+  /** @minLength 1 */
+  body: string;
+}
+
 export type VendorApplicationStatusUpdateStatus = typeof VendorApplicationStatusUpdateStatus[keyof typeof VendorApplicationStatusUpdateStatus];
 
 
@@ -362,6 +910,73 @@ export interface SupportTicketUpdate {
   status: SupportTicketUpdateStatus;
   /** @nullable */
   assignedTo?: string | null;
+}
+
+export type SupportAccountRole = typeof SupportAccountRole[keyof typeof SupportAccountRole];
+
+
+export const SupportAccountRole = {
+  master_admin: 'master_admin',
+  support: 'support',
+  operations: 'operations',
+  finance: 'finance',
+} as const;
+
+export type SupportAccountStatus = typeof SupportAccountStatus[keyof typeof SupportAccountStatus];
+
+
+export const SupportAccountStatus = {
+  active: 'active',
+  suspended: 'suspended',
+} as const;
+
+export interface SupportAccount {
+  id: string;
+  name: string;
+  email: string;
+  role: SupportAccountRole;
+  status: SupportAccountStatus;
+  createdAt: string;
+}
+
+export type CreateSupportAccountRole = typeof CreateSupportAccountRole[keyof typeof CreateSupportAccountRole];
+
+
+export const CreateSupportAccountRole = {
+  master_admin: 'master_admin',
+  support: 'support',
+  operations: 'operations',
+  finance: 'finance',
+} as const;
+
+export interface CreateSupportAccount {
+  /** @minLength 2 */
+  name: string;
+  email: string;
+  role: CreateSupportAccountRole;
+}
+
+export type SupportAccountUpdateRole = typeof SupportAccountUpdateRole[keyof typeof SupportAccountUpdateRole];
+
+
+export const SupportAccountUpdateRole = {
+  master_admin: 'master_admin',
+  support: 'support',
+  operations: 'operations',
+  finance: 'finance',
+} as const;
+
+export type SupportAccountUpdateStatus = typeof SupportAccountUpdateStatus[keyof typeof SupportAccountUpdateStatus];
+
+
+export const SupportAccountUpdateStatus = {
+  active: 'active',
+  suspended: 'suspended',
+} as const;
+
+export interface SupportAccountUpdate {
+  role?: SupportAccountUpdateRole;
+  status?: SupportAccountUpdateStatus;
 }
 
 export interface FulfillmentQueueItem {
@@ -503,6 +1118,18 @@ export const ListAdminVendorApplicationsStatus = {
   pending: 'pending',
   approved: 'approved',
   rejected: 'rejected',
+} as const;
+
+export type ListAdminVendorsParams = {
+accountStatus?: ListAdminVendorsAccountStatus;
+};
+
+export type ListAdminVendorsAccountStatus = typeof ListAdminVendorsAccountStatus[keyof typeof ListAdminVendorsAccountStatus];
+
+
+export const ListAdminVendorsAccountStatus = {
+  active: 'active',
+  suspended: 'suspended',
 } as const;
 
 export type ListSupportTicketsParams = {

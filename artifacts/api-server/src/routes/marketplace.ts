@@ -50,9 +50,82 @@ import {
   type Product as ProductData,
   type AdminOrder,
   type AdminVendorApplication,
+  type AdminVendor,
+  type AdminMessage,
+  type SupportAccount,
   type MarketplaceSettings,
   type SupportTicket,
   type PricingRule,
+  ListAdminVendorsResponse,
+  UpdateAdminVendorParams,
+  UpdateAdminVendorBody,
+  UpdateAdminVendorResponse,
+  ListAdminVendorMessagesParams,
+  ListAdminVendorMessagesResponse,
+  CreateAdminVendorMessageParams,
+  CreateAdminVendorMessageBody,
+  CreateAdminVendorMessageResponse,
+  ListSupportTicketMessagesParams,
+  ListSupportTicketMessagesResponse,
+  CreateSupportTicketMessageParams,
+  CreateSupportTicketMessageBody,
+  CreateSupportTicketMessageResponse,
+  ListSupportAccountsResponse,
+  CreateSupportAccountBody,
+  CreateSupportAccountResponse,
+  UpdateSupportAccountParams,
+  UpdateSupportAccountBody,
+  UpdateSupportAccountResponse,
+  ListVendorProductsResponse,
+  CreateVendorProductBody,
+  CreateVendorProductResponse,
+  UpdateVendorProductParams,
+  UpdateVendorProductBody,
+  UpdateVendorProductResponse,
+  ArchiveVendorProductParams,
+  ArchiveVendorProductResponse,
+  BulkUpdateVendorProductsBody,
+  BulkUpdateVendorProductsResponse,
+  ListVendorOrdersResponse,
+  UpdateVendorOrderStatusParams,
+  UpdateVendorOrderStatusBody,
+  UpdateVendorOrderStatusResponse,
+  ListVendorReviewsResponse,
+  ReplyToVendorReviewParams,
+  ReplyToVendorReviewBody,
+  ReplyToVendorReviewResponse,
+  ListVendorPromotionsResponse,
+  CreateVendorPromotionBody,
+  CreateVendorPromotionResponse,
+  UpdateVendorPromotionParams,
+  UpdateVendorPromotionBody,
+  UpdateVendorPromotionResponse,
+  GetVendorAnalyticsResponse,
+  GetVendorStorefrontResponse,
+  UpdateVendorStorefrontBody,
+  UpdateVendorStorefrontResponse,
+  GetPublicVendorStorefrontParams,
+  GetPublicVendorStorefrontResponse,
+  GetVendorVerificationResponse,
+  UpdateVendorVerificationBody,
+  UpdateVendorVerificationResponse,
+  GetVendorSettingsResponse,
+  UpdateVendorSettingsBody,
+  UpdateVendorSettingsResponse,
+  ListVendorSupportTicketsResponse,
+  CreateVendorSupportTicketBody,
+  CreateVendorSupportTicketResponse,
+  type VendorProduct,
+  type VendorOrder,
+  type VendorReview,
+  type VendorPromotion,
+  type VendorAnalytics,
+  type VendorStorefront,
+  type VendorVerification,
+  type VendorSettings,
+  type VendorCustomer,
+  type VendorInventoryItem,
+  type VendorSupportTicket,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -242,6 +315,252 @@ const repriceCatalog = () => {
 
 repriceCatalog();
 
+const vendorProducts: VendorProduct[] = [
+  {
+    id: "vp-001",
+    title: "Handwoven Lupita Basket",
+    description: "A generous, handwoven basket made by makers in Western Zambia.",
+    category: "Home & Living",
+    subcategory: "Storage",
+    price: 285,
+    salePrice: null,
+    sku: "MOSI-LUP-L",
+    stockQty: 14,
+    lowStockThreshold: 5,
+    status: "active",
+    images: [products[0].imageUrl],
+    videoUrl: null,
+    variants: [{ id: "vv-001", name: "Natural / Large", sku: "MOSI-LUP-L", price: 285, stockQty: 14 }],
+    weight: "1.4 kg",
+    dimensions: "52 × 38 × 32 cm",
+    shippingInformation: "Ships in 1–2 business days from the local pickup point.",
+    views: 1820,
+    purchases: 42,
+    returns: 1,
+  },
+  {
+    id: "vp-002",
+    title: "Lupita Basket · Medium",
+    description: "The smaller everyday version of our signature handwoven basket.",
+    category: "Home & Living",
+    subcategory: "Storage",
+    price: 220,
+    salePrice: 195,
+    sku: "MOSI-LUP-M",
+    stockQty: 4,
+    lowStockThreshold: 5,
+    status: "active",
+    images: [products[0].imageUrl],
+    videoUrl: null,
+    variants: [],
+    weight: "0.9 kg",
+    dimensions: "40 × 30 × 26 cm",
+    shippingInformation: "Ships in 1–2 business days from the local pickup point.",
+    views: 940,
+    purchases: 17,
+    returns: 0,
+  },
+  {
+    id: "vp-003",
+    title: "Mosi Seasonal Gift Set",
+    description: "A curated gift set assembled for housewarmings and celebrations.",
+    category: "Gifts",
+    subcategory: "Gift sets",
+    price: 620,
+    salePrice: null,
+    sku: "MOSI-GIFT-01",
+    stockQty: 0,
+    lowStockThreshold: 3,
+    status: "out_of_stock",
+    images: [products[0].imageUrl],
+    videoUrl: null,
+    variants: [],
+    weight: "2.2 kg",
+    dimensions: "60 × 42 × 35 cm",
+    shippingInformation: "Ships when stock is replenished.",
+    views: 610,
+    purchases: 9,
+    returns: 1,
+  },
+];
+const vendorOrders: VendorOrder[] = [
+  {
+    id: "vo-1001",
+    orderNumber: "GUL-10293",
+    customerName: "Mwaka Phiri",
+    customerEmail: "mwayi@example.com",
+    items: [{ title: "Handwoven Lupita Basket", quantity: 2, unitPrice: 285 }],
+    total: 615,
+    currency: "ZMW",
+    deliveryAddress: "Plot 18, Kabulonga, Lusaka",
+    paymentStatus: "paid",
+    status: "ready_for_dispatch",
+    vendorEarnings: 542,
+    platformCommission: 73,
+    shippingFee: 45,
+    orderDate: "2026-09-16T08:34:00.000Z",
+    expectedDelivery: "2026-09-18",
+    trackingNumber: null,
+  },
+  {
+    id: "vo-1002",
+    orderNumber: "GUL-10287",
+    customerName: "Chanda Mwale",
+    customerEmail: "chanda@example.com",
+    items: [{ title: "Lupita Basket · Medium", quantity: 1, unitPrice: 195 }],
+    total: 240,
+    currency: "ZMW",
+    deliveryAddress: "House 42, Roma, Lusaka",
+    paymentStatus: "paid",
+    status: "processing",
+    vendorEarnings: 218,
+    platformCommission: 22,
+    shippingFee: 45,
+    orderDate: "2026-09-15T09:12:00.000Z",
+    expectedDelivery: "2026-09-18",
+    trackingNumber: null,
+  },
+  {
+    id: "vo-1003",
+    orderNumber: "GUL-10244",
+    customerName: "Thandiwe Banda",
+    customerEmail: "thandiwe@example.com",
+    items: [{ title: "Handwoven Lupita Basket", quantity: 1, unitPrice: 285 }],
+    total: 330,
+    currency: "ZMW",
+    deliveryAddress: "14 Independence Avenue, Lusaka",
+    paymentStatus: "paid",
+    status: "completed",
+    vendorEarnings: 296,
+    platformCommission: 34,
+    shippingFee: 45,
+    orderDate: "2026-09-08T10:05:00.000Z",
+    expectedDelivery: "2026-09-10",
+    trackingNumber: "GUL-RD-9182",
+  },
+  {
+    id: "vo-1004",
+    orderNumber: "GUL-10192",
+    customerName: "Lombe Zulu",
+    customerEmail: "lombe@example.com",
+    items: [{ title: "Lupita Basket · Medium", quantity: 1, unitPrice: 220 }],
+    total: 265,
+    currency: "ZMW",
+    deliveryAddress: "Flat 3, Woodlands, Lusaka",
+    paymentStatus: "refunded",
+    status: "refunded",
+    vendorEarnings: 0,
+    platformCommission: 0,
+    shippingFee: 45,
+    orderDate: "2026-09-02T16:45:00.000Z",
+    expectedDelivery: "2026-09-05",
+    trackingNumber: null,
+  },
+];
+const vendorReviews: VendorReview[] = [
+  {
+    id: "vr-1001",
+    productId: "vp-001",
+    productTitle: "Handwoven Lupita Basket",
+    customerName: "Mwaka Phiri",
+    rating: 5,
+    comment: "Beautifully made and even better in person. The size is perfect.",
+    reply: null,
+    createdAt: "2026-09-15T12:10:00.000Z",
+    repliedAt: null,
+  },
+  {
+    id: "vr-1002",
+    productId: "vp-002",
+    productTitle: "Lupita Basket · Medium",
+    customerName: "Chanda Mwale",
+    rating: 4,
+    comment: "Lovely finish. I would appreciate a little more packaging protection.",
+    reply: "Thank you for the thoughtful feedback. We are improving the packaging this week.",
+    createdAt: "2026-09-08T10:30:00.000Z",
+    repliedAt: "2026-09-09T08:20:00.000Z",
+  },
+];
+const vendorPromotions: VendorPromotion[] = [
+  {
+    id: "promo-1001",
+    name: "Weekend Basket Sale",
+    type: "percentage",
+    value: 20,
+    code: "BASKET20",
+    startsAt: "2026-09-17T00:00:00.000Z",
+    endsAt: "2026-09-20T23:59:00.000Z",
+    status: "active",
+    productIds: ["vp-001", "vp-002"],
+    maximumDiscount: 200,
+  },
+];
+const vendorAnalytics: VendorAnalytics = {
+  sales: [
+    { label: "Mon", sales: 920, orders: 3 },
+    { label: "Tue", sales: 1460, orders: 5 },
+    { label: "Wed", sales: 1180, orders: 4 },
+    { label: "Thu", sales: 2090, orders: 7 },
+    { label: "Fri", sales: 1730, orders: 6 },
+    { label: "Sat", sales: 980, orders: 3 },
+    { label: "Sun", sales: 760, orders: 2 },
+  ],
+  mostViewed: vendorProducts.slice(0, 3),
+  mostPurchased: vendorProducts.slice(0, 2),
+  newCustomers: 24,
+  returningCustomers: 18,
+  averageOrderValue: 384,
+};
+const vendorStorefront: VendorStorefront = {
+  vendorId: "vendor-1001",
+  businessName: "Mosi Home",
+  logoUrl: null,
+  bannerUrl: products[0].imageUrl,
+  description: "Handwoven home goods made slowly and designed to live with you.",
+  contactInformation: "hello@mosihome.zm · +260 97 210 4411",
+  businessHours: "Monday–Saturday · 08:00–17:00",
+  storePolicies: "Returns accepted within 7 days for unused items.",
+  averageRating: 4.9,
+  reviewCount: 324,
+  orderSatisfaction: 98,
+  approvalStatus: "approved",
+};
+const vendorVerification: VendorVerification = {
+  overallStatus: "under_review",
+  phoneVerified: true,
+  emailVerified: true,
+  idSubmitted: true,
+  businessDocumentsSubmitted: false,
+  rejectionReason: null,
+};
+const vendorSettings: VendorSettings = {
+  businessAddress: "Plot 11, Northmead, Lusaka",
+  pickupLocations: "Mosi Home studio · Northmead",
+  operatingHours: "Mon–Sat, 08:00–17:00",
+  shippingSettings: "Local delivery with Gulani dispatch",
+  returnPolicy: "Unused items may be returned within 7 days.",
+  refundPolicy: "Refunds are issued after inspection.",
+  notificationSettings: "Order alerts, customer messages, weekly earnings summary",
+  payoutMethod: "MTN Mobile Money ending 4411",
+};
+const vendorCustomers: VendorCustomer[] = [
+  { id: "customer-1001", name: "Mwaka Phiri", email: "mwayi@example.com", orders: 4, totalSpent: 1280, lastPurchase: "2026-09-16", currentOrders: 1, reviews: 2 },
+  { id: "customer-1002", name: "Chanda Mwale", email: "chanda@example.com", orders: 2, totalSpent: 435, lastPurchase: "2026-09-15", currentOrders: 1, reviews: 1 },
+  { id: "customer-1003", name: "Thandiwe Banda", email: "thandiwe@example.com", orders: 3, totalSpent: 980, lastPurchase: "2026-09-08", currentOrders: 0, reviews: 1 },
+];
+const vendorSupportTickets: VendorSupportTicket[] = [
+  {
+    id: "vendor-ticket-1001",
+    subject: "Need help updating pickup location",
+    category: "Store settings",
+    status: "in_progress",
+    lastMessage: "A member of the Gulani team is reviewing your request.",
+    updatedAt: "2026-09-16T11:20:00.000Z",
+  },
+];
+const vendorVerificationStatus = () => vendorVerification;
+const vendorSettingsStatus = () => vendorSettings;
+
 const categories = [
   { id: "c-001", name: "Home & Living", slug: "home-living", productCount: 18, imageUrl: products[0].imageUrl },
   { id: "c-002", name: "Fashion", slug: "fashion", productCount: 12, imageUrl: products[2].imageUrl },
@@ -336,6 +655,53 @@ const vendorApplications: AdminVendorApplication[] = [
     submittedAt: "2026-09-09T11:05:00.000Z",
   },
 ];
+const adminVendors: AdminVendor[] = [
+  {
+    id: "vendor-1001",
+    businessName: "Mosi Home",
+    contactName: "Mwaka Mosi",
+    email: "hello@mosihome.zm",
+    phone: "+260 97 210 4411",
+    category: "Home & Living",
+    description: "Handwoven home goods and considered everyday storage.",
+    verificationStatus: "approved",
+    accountStatus: "active",
+    joinedAt: "2026-08-15T09:00:00.000Z",
+    productCount: 18,
+    orderCount: 42,
+    lastActiveAt: "2026-09-11T10:12:00.000Z",
+  },
+  {
+    id: "vendor-1002",
+    businessName: "Noma Living",
+    contactName: "Noma Banda",
+    email: "team@nomaliving.zm",
+    phone: "+260 96 700 1890",
+    category: "Home & Living",
+    description: "Relaxed linen and home essentials for slower mornings.",
+    verificationStatus: "approved",
+    accountStatus: "active",
+    joinedAt: "2026-07-20T09:00:00.000Z",
+    productCount: 12,
+    orderCount: 31,
+    lastActiveAt: "2026-09-10T15:40:00.000Z",
+  },
+  {
+    id: "vendor-1003",
+    businessName: "Kaya Botanics",
+    contactName: "Kaya Tembo",
+    email: "hello@kayabotanics.zm",
+    phone: "+260 95 008 3371",
+    category: "Wellness",
+    description: "Small-batch candles and botanical care goods.",
+    verificationStatus: "approved",
+    accountStatus: "suspended",
+    joinedAt: "2026-06-04T09:00:00.000Z",
+    productCount: 8,
+    orderCount: 19,
+    lastActiveAt: "2026-09-08T11:25:00.000Z",
+  },
+];
 const supportTickets: SupportTicket[] = [
   {
     id: "ticket-1001",
@@ -380,6 +746,64 @@ const supportTickets: SupportTicket[] = [
     assignedTo: "Customer service",
     lastMessage: "Thanks for arranging the replacement.",
     updatedAt: "2026-09-10T15:02:00.000Z",
+  },
+];
+const vendorMessages: Record<string, AdminMessage[]> = {
+  "vendor-1001": [
+    {
+      id: "message-vendor-1001-1",
+      senderType: "admin",
+      senderName: "Operations desk",
+      body: "Your new product photos are approved and ready for review.",
+      sentAt: "2026-09-10T08:30:00.000Z",
+    },
+    {
+      id: "message-vendor-1001-2",
+      senderType: "vendor",
+      senderName: "Mwaka Mosi",
+      body: "Thank you. We will refresh the remaining listings this week.",
+      sentAt: "2026-09-10T09:04:00.000Z",
+    },
+  ],
+};
+const ticketMessages: Record<string, AdminMessage[]> = Object.fromEntries(
+  supportTickets.map((ticket) => [
+    ticket.id,
+    [
+      {
+        id: `${ticket.id}-initial`,
+        senderType: "customer" as const,
+        senderName: ticket.customerName,
+        body: ticket.lastMessage,
+        sentAt: ticket.updatedAt,
+      },
+    ],
+  ]),
+) as Record<string, AdminMessage[]>;
+const supportAccounts: SupportAccount[] = [
+  {
+    id: "support-1001",
+    name: "Chipo Mwansa",
+    email: "chipo@gulani.zm",
+    role: "master_admin",
+    status: "active",
+    createdAt: "2026-07-01T08:00:00.000Z",
+  },
+  {
+    id: "support-1002",
+    name: "Finance desk",
+    email: "finance@gulani.zm",
+    role: "finance",
+    status: "active",
+    createdAt: "2026-08-02T08:00:00.000Z",
+  },
+  {
+    id: "support-1003",
+    name: "Customer service",
+    email: "care@gulani.zm",
+    role: "support",
+    status: "active",
+    createdAt: "2026-08-04T08:00:00.000Z",
   },
 ];
 let adminSettings: MarketplaceSettings = {
@@ -598,7 +1022,65 @@ router.patch("/admin/vendor-applications/:applicationId/status", (req, res) => {
   const application = vendorApplications.find((entry) => entry.id === applicationId);
   if (!application) return res.status(404).json({ error: "Vendor application not found" });
   application.status = status;
+  if (status === "approved" && !adminVendors.some((vendor) => vendor.businessName === application.businessName)) {
+    adminVendors.push({
+      id: `vendor-${application.id}`,
+      businessName: application.businessName,
+      contactName: application.contactName,
+      email: application.email,
+      phone: application.phone,
+      category: application.category,
+      description: application.description,
+      verificationStatus: "approved",
+      accountStatus: "active",
+      joinedAt: new Date().toISOString(),
+      productCount: 0,
+      orderCount: 0,
+      lastActiveAt: null,
+    });
+  }
+  const matchingVendor = adminVendors.find((vendor) => vendor.businessName === application.businessName);
+  if (matchingVendor && status !== "approved") matchingVendor.verificationStatus = status;
   return res.json(UpdateVendorApplicationStatusResponse.parse(application));
+});
+
+router.get("/admin/vendors", (req, res) => {
+  const accountStatus = typeof req.query.accountStatus === "string" ? req.query.accountStatus : undefined;
+  const result = accountStatus
+    ? adminVendors.filter((vendor) => vendor.accountStatus === accountStatus)
+    : adminVendors;
+  return res.json(ListAdminVendorsResponse.parse(result));
+});
+
+router.patch("/admin/vendors/:vendorId", (req, res) => {
+  const { vendorId } = UpdateAdminVendorParams.parse(req.params);
+  const changes = UpdateAdminVendorBody.parse(req.body);
+  const vendor = adminVendors.find((entry) => entry.id === vendorId);
+  if (!vendor) return res.status(404).json({ error: "Vendor not found" });
+  Object.assign(vendor, changes);
+  return res.json(UpdateAdminVendorResponse.parse(vendor));
+});
+
+router.get("/admin/vendors/:vendorId/messages", (req, res) => {
+  const { vendorId } = ListAdminVendorMessagesParams.parse(req.params);
+  if (!adminVendors.some((vendor) => vendor.id === vendorId)) return res.status(404).json({ error: "Vendor not found" });
+  if (!vendorMessages[vendorId]) vendorMessages[vendorId] = [];
+  return res.json(ListAdminVendorMessagesResponse.parse(vendorMessages[vendorId]));
+});
+
+router.post("/admin/vendors/:vendorId/messages", (req, res) => {
+  const { vendorId } = CreateAdminVendorMessageParams.parse(req.params);
+  const { body } = CreateAdminVendorMessageBody.parse(req.body);
+  if (!adminVendors.some((vendor) => vendor.id === vendorId)) return res.status(404).json({ error: "Vendor not found" });
+  const message: AdminMessage = {
+    id: randomUUID(),
+    senderType: "admin",
+    senderName: "Operations desk",
+    body,
+    sentAt: new Date().toISOString(),
+  };
+  vendorMessages[vendorId] = [...(vendorMessages[vendorId] ?? []), message];
+  return res.status(201).json(CreateAdminVendorMessageResponse.parse(message));
 });
 
 router.get("/admin/support-tickets", (req, res) => {
@@ -618,6 +1100,56 @@ router.patch("/admin/support-tickets/:ticketId", (req, res) => {
   ticket.assignedTo = body.assignedTo ?? ticket.assignedTo;
   ticket.updatedAt = new Date().toISOString();
   return res.json(UpdateSupportTicketResponse.parse(ticket));
+});
+
+router.get("/admin/support-tickets/:ticketId/messages", (req, res) => {
+  const { ticketId } = ListSupportTicketMessagesParams.parse(req.params);
+  if (!supportTickets.some((ticket) => ticket.id === ticketId)) return res.status(404).json({ error: "Support ticket not found" });
+  return res.json(ListSupportTicketMessagesResponse.parse(ticketMessages[ticketId] ?? []));
+});
+
+router.post("/admin/support-tickets/:ticketId/messages", (req, res) => {
+  const { ticketId } = CreateSupportTicketMessageParams.parse(req.params);
+  const { body } = CreateSupportTicketMessageBody.parse(req.body);
+  const ticket = supportTickets.find((entry) => entry.id === ticketId);
+  if (!ticket) return res.status(404).json({ error: "Support ticket not found" });
+  const message: AdminMessage = {
+    id: randomUUID(),
+    senderType: "admin",
+    senderName: "Operations desk",
+    body,
+    sentAt: new Date().toISOString(),
+  };
+  ticketMessages[ticketId] = [...(ticketMessages[ticketId] ?? []), message];
+  ticket.lastMessage = body;
+  ticket.status = ticket.status === "open" ? "in_progress" : ticket.status;
+  ticket.updatedAt = message.sentAt;
+  return res.status(201).json(CreateSupportTicketMessageResponse.parse(message));
+});
+
+router.get("/admin/support-accounts", (_req, res) => {
+  return res.json(ListSupportAccountsResponse.parse(supportAccounts));
+});
+
+router.post("/admin/support-accounts", (req, res) => {
+  const body = CreateSupportAccountBody.parse(req.body);
+  const account: SupportAccount = {
+    id: randomUUID(),
+    ...body,
+    status: "active",
+    createdAt: new Date().toISOString(),
+  };
+  supportAccounts.push(account);
+  return res.status(201).json(CreateSupportAccountResponse.parse(account));
+});
+
+router.patch("/admin/support-accounts/:accountId", (req, res) => {
+  const { accountId } = UpdateSupportAccountParams.parse(req.params);
+  const changes = UpdateSupportAccountBody.parse(req.body);
+  const account = supportAccounts.find((entry) => entry.id === accountId);
+  if (!account) return res.status(404).json({ error: "Support account not found" });
+  Object.assign(account, changes);
+  return res.json(UpdateSupportAccountResponse.parse(account));
 });
 
 router.get("/admin/pricing-rules", (_req, res) => {
@@ -691,14 +1223,211 @@ router.patch("/admin/settings", (req, res) => {
 });
 
 router.get("/vendor/dashboard", (_req, res) => {
-  res.json(GetVendorDashboardResponse.parse({
+  const completedOrders = vendorOrders.filter((order) => ["completed", "delivered"].includes(order.status)).length;
+  const cancelledRefundedOrders = vendorOrders.filter((order) => ["cancelled", "refunded", "refund_requested"].includes(order.status)).length;
+  const productsInStock = vendorProducts.filter((product) => product.stockQty > 0 && product.status !== "archived").length;
+  const lowStockAlerts = vendorProducts.filter((product) => product.stockQty <= product.lowStockThreshold && product.status !== "archived").length;
+  return res.json(GetVendorDashboardResponse.parse({
     vendorName: "Mosi Home",
-    pendingOrders: 3,
-    productsLive: 18,
+    pendingOrders: vendorOrders.filter((order) => ["new", "confirmed", "processing"].includes(order.status)).length,
+    productsLive: vendorProducts.filter((product) => product.status === "active").length,
     revenueThisMonth: 18420,
-    rating: 4.9,
-    recentOrders: orders.slice(0, 3),
+    rating: vendorStorefront.averageRating,
+    totalSales: vendorOrders.reduce((sum, order) => sum + order.total, 0),
+    todaySales: vendorOrders.filter((order) => order.orderDate.startsWith("2026-09-16")).reduce((sum, order) => sum + order.total, 0),
+    ordersAwaitingShipment: vendorOrders.filter((order) => order.status === "ready_for_dispatch").length,
+    completedOrders,
+    cancelledRefundedOrders,
+    productsInStock,
+    lowStockAlerts,
+    unreadCustomerMessages: 4,
+    pendingDisputes: vendorOrders.filter((order) => order.status === "disputed").length + 1,
+    availableBalance: 6200,
+    pendingBalance: 2300,
+    recentOrders: vendorOrders.slice(0, 4),
+    salesChart: vendorAnalytics.sales,
+    customers: vendorCustomers,
+    inventory: vendorProducts.map((product) => ({
+      productId: product.id,
+      productTitle: product.title,
+      sku: product.sku,
+      available: product.stockQty,
+      reserved: product.stockQty > 0 ? 2 : 0,
+      soldToday: product.purchases > 0 ? 1 : 0,
+      lowStockThreshold: product.lowStockThreshold,
+    })),
+    storefront: vendorStorefront,
+    verification: vendorVerification,
+    settings: vendorSettings,
   }));
+});
+
+router.get("/vendor/products", (_req, res) => {
+  return res.json(ListVendorProductsResponse.parse(vendorProducts));
+});
+
+router.post("/vendor/products", (req, res) => {
+  const body = CreateVendorProductBody.parse(req.body);
+  const product: VendorProduct = {
+    id: randomUUID(),
+    ...body,
+    views: 0,
+    purchases: 0,
+    returns: 0,
+  };
+  vendorProducts.unshift(product);
+  return res.status(201).json(CreateVendorProductResponse.parse(product));
+});
+
+router.patch("/vendor/products/:productId", (req, res) => {
+  const { productId } = UpdateVendorProductParams.parse(req.params);
+  const body = UpdateVendorProductBody.parse(req.body);
+  const product = vendorProducts.find((entry) => entry.id === productId);
+  if (!product) return res.status(404).json({ error: "Vendor product not found" });
+  Object.assign(product, body);
+  if (product.stockQty === 0 && product.status === "active") product.status = "out_of_stock";
+  return res.json(UpdateVendorProductResponse.parse(product));
+});
+
+router.delete("/vendor/products/:productId", (req, res) => {
+  const { productId } = ArchiveVendorProductParams.parse(req.params);
+  const product = vendorProducts.find((entry) => entry.id === productId);
+  if (!product) return res.status(404).json({ error: "Vendor product not found" });
+  product.status = "archived";
+  return res.json(ArchiveVendorProductResponse.parse(product));
+});
+
+router.post("/vendor/products/bulk", (req, res) => {
+  const body = BulkUpdateVendorProductsBody.parse(req.body);
+  const selected = vendorProducts.filter((product) => body.productIds.includes(product.id));
+  for (const product of selected) {
+    if (body.action === "enable") product.status = product.stockQty > 0 ? "active" : "out_of_stock";
+    if (body.action === "disable") product.status = "disabled";
+    if (body.action === "archive") product.status = "archived";
+    if (body.action === "price_update" && body.value !== undefined) product.price = body.value;
+    if (body.action === "stock_update" && body.value !== undefined) {
+      product.stockQty = Math.max(0, Math.round(body.value));
+      product.status = product.stockQty === 0 ? "out_of_stock" : product.status === "out_of_stock" ? "active" : product.status;
+    }
+  }
+  return res.json(BulkUpdateVendorProductsResponse.parse(selected));
+});
+
+router.get("/vendor/orders", (_req, res) => {
+  return res.json(ListVendorOrdersResponse.parse(vendorOrders));
+});
+
+router.patch("/vendor/orders/:orderId/status", (req, res) => {
+  const { orderId } = UpdateVendorOrderStatusParams.parse(req.params);
+  const { status } = UpdateVendorOrderStatusBody.parse(req.body);
+  const order = vendorOrders.find((entry) => entry.id === orderId);
+  if (!order) return res.status(404).json({ error: "Vendor order not found" });
+  order.status = status;
+  if (status === "shipped" && !order.trackingNumber) order.trackingNumber = `GUL-TRK-${Math.floor(Math.random() * 9000) + 1000}`;
+  return res.json(UpdateVendorOrderStatusResponse.parse(order));
+});
+
+router.get("/vendor/reviews", (_req, res) => {
+  return res.json(ListVendorReviewsResponse.parse(vendorReviews));
+});
+
+router.patch("/vendor/reviews/:reviewId/reply", (req, res) => {
+  const { reviewId } = ReplyToVendorReviewParams.parse(req.params);
+  const { reply } = ReplyToVendorReviewBody.parse(req.body);
+  const review = vendorReviews.find((entry) => entry.id === reviewId);
+  if (!review) return res.status(404).json({ error: "Vendor review not found" });
+  review.reply = reply;
+  review.repliedAt = new Date().toISOString();
+  return res.json(ReplyToVendorReviewResponse.parse(review));
+});
+
+router.get("/vendor/promotions", (_req, res) => {
+  return res.json(ListVendorPromotionsResponse.parse(vendorPromotions));
+});
+
+router.post("/vendor/promotions", (req, res) => {
+  const body = CreateVendorPromotionBody.parse(req.body);
+  const promotion: VendorPromotion = { id: randomUUID(), ...body, status: "scheduled" };
+  vendorPromotions.unshift(promotion);
+  return res.status(201).json(CreateVendorPromotionResponse.parse(promotion));
+});
+
+router.patch("/vendor/promotions/:promotionId", (req, res) => {
+  const { promotionId } = UpdateVendorPromotionParams.parse(req.params);
+  const body = UpdateVendorPromotionBody.parse(req.body);
+  const promotion = vendorPromotions.find((entry) => entry.id === promotionId);
+  if (!promotion) return res.status(404).json({ error: "Vendor promotion not found" });
+  Object.assign(promotion, body);
+  return res.json(UpdateVendorPromotionResponse.parse(promotion));
+});
+
+router.get("/vendor/analytics", (_req, res) => {
+  return res.json(GetVendorAnalyticsResponse.parse(vendorAnalytics));
+});
+
+router.get("/vendor/storefront", (_req, res) => {
+  return res.json(GetVendorStorefrontResponse.parse(vendorStorefront));
+});
+
+router.patch("/vendor/storefront", (req, res) => {
+  const body = UpdateVendorStorefrontBody.parse(req.body);
+  Object.assign(vendorStorefront, body);
+  return res.json(UpdateVendorStorefrontResponse.parse(vendorStorefront));
+});
+
+router.get("/stores/:vendorId", (req, res) => {
+  const { vendorId } = GetPublicVendorStorefrontParams.parse(req.params);
+  if (vendorId !== vendorStorefront.vendorId || vendorStorefront.approvalStatus !== "approved") {
+    return res.status(404).json({ error: "Storefront not found" });
+  }
+  return res.json(GetPublicVendorStorefrontResponse.parse({
+    storefront: vendorStorefront,
+    products: vendorProducts.filter((product) => product.status === "active"),
+    reviews: vendorReviews,
+  }));
+});
+
+router.get("/vendor/verification", (_req, res) => {
+  return res.json(GetVendorVerificationResponse.parse(vendorVerificationStatus()));
+});
+
+router.patch("/vendor/verification", (req, res) => {
+  const body = UpdateVendorVerificationBody.parse(req.body);
+  Object.assign(vendorVerification, body);
+  if (vendorVerification.idSubmitted && vendorVerification.businessDocumentsSubmitted) {
+    vendorVerification.overallStatus = "under_review";
+  } else if (vendorVerification.idSubmitted || vendorVerification.businessDocumentsSubmitted) {
+    vendorVerification.overallStatus = "submitted";
+  }
+  return res.json(UpdateVendorVerificationResponse.parse(vendorVerification));
+});
+
+router.get("/vendor/settings", (_req, res) => {
+  return res.json(GetVendorSettingsResponse.parse(vendorSettingsStatus()));
+});
+
+router.patch("/vendor/settings", (req, res) => {
+  const body = UpdateVendorSettingsBody.parse(req.body);
+  Object.assign(vendorSettings, body);
+  return res.json(UpdateVendorSettingsResponse.parse(vendorSettings));
+});
+
+router.get("/vendor/support-tickets", (_req, res) => {
+  return res.json(ListVendorSupportTicketsResponse.parse(vendorSupportTickets));
+});
+
+router.post("/vendor/support-tickets", (req, res) => {
+  const body = CreateVendorSupportTicketBody.parse(req.body);
+  const ticket: VendorSupportTicket = {
+    id: randomUUID(),
+    subject: body.subject,
+    category: body.category,
+    status: "open",
+    lastMessage: body.message,
+    updatedAt: new Date().toISOString(),
+  };
+  vendorSupportTickets.unshift(ticket);
+  return res.status(201).json(CreateVendorSupportTicketResponse.parse(ticket));
 });
 
 router.get("/admin/dashboard", (_req, res) => {

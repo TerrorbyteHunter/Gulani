@@ -257,6 +257,379 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VendorDashboard"
+  /vendor/products:
+    get:
+      operationId: listVendorProducts
+      tags: [vendors]
+      summary: List products owned by the current vendor
+      responses:
+        "200":
+          description: Vendor products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VendorProduct"
+    post:
+      operationId: createVendorProduct
+      tags: [vendors]
+      summary: Create a vendor product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorProductInput"
+      responses:
+        "201":
+          description: Created product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorProduct"
+  /vendor/products/{productId}:
+    patch:
+      operationId: updateVendorProduct
+      tags: [vendors]
+      summary: Update a vendor product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorProductInput"
+      responses:
+        "200":
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorProduct"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: archiveVendorProduct
+      tags: [vendors]
+      summary: Archive a vendor product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Archived product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorProduct"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /vendor/products/bulk:
+    post:
+      operationId: bulkUpdateVendorProducts
+      tags: [vendors]
+      summary: Apply a bulk product action
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorProductBulkUpdate"
+      responses:
+        "200":
+          description: Updated products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VendorProduct"
+  /vendor/orders:
+    get:
+      operationId: listVendorOrders
+      tags: [vendors]
+      summary: List orders for the current vendor
+      responses:
+        "200":
+          description: Vendor orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VendorOrder"
+  /vendor/orders/{orderId}/status:
+    patch:
+      operationId: updateVendorOrderStatus
+      tags: [vendors]
+      summary: Update a vendor order status
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorOrderStatusUpdate"
+      responses:
+        "200":
+          description: Updated vendor order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorOrder"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /vendor/reviews:
+    get:
+      operationId: listVendorReviews
+      tags: [vendors]
+      summary: List reviews for the current vendor
+      responses:
+        "200":
+          description: Vendor reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VendorReview"
+  /vendor/reviews/{reviewId}/reply:
+    patch:
+      operationId: replyToVendorReview
+      tags: [vendors]
+      summary: Reply to a customer review
+      parameters:
+        - name: reviewId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorReviewReply"
+      responses:
+        "200":
+          description: Updated review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorReview"
+  /vendor/promotions:
+    get:
+      operationId: listVendorPromotions
+      tags: [vendors]
+      summary: List vendor promotions
+      responses:
+        "200":
+          description: Vendor promotions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VendorPromotion"
+    post:
+      operationId: createVendorPromotion
+      tags: [vendors]
+      summary: Create a vendor promotion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorPromotionInput"
+      responses:
+        "201":
+          description: Created promotion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorPromotion"
+  /vendor/promotions/{promotionId}:
+    patch:
+      operationId: updateVendorPromotion
+      tags: [vendors]
+      summary: Update a vendor promotion
+      parameters:
+        - name: promotionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorPromotionUpdate"
+      responses:
+        "200":
+          description: Updated promotion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorPromotion"
+  /vendor/analytics:
+    get:
+      operationId: getVendorAnalytics
+      tags: [vendors]
+      summary: Get vendor analytics
+      responses:
+        "200":
+          description: Vendor analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorAnalytics"
+  /vendor/storefront:
+    get:
+      operationId: getVendorStorefront
+      tags: [vendors]
+      summary: Get vendor storefront settings
+      responses:
+        "200":
+          description: Vendor storefront
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorStorefront"
+    patch:
+      operationId: updateVendorStorefront
+      tags: [vendors]
+      summary: Update vendor storefront settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorStorefrontUpdate"
+      responses:
+        "200":
+          description: Updated storefront
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorStorefront"
+  /stores/{vendorId}:
+    get:
+      operationId: getPublicVendorStorefront
+      tags: [vendors]
+      summary: Get a public vendor storefront
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Public vendor storefront
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicVendorStorefront"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /vendor/verification:
+    get:
+      operationId: getVendorVerification
+      tags: [vendors]
+      summary: Get vendor verification status
+      responses:
+        "200":
+          description: Vendor verification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorVerification"
+    patch:
+      operationId: updateVendorVerification
+      tags: [vendors]
+      summary: Submit vendor verification information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorVerificationUpdate"
+      responses:
+        "200":
+          description: Updated verification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorVerification"
+  /vendor/settings:
+    get:
+      operationId: getVendorSettings
+      tags: [vendors]
+      summary: Get vendor settings
+      responses:
+        "200":
+          description: Vendor settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorSettings"
+    patch:
+      operationId: updateVendorSettings
+      tags: [vendors]
+      summary: Update vendor settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorSettingsUpdate"
+      responses:
+        "200":
+          description: Updated vendor settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorSettings"
+  /vendor/support-tickets:
+    get:
+      operationId: listVendorSupportTickets
+      tags: [vendors]
+      summary: List vendor support tickets
+      responses:
+        "200":
+          description: Vendor support tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VendorSupportTicket"
+    post:
+      operationId: createVendorSupportTicket
+      tags: [vendors]
+      summary: Create a vendor support ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorSupportTicketInput"
+      responses:
+        "201":
+          description: Created support ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorSupportTicket"
   /admin/dashboard:
     get:
       operationId: getAdminDashboard
@@ -360,6 +733,97 @@ paths:
                 $ref: "#/components/schemas/AdminVendorApplication"
         "404":
           $ref: "#/components/responses/NotFound"
+  /admin/vendors:
+    get:
+      operationId: listAdminVendors
+      tags: [admin]
+      summary: List vendor accounts
+      parameters:
+        - name: accountStatus
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended]
+      responses:
+        "200":
+          description: Vendor accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminVendor"
+  /admin/vendors/{vendorId}:
+    patch:
+      operationId: updateAdminVendor
+      tags: [admin]
+      summary: Update a vendor account
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminVendorUpdate"
+      responses:
+        "200":
+          description: Updated vendor account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminVendor"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /admin/vendors/{vendorId}/messages:
+    get:
+      operationId: listAdminVendorMessages
+      tags: [admin]
+      summary: List messages with a vendor
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Vendor conversation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminMessage"
+    post:
+      operationId: createAdminVendorMessage
+      tags: [admin]
+      summary: Send a message to a vendor
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdminMessage"
+      responses:
+        "201":
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminMessage"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /admin/support-tickets:
     get:
       operationId: listSupportTickets
@@ -404,6 +868,108 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SupportTicket"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /admin/support-tickets/{ticketId}/messages:
+    get:
+      operationId: listSupportTicketMessages
+      tags: [admin]
+      summary: List support ticket messages
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket conversation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminMessage"
+    post:
+      operationId: createSupportTicketMessage
+      tags: [admin]
+      summary: Send a support ticket message
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdminMessage"
+      responses:
+        "201":
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminMessage"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /admin/support-accounts:
+    get:
+      operationId: listSupportAccounts
+      tags: [admin]
+      summary: List operations support accounts
+      responses:
+        "200":
+          description: Support accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupportAccount"
+    post:
+      operationId: createSupportAccount
+      tags: [admin]
+      summary: Create a support account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupportAccount"
+      responses:
+        "201":
+          description: Created support account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportAccount"
+  /admin/support-accounts/{accountId}:
+    patch:
+      operationId: updateSupportAccount
+      tags: [admin]
+      summary: Update a support account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportAccountUpdate"
+      responses:
+        "200":
+          description: Updated support account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportAccount"
         "404":
           $ref: "#/components/responses/NotFound"
   /admin/fulfillment:
@@ -716,11 +1282,343 @@ components:
         productsLive: { type: integer }
         revenueThisMonth: { type: number }
         rating: { type: number }
+        totalSales: { type: number }
+        todaySales: { type: number }
+        ordersAwaitingShipment: { type: integer }
+        completedOrders: { type: integer }
+        cancelledRefundedOrders: { type: integer }
+        productsInStock: { type: integer }
+        lowStockAlerts: { type: integer }
+        unreadCustomerMessages: { type: integer }
+        pendingDisputes: { type: integer }
+        availableBalance: { type: number }
+        pendingBalance: { type: number }
         recentOrders:
           type: array
           items:
-            $ref: "#/components/schemas/Order"
-      required: [vendorName, pendingOrders, productsLive, revenueThisMonth, rating, recentOrders]
+            $ref: "#/components/schemas/VendorOrder"
+        salesChart:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorSalesPoint"
+        customers:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorCustomer"
+        inventory:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorInventoryItem"
+        storefront:
+          $ref: "#/components/schemas/VendorStorefront"
+        verification:
+          $ref: "#/components/schemas/VendorVerification"
+        settings:
+          $ref: "#/components/schemas/VendorSettings"
+      required: [vendorName, pendingOrders, productsLive, revenueThisMonth, rating, totalSales, todaySales, ordersAwaitingShipment, completedOrders, cancelledRefundedOrders, productsInStock, lowStockAlerts, unreadCustomerMessages, pendingDisputes, availableBalance, pendingBalance, recentOrders, salesChart, customers, inventory, storefront, verification, settings]
+    VendorSalesPoint:
+      type: object
+      properties:
+        label: { type: string }
+        sales: { type: number }
+        orders: { type: integer }
+      required: [label, sales, orders]
+    VendorOrder:
+      type: object
+      properties:
+        id: { type: string }
+        orderNumber: { type: string }
+        customerName: { type: string }
+        customerEmail: { type: string }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              title: { type: string }
+              quantity: { type: integer }
+              unitPrice: { type: number }
+            required: [title, quantity, unitPrice]
+        total: { type: number }
+        currency: { type: string }
+        deliveryAddress: { type: string }
+        paymentStatus: { type: string, enum: [pending, paid, failed, refunded] }
+        status: { type: string, enum: [new, confirmed, processing, ready_for_dispatch, shipped, delivered, completed, cancelled, refund_requested, refunded, failed_delivery, disputed] }
+        vendorEarnings: { type: number }
+        platformCommission: { type: number }
+        shippingFee: { type: number }
+        orderDate: { type: string }
+        expectedDelivery: { type: string }
+        trackingNumber: { type: ["string", "null"] }
+      required: [id, orderNumber, customerName, customerEmail, items, total, currency, deliveryAddress, paymentStatus, status, vendorEarnings, platformCommission, shippingFee, orderDate, expectedDelivery, trackingNumber]
+    VendorOrderStatusUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [new, confirmed, processing, ready_for_dispatch, shipped, delivered, completed, cancelled, refund_requested, refunded, failed_delivery, disputed] }
+      required: [status]
+    VendorProductVariant:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        sku: { type: string }
+        price: { type: number }
+        stockQty: { type: integer }
+      required: [id, name, sku, price, stockQty]
+    VendorProduct:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        subcategory: { type: string }
+        price: { type: number }
+        salePrice: { type: ["number", "null"] }
+        sku: { type: string }
+        stockQty: { type: integer }
+        lowStockThreshold: { type: integer }
+        status: { type: string, enum: [draft, active, out_of_stock, disabled, archived] }
+        images:
+          type: array
+          items: { type: string }
+        videoUrl: { type: ["string", "null"] }
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorProductVariant"
+        weight: { type: string }
+        dimensions: { type: string }
+        shippingInformation: { type: string }
+        views: { type: integer }
+        purchases: { type: integer }
+        returns: { type: integer }
+      required: [id, title, description, category, subcategory, price, salePrice, sku, stockQty, lowStockThreshold, status, images, videoUrl, variants, weight, dimensions, shippingInformation, views, purchases, returns]
+    VendorProductInput:
+      type: object
+      properties:
+        title: { type: string, minLength: 2 }
+        description: { type: string, minLength: 10 }
+        category: { type: string }
+        subcategory: { type: string }
+        price: { type: number, minimum: 0 }
+        salePrice: { type: ["number", "null"], minimum: 0 }
+        sku: { type: string }
+        stockQty: { type: integer, minimum: 0 }
+        lowStockThreshold: { type: integer, minimum: 0 }
+        status: { type: string, enum: [draft, active, out_of_stock, disabled, archived] }
+        images:
+          type: array
+          items: { type: string }
+        videoUrl: { type: ["string", "null"] }
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorProductVariant"
+        weight: { type: string }
+        dimensions: { type: string }
+        shippingInformation: { type: string }
+      required: [title, description, category, subcategory, price, salePrice, sku, stockQty, lowStockThreshold, status, images, videoUrl, variants, weight, dimensions, shippingInformation]
+    VendorProductBulkUpdate:
+      type: object
+      properties:
+        productIds:
+          type: array
+          items: { type: string }
+          minItems: 1
+        action: { type: string, enum: [enable, disable, archive, price_update, stock_update] }
+        value: { type: number }
+      required: [productIds, action]
+    VendorReview:
+      type: object
+      properties:
+        id: { type: string }
+        productId: { type: string }
+        productTitle: { type: string }
+        customerName: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+        reply: { type: ["string", "null"] }
+        createdAt: { type: string }
+        repliedAt: { type: ["string", "null"] }
+      required: [id, productId, productTitle, customerName, rating, comment, reply, createdAt, repliedAt]
+    VendorReviewReply:
+      type: object
+      properties:
+        reply: { type: string, minLength: 1 }
+      required: [reply]
+    VendorPromotion:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        type: { type: string, enum: [percentage, fixed, buy_x_get_y, flash_sale, bundle, coupon, free_shipping] }
+        value: { type: number }
+        code: { type: ["string", "null"] }
+        startsAt: { type: string }
+        endsAt: { type: string }
+        status: { type: string, enum: [draft, scheduled, active, ended, disabled] }
+        productIds:
+          type: array
+          items: { type: string }
+        maximumDiscount: { type: ["number", "null"] }
+      required: [id, name, type, value, code, startsAt, endsAt, status, productIds, maximumDiscount]
+    VendorPromotionInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2 }
+        type: { type: string, enum: [percentage, fixed, buy_x_get_y, flash_sale, bundle, coupon, free_shipping] }
+        value: { type: number, minimum: 0 }
+        code: { type: ["string", "null"] }
+        startsAt: { type: string }
+        endsAt: { type: string }
+        productIds:
+          type: array
+          items: { type: string }
+        maximumDiscount: { type: ["number", "null"], minimum: 0 }
+      required: [name, type, value, code, startsAt, endsAt, productIds, maximumDiscount]
+    VendorPromotionUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [draft, scheduled, active, ended, disabled] }
+        value: { type: number, minimum: 0 }
+    VendorAnalytics:
+      type: object
+      properties:
+        sales:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorSalesPoint"
+        mostViewed:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorProduct"
+        mostPurchased:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorProduct"
+        newCustomers: { type: integer }
+        returningCustomers: { type: integer }
+        averageOrderValue: { type: number }
+      required: [sales, mostViewed, mostPurchased, newCustomers, returningCustomers, averageOrderValue]
+    VendorStorefront:
+      type: object
+      properties:
+        vendorId: { type: string }
+        businessName: { type: string }
+        logoUrl: { type: ["string", "null"] }
+        bannerUrl: { type: ["string", "null"] }
+        description: { type: string }
+        contactInformation: { type: string }
+        businessHours: { type: string }
+        storePolicies: { type: string }
+        averageRating: { type: number }
+        reviewCount: { type: integer }
+        orderSatisfaction: { type: number }
+        approvalStatus: { type: string, enum: [draft, pending_review, approved, changes_requested] }
+      required: [vendorId, businessName, logoUrl, bannerUrl, description, contactInformation, businessHours, storePolicies, averageRating, reviewCount, orderSatisfaction, approvalStatus]
+    VendorStorefrontUpdate:
+      type: object
+      properties:
+        logoUrl: { type: ["string", "null"] }
+        bannerUrl: { type: ["string", "null"] }
+        description: { type: string }
+        contactInformation: { type: string }
+        businessHours: { type: string }
+        storePolicies: { type: string }
+        approvalStatus: { type: string, enum: [draft, pending_review] }
+    PublicVendorStorefront:
+      type: object
+      properties:
+        storefront:
+          $ref: "#/components/schemas/VendorStorefront"
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorProduct"
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/VendorReview"
+      required: [storefront, products, reviews]
+    VendorVerification:
+      type: object
+      properties:
+        overallStatus: { type: string, enum: [not_submitted, submitted, under_review, approved, rejected, more_information_required, suspended] }
+        phoneVerified: { type: boolean }
+        emailVerified: { type: boolean }
+        idSubmitted: { type: boolean }
+        businessDocumentsSubmitted: { type: boolean }
+        rejectionReason: { type: ["string", "null"] }
+      required: [overallStatus, phoneVerified, emailVerified, idSubmitted, businessDocumentsSubmitted, rejectionReason]
+    VendorVerificationUpdate:
+      type: object
+      properties:
+        idSubmitted: { type: boolean }
+        businessDocumentsSubmitted: { type: boolean }
+    VendorSettings:
+      type: object
+      properties:
+        businessAddress: { type: string }
+        pickupLocations: { type: string }
+        operatingHours: { type: string }
+        shippingSettings: { type: string }
+        returnPolicy: { type: string }
+        refundPolicy: { type: string }
+        notificationSettings: { type: string }
+        payoutMethod: { type: string }
+      required: [businessAddress, pickupLocations, operatingHours, shippingSettings, returnPolicy, refundPolicy, notificationSettings, payoutMethod]
+    VendorSettingsUpdate:
+      type: object
+      properties:
+        businessAddress: { type: string }
+        pickupLocations: { type: string }
+        operatingHours: { type: string }
+        shippingSettings: { type: string }
+        returnPolicy: { type: string }
+        refundPolicy: { type: string }
+        notificationSettings: { type: string }
+        payoutMethod: { type: string }
+    VendorCustomer:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        orders: { type: integer }
+        totalSpent: { type: number }
+        lastPurchase: { type: string }
+        currentOrders: { type: integer }
+        reviews: { type: integer }
+      required: [id, name, email, orders, totalSpent, lastPurchase, currentOrders, reviews]
+    VendorInventoryItem:
+      type: object
+      properties:
+        productId: { type: string }
+        productTitle: { type: string }
+        sku: { type: string }
+        available: { type: integer }
+        reserved: { type: integer }
+        soldToday: { type: integer }
+        lowStockThreshold: { type: integer }
+      required: [productId, productTitle, sku, available, reserved, soldToday, lowStockThreshold]
+    VendorSupportTicket:
+      type: object
+      properties:
+        id: { type: string }
+        subject: { type: string }
+        category: { type: string }
+        status: { type: string, enum: [open, in_progress, resolved] }
+        lastMessage: { type: string }
+        updatedAt: { type: string }
+      required: [id, subject, category, status, lastMessage, updatedAt]
+    VendorSupportTicketInput:
+      type: object
+      properties:
+        subject: { type: string, minLength: 3 }
+        category: { type: string }
+        message: { type: string, minLength: 3 }
+      required: [subject, category, message]
     AdminDashboard:
       type: object
       properties:
@@ -771,6 +1669,42 @@ components:
         status: { type: string, enum: [pending, approved, rejected] }
         submittedAt: { type: string }
       required: [id, businessName, contactName, email, phone, category, description, status, submittedAt]
+    AdminVendor:
+      type: object
+      properties:
+        id: { type: string }
+        businessName: { type: string }
+        contactName: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        category: { type: string }
+        description: { type: string }
+        verificationStatus: { type: string, enum: [pending, approved, rejected] }
+        accountStatus: { type: string, enum: [active, suspended] }
+        joinedAt: { type: string }
+        productCount: { type: integer }
+        orderCount: { type: integer }
+        lastActiveAt: { type: ["string", "null"] }
+      required: [id, businessName, contactName, email, phone, category, description, verificationStatus, accountStatus, joinedAt, productCount, orderCount, lastActiveAt]
+    AdminVendorUpdate:
+      type: object
+      properties:
+        accountStatus: { type: string, enum: [active, suspended] }
+        verificationStatus: { type: string, enum: [pending, approved, rejected] }
+    AdminMessage:
+      type: object
+      properties:
+        id: { type: string }
+        senderType: { type: string, enum: [admin, vendor, customer] }
+        senderName: { type: string }
+        body: { type: string }
+        sentAt: { type: string }
+      required: [id, senderType, senderName, body, sentAt]
+    CreateAdminMessage:
+      type: object
+      properties:
+        body: { type: string, minLength: 1 }
+      required: [body]
     VendorApplicationStatusUpdate:
       type: object
       properties:
@@ -797,6 +1731,28 @@ components:
         status: { type: string, enum: [open, in_progress, resolved] }
         assignedTo: { type: ["string", "null"] }
       required: [status]
+    SupportAccount:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [master_admin, support, operations, finance] }
+        status: { type: string, enum: [active, suspended] }
+        createdAt: { type: string }
+      required: [id, name, email, role, status, createdAt]
+    CreateSupportAccount:
+      type: object
+      properties:
+        name: { type: string, minLength: 2 }
+        email: { type: string, format: email }
+        role: { type: string, enum: [master_admin, support, operations, finance] }
+      required: [name, email, role]
+    SupportAccountUpdate:
+      type: object
+      properties:
+        role: { type: string, enum: [master_admin, support, operations, finance] }
+        status: { type: string, enum: [active, suspended] }
     FulfillmentOverview:
       type: object
       properties:

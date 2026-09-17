@@ -21,9 +21,12 @@ import type {
 
 import type {
   AdminDashboard,
+  AdminMessage,
   AdminOrder,
   AdminOrderStatusUpdate,
+  AdminVendor,
   AdminVendorApplication,
+  AdminVendorUpdate,
   BadRequestResponse,
   Cart,
   CartItemInput,
@@ -32,10 +35,13 @@ import type {
   Category,
   CheckoutInput,
   CheckoutResult,
+  CreateAdminMessage,
+  CreateSupportAccount,
   FulfillmentOverview,
   HealthStatus,
   ListAdminOrdersParams,
   ListAdminVendorApplicationsParams,
+  ListAdminVendorsParams,
   ListProductsParams,
   ListSupportTicketsParams,
   MarketplaceSettings,
@@ -45,13 +51,35 @@ import type {
   PricingRule,
   PricingRuleUpdate,
   Product,
+  PublicVendorStorefront,
   SalesOverview,
+  SupportAccount,
+  SupportAccountUpdate,
   SupportTicket,
   SupportTicketUpdate,
+  VendorAnalytics,
   VendorApplication,
   VendorApplicationInput,
   VendorApplicationStatusUpdate,
-  VendorDashboard
+  VendorDashboard,
+  VendorOrder,
+  VendorOrderStatusUpdate,
+  VendorProduct,
+  VendorProductBulkUpdate,
+  VendorProductInput,
+  VendorPromotion,
+  VendorPromotionInput,
+  VendorPromotionUpdate,
+  VendorReview,
+  VendorReviewReply,
+  VendorSettings,
+  VendorSettingsUpdate,
+  VendorStorefront,
+  VendorStorefrontUpdate,
+  VendorSupportTicket,
+  VendorSupportTicketInput,
+  VendorVerification,
+  VendorVerificationUpdate
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1210,6 +1238,1822 @@ export function useGetVendorDashboard<TData = Awaited<ReturnType<typeof getVendo
 
 
 
+export const getListVendorProductsUrl = () => {
+
+
+
+
+  return `/api/vendor/products`
+}
+
+/**
+ * @summary List products owned by the current vendor
+ */
+export const listVendorProducts = async ( options?: Parameters<typeof customFetch>[1]): Promise<VendorProduct[]> => {
+
+  return customFetch<VendorProduct[]>(getListVendorProductsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVendorProductsQueryKey = () => {
+    return [
+    `/api/vendor/products`
+    ] as const;
+    }
+
+
+export const getListVendorProductsQueryOptions = <TData = Awaited<ReturnType<typeof listVendorProducts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVendorProductsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVendorProducts>>> = ({ signal }) => listVendorProducts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVendorProducts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVendorProductsQueryResult = NonNullable<Awaited<ReturnType<typeof listVendorProducts>>>
+export type ListVendorProductsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List products owned by the current vendor
+ */
+
+export function useListVendorProducts<TData = Awaited<ReturnType<typeof listVendorProducts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorProducts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVendorProductsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateVendorProductUrl = () => {
+
+
+
+
+  return `/api/vendor/products`
+}
+
+/**
+ * @summary Create a vendor product
+ */
+export const createVendorProduct = async (vendorProductInput: VendorProductInput, options?: Parameters<typeof customFetch>[1]): Promise<VendorProduct> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorProduct>(getCreateVendorProductUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorProductInput)
+  }
+);}
+
+
+
+
+
+export const getCreateVendorProductMutationKey = () => ['createVendorProduct'] as const;
+
+export const getCreateVendorProductMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVendorProduct>>, TError,CreateVendorProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createVendorProduct>>, TError,CreateVendorProductMutationVariables, TContext> => {
+
+const mutationKey = getCreateVendorProductMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVendorProduct>>, CreateVendorProductMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createVendorProduct(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateVendorProductMutationResult = NonNullable<Awaited<ReturnType<typeof createVendorProduct>>>
+    export type CreateVendorProductMutationBody = BodyType<VendorProductInput>
+    export type CreateVendorProductMutationError = ErrorType<unknown>
+    export type CreateVendorProductMutationVariables = {data: BodyType<VendorProductInput>}
+
+    /**
+ * @summary Create a vendor product
+ */
+export const useCreateVendorProduct = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVendorProduct>>, TError,CreateVendorProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createVendorProduct>>,
+        TError,
+        CreateVendorProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateVendorProductMutationOptions(options));
+    }
+
+export const getUpdateVendorProductUrl = (productId: string,) => {
+
+
+
+
+  return `/api/vendor/products/${productId}`
+}
+
+/**
+ * @summary Update a vendor product
+ */
+export const updateVendorProduct = async (productId: string,
+    vendorProductInput: VendorProductInput, options?: Parameters<typeof customFetch>[1]): Promise<VendorProduct> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorProduct>(getUpdateVendorProductUrl(productId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorProductInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateVendorProductMutationKey = () => ['updateVendorProduct'] as const;
+
+export const getUpdateVendorProductMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorProduct>>, TError,UpdateVendorProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVendorProduct>>, TError,UpdateVendorProductMutationVariables, TContext> => {
+
+const mutationKey = getUpdateVendorProductMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVendorProduct>>, UpdateVendorProductMutationVariables> = (props) => {
+          const {productId,data} = props ?? {};
+
+          return  updateVendorProduct(productId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVendorProductMutationResult = NonNullable<Awaited<ReturnType<typeof updateVendorProduct>>>
+    export type UpdateVendorProductMutationBody = BodyType<VendorProductInput>
+    export type UpdateVendorProductMutationError = ErrorType<NotFoundResponse>
+    export type UpdateVendorProductMutationVariables = {productId: string;data: BodyType<VendorProductInput>}
+
+    /**
+ * @summary Update a vendor product
+ */
+export const useUpdateVendorProduct = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorProduct>>, TError,UpdateVendorProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVendorProduct>>,
+        TError,
+        UpdateVendorProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateVendorProductMutationOptions(options));
+    }
+
+export const getArchiveVendorProductUrl = (productId: string,) => {
+
+
+
+
+  return `/api/vendor/products/${productId}`
+}
+
+/**
+ * @summary Archive a vendor product
+ */
+export const archiveVendorProduct = async (productId: string, options?: Parameters<typeof customFetch>[1]): Promise<VendorProduct> => {
+
+  return customFetch<VendorProduct>(getArchiveVendorProductUrl(productId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getArchiveVendorProductMutationKey = () => ['archiveVendorProduct'] as const;
+
+export const getArchiveVendorProductMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveVendorProduct>>, TError,ArchiveVendorProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveVendorProduct>>, TError,ArchiveVendorProductMutationVariables, TContext> => {
+
+const mutationKey = getArchiveVendorProductMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveVendorProduct>>, ArchiveVendorProductMutationVariables> = (props) => {
+          const {productId} = props ?? {};
+
+          return  archiveVendorProduct(productId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveVendorProductMutationResult = NonNullable<Awaited<ReturnType<typeof archiveVendorProduct>>>
+
+    export type ArchiveVendorProductMutationError = ErrorType<NotFoundResponse>
+    export type ArchiveVendorProductMutationVariables = {productId: string}
+
+    /**
+ * @summary Archive a vendor product
+ */
+export const useArchiveVendorProduct = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveVendorProduct>>, TError,ArchiveVendorProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveVendorProduct>>,
+        TError,
+        ArchiveVendorProductMutationVariables,
+        TContext
+      > => {
+      return useMutation(getArchiveVendorProductMutationOptions(options));
+    }
+
+export const getBulkUpdateVendorProductsUrl = () => {
+
+
+
+
+  return `/api/vendor/products/bulk`
+}
+
+/**
+ * @summary Apply a bulk product action
+ */
+export const bulkUpdateVendorProducts = async (vendorProductBulkUpdate: VendorProductBulkUpdate, options?: Parameters<typeof customFetch>[1]): Promise<VendorProduct[]> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorProduct[]>(getBulkUpdateVendorProductsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorProductBulkUpdate)
+  }
+);}
+
+
+
+
+
+export const getBulkUpdateVendorProductsMutationKey = () => ['bulkUpdateVendorProducts'] as const;
+
+export const getBulkUpdateVendorProductsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateVendorProducts>>, TError,BulkUpdateVendorProductsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateVendorProducts>>, TError,BulkUpdateVendorProductsMutationVariables, TContext> => {
+
+const mutationKey = getBulkUpdateVendorProductsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkUpdateVendorProducts>>, BulkUpdateVendorProductsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  bulkUpdateVendorProducts(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BulkUpdateVendorProductsMutationResult = NonNullable<Awaited<ReturnType<typeof bulkUpdateVendorProducts>>>
+    export type BulkUpdateVendorProductsMutationBody = BodyType<VendorProductBulkUpdate>
+    export type BulkUpdateVendorProductsMutationError = ErrorType<unknown>
+    export type BulkUpdateVendorProductsMutationVariables = {data: BodyType<VendorProductBulkUpdate>}
+
+    /**
+ * @summary Apply a bulk product action
+ */
+export const useBulkUpdateVendorProducts = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateVendorProducts>>, TError,BulkUpdateVendorProductsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bulkUpdateVendorProducts>>,
+        TError,
+        BulkUpdateVendorProductsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getBulkUpdateVendorProductsMutationOptions(options));
+    }
+
+export const getListVendorOrdersUrl = () => {
+
+
+
+
+  return `/api/vendor/orders`
+}
+
+/**
+ * @summary List orders for the current vendor
+ */
+export const listVendorOrders = async ( options?: Parameters<typeof customFetch>[1]): Promise<VendorOrder[]> => {
+
+  return customFetch<VendorOrder[]>(getListVendorOrdersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVendorOrdersQueryKey = () => {
+    return [
+    `/api/vendor/orders`
+    ] as const;
+    }
+
+
+export const getListVendorOrdersQueryOptions = <TData = Awaited<ReturnType<typeof listVendorOrders>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVendorOrdersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVendorOrders>>> = ({ signal }) => listVendorOrders({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVendorOrders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVendorOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listVendorOrders>>>
+export type ListVendorOrdersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List orders for the current vendor
+ */
+
+export function useListVendorOrders<TData = Awaited<ReturnType<typeof listVendorOrders>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVendorOrdersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateVendorOrderStatusUrl = (orderId: string,) => {
+
+
+
+
+  return `/api/vendor/orders/${orderId}/status`
+}
+
+/**
+ * @summary Update a vendor order status
+ */
+export const updateVendorOrderStatus = async (orderId: string,
+    vendorOrderStatusUpdate: VendorOrderStatusUpdate, options?: Parameters<typeof customFetch>[1]): Promise<VendorOrder> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorOrder>(getUpdateVendorOrderStatusUrl(orderId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorOrderStatusUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateVendorOrderStatusMutationKey = () => ['updateVendorOrderStatus'] as const;
+
+export const getUpdateVendorOrderStatusMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorOrderStatus>>, TError,UpdateVendorOrderStatusMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVendorOrderStatus>>, TError,UpdateVendorOrderStatusMutationVariables, TContext> => {
+
+const mutationKey = getUpdateVendorOrderStatusMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVendorOrderStatus>>, UpdateVendorOrderStatusMutationVariables> = (props) => {
+          const {orderId,data} = props ?? {};
+
+          return  updateVendorOrderStatus(orderId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVendorOrderStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateVendorOrderStatus>>>
+    export type UpdateVendorOrderStatusMutationBody = BodyType<VendorOrderStatusUpdate>
+    export type UpdateVendorOrderStatusMutationError = ErrorType<NotFoundResponse>
+    export type UpdateVendorOrderStatusMutationVariables = {orderId: string;data: BodyType<VendorOrderStatusUpdate>}
+
+    /**
+ * @summary Update a vendor order status
+ */
+export const useUpdateVendorOrderStatus = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorOrderStatus>>, TError,UpdateVendorOrderStatusMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVendorOrderStatus>>,
+        TError,
+        UpdateVendorOrderStatusMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateVendorOrderStatusMutationOptions(options));
+    }
+
+export const getListVendorReviewsUrl = () => {
+
+
+
+
+  return `/api/vendor/reviews`
+}
+
+/**
+ * @summary List reviews for the current vendor
+ */
+export const listVendorReviews = async ( options?: Parameters<typeof customFetch>[1]): Promise<VendorReview[]> => {
+
+  return customFetch<VendorReview[]>(getListVendorReviewsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVendorReviewsQueryKey = () => {
+    return [
+    `/api/vendor/reviews`
+    ] as const;
+    }
+
+
+export const getListVendorReviewsQueryOptions = <TData = Awaited<ReturnType<typeof listVendorReviews>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorReviews>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVendorReviewsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVendorReviews>>> = ({ signal }) => listVendorReviews({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVendorReviews>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVendorReviewsQueryResult = NonNullable<Awaited<ReturnType<typeof listVendorReviews>>>
+export type ListVendorReviewsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List reviews for the current vendor
+ */
+
+export function useListVendorReviews<TData = Awaited<ReturnType<typeof listVendorReviews>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorReviews>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVendorReviewsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getReplyToVendorReviewUrl = (reviewId: string,) => {
+
+
+
+
+  return `/api/vendor/reviews/${reviewId}/reply`
+}
+
+/**
+ * @summary Reply to a customer review
+ */
+export const replyToVendorReview = async (reviewId: string,
+    vendorReviewReply: VendorReviewReply, options?: Parameters<typeof customFetch>[1]): Promise<VendorReview> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorReview>(getReplyToVendorReviewUrl(reviewId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorReviewReply)
+  }
+);}
+
+
+
+
+
+export const getReplyToVendorReviewMutationKey = () => ['replyToVendorReview'] as const;
+
+export const getReplyToVendorReviewMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replyToVendorReview>>, TError,ReplyToVendorReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof replyToVendorReview>>, TError,ReplyToVendorReviewMutationVariables, TContext> => {
+
+const mutationKey = getReplyToVendorReviewMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replyToVendorReview>>, ReplyToVendorReviewMutationVariables> = (props) => {
+          const {reviewId,data} = props ?? {};
+
+          return  replyToVendorReview(reviewId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplyToVendorReviewMutationResult = NonNullable<Awaited<ReturnType<typeof replyToVendorReview>>>
+    export type ReplyToVendorReviewMutationBody = BodyType<VendorReviewReply>
+    export type ReplyToVendorReviewMutationError = ErrorType<unknown>
+    export type ReplyToVendorReviewMutationVariables = {reviewId: string;data: BodyType<VendorReviewReply>}
+
+    /**
+ * @summary Reply to a customer review
+ */
+export const useReplyToVendorReview = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replyToVendorReview>>, TError,ReplyToVendorReviewMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof replyToVendorReview>>,
+        TError,
+        ReplyToVendorReviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReplyToVendorReviewMutationOptions(options));
+    }
+
+export const getListVendorPromotionsUrl = () => {
+
+
+
+
+  return `/api/vendor/promotions`
+}
+
+/**
+ * @summary List vendor promotions
+ */
+export const listVendorPromotions = async ( options?: Parameters<typeof customFetch>[1]): Promise<VendorPromotion[]> => {
+
+  return customFetch<VendorPromotion[]>(getListVendorPromotionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVendorPromotionsQueryKey = () => {
+    return [
+    `/api/vendor/promotions`
+    ] as const;
+    }
+
+
+export const getListVendorPromotionsQueryOptions = <TData = Awaited<ReturnType<typeof listVendorPromotions>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorPromotions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVendorPromotionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVendorPromotions>>> = ({ signal }) => listVendorPromotions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVendorPromotions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVendorPromotionsQueryResult = NonNullable<Awaited<ReturnType<typeof listVendorPromotions>>>
+export type ListVendorPromotionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List vendor promotions
+ */
+
+export function useListVendorPromotions<TData = Awaited<ReturnType<typeof listVendorPromotions>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorPromotions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVendorPromotionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateVendorPromotionUrl = () => {
+
+
+
+
+  return `/api/vendor/promotions`
+}
+
+/**
+ * @summary Create a vendor promotion
+ */
+export const createVendorPromotion = async (vendorPromotionInput: VendorPromotionInput, options?: Parameters<typeof customFetch>[1]): Promise<VendorPromotion> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorPromotion>(getCreateVendorPromotionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorPromotionInput)
+  }
+);}
+
+
+
+
+
+export const getCreateVendorPromotionMutationKey = () => ['createVendorPromotion'] as const;
+
+export const getCreateVendorPromotionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVendorPromotion>>, TError,CreateVendorPromotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createVendorPromotion>>, TError,CreateVendorPromotionMutationVariables, TContext> => {
+
+const mutationKey = getCreateVendorPromotionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVendorPromotion>>, CreateVendorPromotionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createVendorPromotion(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateVendorPromotionMutationResult = NonNullable<Awaited<ReturnType<typeof createVendorPromotion>>>
+    export type CreateVendorPromotionMutationBody = BodyType<VendorPromotionInput>
+    export type CreateVendorPromotionMutationError = ErrorType<unknown>
+    export type CreateVendorPromotionMutationVariables = {data: BodyType<VendorPromotionInput>}
+
+    /**
+ * @summary Create a vendor promotion
+ */
+export const useCreateVendorPromotion = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVendorPromotion>>, TError,CreateVendorPromotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createVendorPromotion>>,
+        TError,
+        CreateVendorPromotionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateVendorPromotionMutationOptions(options));
+    }
+
+export const getUpdateVendorPromotionUrl = (promotionId: string,) => {
+
+
+
+
+  return `/api/vendor/promotions/${promotionId}`
+}
+
+/**
+ * @summary Update a vendor promotion
+ */
+export const updateVendorPromotion = async (promotionId: string,
+    vendorPromotionUpdate: VendorPromotionUpdate, options?: Parameters<typeof customFetch>[1]): Promise<VendorPromotion> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorPromotion>(getUpdateVendorPromotionUrl(promotionId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorPromotionUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateVendorPromotionMutationKey = () => ['updateVendorPromotion'] as const;
+
+export const getUpdateVendorPromotionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorPromotion>>, TError,UpdateVendorPromotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVendorPromotion>>, TError,UpdateVendorPromotionMutationVariables, TContext> => {
+
+const mutationKey = getUpdateVendorPromotionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVendorPromotion>>, UpdateVendorPromotionMutationVariables> = (props) => {
+          const {promotionId,data} = props ?? {};
+
+          return  updateVendorPromotion(promotionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVendorPromotionMutationResult = NonNullable<Awaited<ReturnType<typeof updateVendorPromotion>>>
+    export type UpdateVendorPromotionMutationBody = BodyType<VendorPromotionUpdate>
+    export type UpdateVendorPromotionMutationError = ErrorType<unknown>
+    export type UpdateVendorPromotionMutationVariables = {promotionId: string;data: BodyType<VendorPromotionUpdate>}
+
+    /**
+ * @summary Update a vendor promotion
+ */
+export const useUpdateVendorPromotion = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorPromotion>>, TError,UpdateVendorPromotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVendorPromotion>>,
+        TError,
+        UpdateVendorPromotionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateVendorPromotionMutationOptions(options));
+    }
+
+export const getGetVendorAnalyticsUrl = () => {
+
+
+
+
+  return `/api/vendor/analytics`
+}
+
+/**
+ * @summary Get vendor analytics
+ */
+export const getVendorAnalytics = async ( options?: Parameters<typeof customFetch>[1]): Promise<VendorAnalytics> => {
+
+  return customFetch<VendorAnalytics>(getGetVendorAnalyticsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVendorAnalyticsQueryKey = () => {
+    return [
+    `/api/vendor/analytics`
+    ] as const;
+    }
+
+
+export const getGetVendorAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof getVendorAnalytics>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVendorAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVendorAnalyticsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVendorAnalytics>>> = ({ signal }) => getVendorAnalytics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVendorAnalytics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVendorAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof getVendorAnalytics>>>
+export type GetVendorAnalyticsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get vendor analytics
+ */
+
+export function useGetVendorAnalytics<TData = Awaited<ReturnType<typeof getVendorAnalytics>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVendorAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVendorAnalyticsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetVendorStorefrontUrl = () => {
+
+
+
+
+  return `/api/vendor/storefront`
+}
+
+/**
+ * @summary Get vendor storefront settings
+ */
+export const getVendorStorefront = async ( options?: Parameters<typeof customFetch>[1]): Promise<VendorStorefront> => {
+
+  return customFetch<VendorStorefront>(getGetVendorStorefrontUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVendorStorefrontQueryKey = () => {
+    return [
+    `/api/vendor/storefront`
+    ] as const;
+    }
+
+
+export const getGetVendorStorefrontQueryOptions = <TData = Awaited<ReturnType<typeof getVendorStorefront>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVendorStorefront>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVendorStorefrontQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVendorStorefront>>> = ({ signal }) => getVendorStorefront({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVendorStorefront>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVendorStorefrontQueryResult = NonNullable<Awaited<ReturnType<typeof getVendorStorefront>>>
+export type GetVendorStorefrontQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get vendor storefront settings
+ */
+
+export function useGetVendorStorefront<TData = Awaited<ReturnType<typeof getVendorStorefront>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVendorStorefront>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVendorStorefrontQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateVendorStorefrontUrl = () => {
+
+
+
+
+  return `/api/vendor/storefront`
+}
+
+/**
+ * @summary Update vendor storefront settings
+ */
+export const updateVendorStorefront = async (vendorStorefrontUpdate: VendorStorefrontUpdate, options?: Parameters<typeof customFetch>[1]): Promise<VendorStorefront> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorStorefront>(getUpdateVendorStorefrontUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorStorefrontUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateVendorStorefrontMutationKey = () => ['updateVendorStorefront'] as const;
+
+export const getUpdateVendorStorefrontMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorStorefront>>, TError,UpdateVendorStorefrontMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVendorStorefront>>, TError,UpdateVendorStorefrontMutationVariables, TContext> => {
+
+const mutationKey = getUpdateVendorStorefrontMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVendorStorefront>>, UpdateVendorStorefrontMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateVendorStorefront(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVendorStorefrontMutationResult = NonNullable<Awaited<ReturnType<typeof updateVendorStorefront>>>
+    export type UpdateVendorStorefrontMutationBody = BodyType<VendorStorefrontUpdate>
+    export type UpdateVendorStorefrontMutationError = ErrorType<unknown>
+    export type UpdateVendorStorefrontMutationVariables = {data: BodyType<VendorStorefrontUpdate>}
+
+    /**
+ * @summary Update vendor storefront settings
+ */
+export const useUpdateVendorStorefront = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorStorefront>>, TError,UpdateVendorStorefrontMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVendorStorefront>>,
+        TError,
+        UpdateVendorStorefrontMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateVendorStorefrontMutationOptions(options));
+    }
+
+export const getGetPublicVendorStorefrontUrl = (vendorId: string,) => {
+
+
+
+
+  return `/api/stores/${vendorId}`
+}
+
+/**
+ * @summary Get a public vendor storefront
+ */
+export const getPublicVendorStorefront = async (vendorId: string, options?: Parameters<typeof customFetch>[1]): Promise<PublicVendorStorefront> => {
+
+  return customFetch<PublicVendorStorefront>(getGetPublicVendorStorefrontUrl(vendorId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicVendorStorefrontQueryKey = (vendorId: string,) => {
+    return [
+    `/api/stores/${vendorId}`
+    ] as const;
+    }
+
+
+export const getGetPublicVendorStorefrontQueryOptions = <TData = Awaited<ReturnType<typeof getPublicVendorStorefront>>, TError = ErrorType<NotFoundResponse>>(vendorId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicVendorStorefront>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicVendorStorefrontQueryKey(vendorId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicVendorStorefront>>> = ({ signal }) => getPublicVendorStorefront(vendorId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: vendorId !== null && vendorId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicVendorStorefront>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPublicVendorStorefrontQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicVendorStorefront>>>
+export type GetPublicVendorStorefrontQueryError = ErrorType<NotFoundResponse>
+
+
+/**
+ * @summary Get a public vendor storefront
+ */
+
+export function useGetPublicVendorStorefront<TData = Awaited<ReturnType<typeof getPublicVendorStorefront>>, TError = ErrorType<NotFoundResponse>>(
+ vendorId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicVendorStorefront>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPublicVendorStorefrontQueryOptions(vendorId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetVendorVerificationUrl = () => {
+
+
+
+
+  return `/api/vendor/verification`
+}
+
+/**
+ * @summary Get vendor verification status
+ */
+export const getVendorVerification = async ( options?: Parameters<typeof customFetch>[1]): Promise<VendorVerification> => {
+
+  return customFetch<VendorVerification>(getGetVendorVerificationUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVendorVerificationQueryKey = () => {
+    return [
+    `/api/vendor/verification`
+    ] as const;
+    }
+
+
+export const getGetVendorVerificationQueryOptions = <TData = Awaited<ReturnType<typeof getVendorVerification>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVendorVerification>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVendorVerificationQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVendorVerification>>> = ({ signal }) => getVendorVerification({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVendorVerification>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVendorVerificationQueryResult = NonNullable<Awaited<ReturnType<typeof getVendorVerification>>>
+export type GetVendorVerificationQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get vendor verification status
+ */
+
+export function useGetVendorVerification<TData = Awaited<ReturnType<typeof getVendorVerification>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVendorVerification>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVendorVerificationQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateVendorVerificationUrl = () => {
+
+
+
+
+  return `/api/vendor/verification`
+}
+
+/**
+ * @summary Submit vendor verification information
+ */
+export const updateVendorVerification = async (vendorVerificationUpdate: VendorVerificationUpdate, options?: Parameters<typeof customFetch>[1]): Promise<VendorVerification> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorVerification>(getUpdateVendorVerificationUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorVerificationUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateVendorVerificationMutationKey = () => ['updateVendorVerification'] as const;
+
+export const getUpdateVendorVerificationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorVerification>>, TError,UpdateVendorVerificationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVendorVerification>>, TError,UpdateVendorVerificationMutationVariables, TContext> => {
+
+const mutationKey = getUpdateVendorVerificationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVendorVerification>>, UpdateVendorVerificationMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateVendorVerification(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVendorVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof updateVendorVerification>>>
+    export type UpdateVendorVerificationMutationBody = BodyType<VendorVerificationUpdate>
+    export type UpdateVendorVerificationMutationError = ErrorType<unknown>
+    export type UpdateVendorVerificationMutationVariables = {data: BodyType<VendorVerificationUpdate>}
+
+    /**
+ * @summary Submit vendor verification information
+ */
+export const useUpdateVendorVerification = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorVerification>>, TError,UpdateVendorVerificationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVendorVerification>>,
+        TError,
+        UpdateVendorVerificationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateVendorVerificationMutationOptions(options));
+    }
+
+export const getGetVendorSettingsUrl = () => {
+
+
+
+
+  return `/api/vendor/settings`
+}
+
+/**
+ * @summary Get vendor settings
+ */
+export const getVendorSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<VendorSettings> => {
+
+  return customFetch<VendorSettings>(getGetVendorSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVendorSettingsQueryKey = () => {
+    return [
+    `/api/vendor/settings`
+    ] as const;
+    }
+
+
+export const getGetVendorSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getVendorSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVendorSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVendorSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVendorSettings>>> = ({ signal }) => getVendorSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVendorSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVendorSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getVendorSettings>>>
+export type GetVendorSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get vendor settings
+ */
+
+export function useGetVendorSettings<TData = Awaited<ReturnType<typeof getVendorSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVendorSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVendorSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateVendorSettingsUrl = () => {
+
+
+
+
+  return `/api/vendor/settings`
+}
+
+/**
+ * @summary Update vendor settings
+ */
+export const updateVendorSettings = async (vendorSettingsUpdate: VendorSettingsUpdate, options?: Parameters<typeof customFetch>[1]): Promise<VendorSettings> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorSettings>(getUpdateVendorSettingsUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorSettingsUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateVendorSettingsMutationKey = () => ['updateVendorSettings'] as const;
+
+export const getUpdateVendorSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorSettings>>, TError,UpdateVendorSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateVendorSettings>>, TError,UpdateVendorSettingsMutationVariables, TContext> => {
+
+const mutationKey = getUpdateVendorSettingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateVendorSettings>>, UpdateVendorSettingsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateVendorSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateVendorSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateVendorSettings>>>
+    export type UpdateVendorSettingsMutationBody = BodyType<VendorSettingsUpdate>
+    export type UpdateVendorSettingsMutationError = ErrorType<unknown>
+    export type UpdateVendorSettingsMutationVariables = {data: BodyType<VendorSettingsUpdate>}
+
+    /**
+ * @summary Update vendor settings
+ */
+export const useUpdateVendorSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateVendorSettings>>, TError,UpdateVendorSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateVendorSettings>>,
+        TError,
+        UpdateVendorSettingsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateVendorSettingsMutationOptions(options));
+    }
+
+export const getListVendorSupportTicketsUrl = () => {
+
+
+
+
+  return `/api/vendor/support-tickets`
+}
+
+/**
+ * @summary List vendor support tickets
+ */
+export const listVendorSupportTickets = async ( options?: Parameters<typeof customFetch>[1]): Promise<VendorSupportTicket[]> => {
+
+  return customFetch<VendorSupportTicket[]>(getListVendorSupportTicketsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVendorSupportTicketsQueryKey = () => {
+    return [
+    `/api/vendor/support-tickets`
+    ] as const;
+    }
+
+
+export const getListVendorSupportTicketsQueryOptions = <TData = Awaited<ReturnType<typeof listVendorSupportTickets>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorSupportTickets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVendorSupportTicketsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVendorSupportTickets>>> = ({ signal }) => listVendorSupportTickets({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVendorSupportTickets>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVendorSupportTicketsQueryResult = NonNullable<Awaited<ReturnType<typeof listVendorSupportTickets>>>
+export type ListVendorSupportTicketsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List vendor support tickets
+ */
+
+export function useListVendorSupportTickets<TData = Awaited<ReturnType<typeof listVendorSupportTickets>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVendorSupportTickets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVendorSupportTicketsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateVendorSupportTicketUrl = () => {
+
+
+
+
+  return `/api/vendor/support-tickets`
+}
+
+/**
+ * @summary Create a vendor support ticket
+ */
+export const createVendorSupportTicket = async (vendorSupportTicketInput: VendorSupportTicketInput, options?: Parameters<typeof customFetch>[1]): Promise<VendorSupportTicket> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<VendorSupportTicket>(getCreateVendorSupportTicketUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(vendorSupportTicketInput)
+  }
+);}
+
+
+
+
+
+export const getCreateVendorSupportTicketMutationKey = () => ['createVendorSupportTicket'] as const;
+
+export const getCreateVendorSupportTicketMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVendorSupportTicket>>, TError,CreateVendorSupportTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createVendorSupportTicket>>, TError,CreateVendorSupportTicketMutationVariables, TContext> => {
+
+const mutationKey = getCreateVendorSupportTicketMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVendorSupportTicket>>, CreateVendorSupportTicketMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createVendorSupportTicket(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateVendorSupportTicketMutationResult = NonNullable<Awaited<ReturnType<typeof createVendorSupportTicket>>>
+    export type CreateVendorSupportTicketMutationBody = BodyType<VendorSupportTicketInput>
+    export type CreateVendorSupportTicketMutationError = ErrorType<unknown>
+    export type CreateVendorSupportTicketMutationVariables = {data: BodyType<VendorSupportTicketInput>}
+
+    /**
+ * @summary Create a vendor support ticket
+ */
+export const useCreateVendorSupportTicket = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVendorSupportTicket>>, TError,CreateVendorSupportTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createVendorSupportTicket>>,
+        TError,
+        CreateVendorSupportTicketMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateVendorSupportTicketMutationOptions(options));
+    }
+
 export const getGetAdminDashboardUrl = () => {
 
 
@@ -1633,6 +3477,345 @@ export const useUpdateVendorApplicationStatus = <TError = ErrorType<NotFoundResp
       return useMutation(getUpdateVendorApplicationStatusMutationOptions(options));
     }
 
+export const getListAdminVendorsUrl = (params?: ListAdminVendorsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/vendors?${stringifiedParams}` : `/api/admin/vendors`
+}
+
+/**
+ * @summary List vendor accounts
+ */
+export const listAdminVendors = async (params?: ListAdminVendorsParams, options?: Parameters<typeof customFetch>[1]): Promise<AdminVendor[]> => {
+
+  return customFetch<AdminVendor[]>(getListAdminVendorsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminVendorsQueryKey = (params?: ListAdminVendorsParams,) => {
+    return [
+    `/api/admin/vendors`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAdminVendorsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminVendors>>, TError = ErrorType<unknown>>(params?: ListAdminVendorsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminVendors>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminVendorsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminVendors>>> = ({ signal }) => listAdminVendors(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminVendors>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminVendorsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminVendors>>>
+export type ListAdminVendorsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List vendor accounts
+ */
+
+export function useListAdminVendors<TData = Awaited<ReturnType<typeof listAdminVendors>>, TError = ErrorType<unknown>>(
+ params?: ListAdminVendorsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminVendors>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminVendorsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateAdminVendorUrl = (vendorId: string,) => {
+
+
+
+
+  return `/api/admin/vendors/${vendorId}`
+}
+
+/**
+ * @summary Update a vendor account
+ */
+export const updateAdminVendor = async (vendorId: string,
+    adminVendorUpdate: AdminVendorUpdate, options?: Parameters<typeof customFetch>[1]): Promise<AdminVendor> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AdminVendor>(getUpdateAdminVendorUrl(vendorId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(adminVendorUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdminVendorMutationKey = () => ['updateAdminVendor'] as const;
+
+export const getUpdateAdminVendorMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminVendor>>, TError,UpdateAdminVendorMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminVendor>>, TError,UpdateAdminVendorMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAdminVendorMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminVendor>>, UpdateAdminVendorMutationVariables> = (props) => {
+          const {vendorId,data} = props ?? {};
+
+          return  updateAdminVendor(vendorId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminVendorMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminVendor>>>
+    export type UpdateAdminVendorMutationBody = BodyType<AdminVendorUpdate>
+    export type UpdateAdminVendorMutationError = ErrorType<NotFoundResponse>
+    export type UpdateAdminVendorMutationVariables = {vendorId: string;data: BodyType<AdminVendorUpdate>}
+
+    /**
+ * @summary Update a vendor account
+ */
+export const useUpdateAdminVendor = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminVendor>>, TError,UpdateAdminVendorMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminVendor>>,
+        TError,
+        UpdateAdminVendorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAdminVendorMutationOptions(options));
+    }
+
+export const getListAdminVendorMessagesUrl = (vendorId: string,) => {
+
+
+
+
+  return `/api/admin/vendors/${vendorId}/messages`
+}
+
+/**
+ * @summary List messages with a vendor
+ */
+export const listAdminVendorMessages = async (vendorId: string, options?: Parameters<typeof customFetch>[1]): Promise<AdminMessage[]> => {
+
+  return customFetch<AdminMessage[]>(getListAdminVendorMessagesUrl(vendorId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminVendorMessagesQueryKey = (vendorId: string,) => {
+    return [
+    `/api/admin/vendors/${vendorId}/messages`
+    ] as const;
+    }
+
+
+export const getListAdminVendorMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listAdminVendorMessages>>, TError = ErrorType<unknown>>(vendorId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminVendorMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminVendorMessagesQueryKey(vendorId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminVendorMessages>>> = ({ signal }) => listAdminVendorMessages(vendorId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: vendorId !== null && vendorId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminVendorMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminVendorMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminVendorMessages>>>
+export type ListAdminVendorMessagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List messages with a vendor
+ */
+
+export function useListAdminVendorMessages<TData = Awaited<ReturnType<typeof listAdminVendorMessages>>, TError = ErrorType<unknown>>(
+ vendorId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminVendorMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminVendorMessagesQueryOptions(vendorId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAdminVendorMessageUrl = (vendorId: string,) => {
+
+
+
+
+  return `/api/admin/vendors/${vendorId}/messages`
+}
+
+/**
+ * @summary Send a message to a vendor
+ */
+export const createAdminVendorMessage = async (vendorId: string,
+    createAdminMessage: CreateAdminMessage, options?: Parameters<typeof customFetch>[1]): Promise<AdminMessage> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AdminMessage>(getCreateAdminVendorMessageUrl(vendorId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createAdminMessage)
+  }
+);}
+
+
+
+
+
+export const getCreateAdminVendorMessageMutationKey = () => ['createAdminVendorMessage'] as const;
+
+export const getCreateAdminVendorMessageMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminVendorMessage>>, TError,CreateAdminVendorMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdminVendorMessage>>, TError,CreateAdminVendorMessageMutationVariables, TContext> => {
+
+const mutationKey = getCreateAdminVendorMessageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdminVendorMessage>>, CreateAdminVendorMessageMutationVariables> = (props) => {
+          const {vendorId,data} = props ?? {};
+
+          return  createAdminVendorMessage(vendorId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdminVendorMessageMutationResult = NonNullable<Awaited<ReturnType<typeof createAdminVendorMessage>>>
+    export type CreateAdminVendorMessageMutationBody = BodyType<CreateAdminMessage>
+    export type CreateAdminVendorMessageMutationError = ErrorType<NotFoundResponse>
+    export type CreateAdminVendorMessageMutationVariables = {vendorId: string;data: BodyType<CreateAdminMessage>}
+
+    /**
+ * @summary Send a message to a vendor
+ */
+export const useCreateAdminVendorMessage = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminVendorMessage>>, TError,CreateAdminVendorMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAdminVendorMessage>>,
+        TError,
+        CreateAdminVendorMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAdminVendorMessageMutationOptions(options));
+    }
+
 export const getListSupportTicketsUrl = (params?: ListSupportTicketsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1804,6 +3987,426 @@ export const useUpdateSupportTicket = <TError = ErrorType<NotFoundResponse>,
         TContext
       > => {
       return useMutation(getUpdateSupportTicketMutationOptions(options));
+    }
+
+export const getListSupportTicketMessagesUrl = (ticketId: string,) => {
+
+
+
+
+  return `/api/admin/support-tickets/${ticketId}/messages`
+}
+
+/**
+ * @summary List support ticket messages
+ */
+export const listSupportTicketMessages = async (ticketId: string, options?: Parameters<typeof customFetch>[1]): Promise<AdminMessage[]> => {
+
+  return customFetch<AdminMessage[]>(getListSupportTicketMessagesUrl(ticketId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSupportTicketMessagesQueryKey = (ticketId: string,) => {
+    return [
+    `/api/admin/support-tickets/${ticketId}/messages`
+    ] as const;
+    }
+
+
+export const getListSupportTicketMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listSupportTicketMessages>>, TError = ErrorType<unknown>>(ticketId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSupportTicketMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSupportTicketMessagesQueryKey(ticketId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSupportTicketMessages>>> = ({ signal }) => listSupportTicketMessages(ticketId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: ticketId !== null && ticketId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSupportTicketMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSupportTicketMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listSupportTicketMessages>>>
+export type ListSupportTicketMessagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List support ticket messages
+ */
+
+export function useListSupportTicketMessages<TData = Awaited<ReturnType<typeof listSupportTicketMessages>>, TError = ErrorType<unknown>>(
+ ticketId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSupportTicketMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSupportTicketMessagesQueryOptions(ticketId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateSupportTicketMessageUrl = (ticketId: string,) => {
+
+
+
+
+  return `/api/admin/support-tickets/${ticketId}/messages`
+}
+
+/**
+ * @summary Send a support ticket message
+ */
+export const createSupportTicketMessage = async (ticketId: string,
+    createAdminMessage: CreateAdminMessage, options?: Parameters<typeof customFetch>[1]): Promise<AdminMessage> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AdminMessage>(getCreateSupportTicketMessageUrl(ticketId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createAdminMessage)
+  }
+);}
+
+
+
+
+
+export const getCreateSupportTicketMessageMutationKey = () => ['createSupportTicketMessage'] as const;
+
+export const getCreateSupportTicketMessageMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportTicketMessage>>, TError,CreateSupportTicketMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSupportTicketMessage>>, TError,CreateSupportTicketMessageMutationVariables, TContext> => {
+
+const mutationKey = getCreateSupportTicketMessageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSupportTicketMessage>>, CreateSupportTicketMessageMutationVariables> = (props) => {
+          const {ticketId,data} = props ?? {};
+
+          return  createSupportTicketMessage(ticketId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSupportTicketMessageMutationResult = NonNullable<Awaited<ReturnType<typeof createSupportTicketMessage>>>
+    export type CreateSupportTicketMessageMutationBody = BodyType<CreateAdminMessage>
+    export type CreateSupportTicketMessageMutationError = ErrorType<NotFoundResponse>
+    export type CreateSupportTicketMessageMutationVariables = {ticketId: string;data: BodyType<CreateAdminMessage>}
+
+    /**
+ * @summary Send a support ticket message
+ */
+export const useCreateSupportTicketMessage = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportTicketMessage>>, TError,CreateSupportTicketMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSupportTicketMessage>>,
+        TError,
+        CreateSupportTicketMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateSupportTicketMessageMutationOptions(options));
+    }
+
+export const getListSupportAccountsUrl = () => {
+
+
+
+
+  return `/api/admin/support-accounts`
+}
+
+/**
+ * @summary List operations support accounts
+ */
+export const listSupportAccounts = async ( options?: Parameters<typeof customFetch>[1]): Promise<SupportAccount[]> => {
+
+  return customFetch<SupportAccount[]>(getListSupportAccountsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSupportAccountsQueryKey = () => {
+    return [
+    `/api/admin/support-accounts`
+    ] as const;
+    }
+
+
+export const getListSupportAccountsQueryOptions = <TData = Awaited<ReturnType<typeof listSupportAccounts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSupportAccounts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSupportAccountsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSupportAccounts>>> = ({ signal }) => listSupportAccounts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSupportAccounts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSupportAccountsQueryResult = NonNullable<Awaited<ReturnType<typeof listSupportAccounts>>>
+export type ListSupportAccountsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List operations support accounts
+ */
+
+export function useListSupportAccounts<TData = Awaited<ReturnType<typeof listSupportAccounts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSupportAccounts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSupportAccountsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateSupportAccountUrl = () => {
+
+
+
+
+  return `/api/admin/support-accounts`
+}
+
+/**
+ * @summary Create a support account
+ */
+export const createSupportAccount = async (createSupportAccountBody: CreateSupportAccount, options?: Parameters<typeof customFetch>[1]): Promise<SupportAccount> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SupportAccount>(getCreateSupportAccountUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createSupportAccountBody)
+  }
+);}
+
+
+
+
+
+export const getCreateSupportAccountMutationKey = () => ['createSupportAccount'] as const;
+
+export const getCreateSupportAccountMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportAccount>>, TError,CreateSupportAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSupportAccount>>, TError,CreateSupportAccountMutationVariables, TContext> => {
+
+const mutationKey = getCreateSupportAccountMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSupportAccount>>, CreateSupportAccountMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSupportAccount(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSupportAccountMutationResult = NonNullable<Awaited<ReturnType<typeof createSupportAccount>>>
+    export type CreateSupportAccountMutationBody = BodyType<CreateSupportAccount>
+    export type CreateSupportAccountMutationError = ErrorType<unknown>
+    export type CreateSupportAccountMutationVariables = {data: BodyType<CreateSupportAccount>}
+
+    /**
+ * @summary Create a support account
+ */
+export const useCreateSupportAccount = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportAccount>>, TError,CreateSupportAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSupportAccount>>,
+        TError,
+        CreateSupportAccountMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateSupportAccountMutationOptions(options));
+    }
+
+export const getUpdateSupportAccountUrl = (accountId: string,) => {
+
+
+
+
+  return `/api/admin/support-accounts/${accountId}`
+}
+
+/**
+ * @summary Update a support account
+ */
+export const updateSupportAccount = async (accountId: string,
+    supportAccountUpdate: SupportAccountUpdate, options?: Parameters<typeof customFetch>[1]): Promise<SupportAccount> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SupportAccount>(getUpdateSupportAccountUrl(accountId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(supportAccountUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateSupportAccountMutationKey = () => ['updateSupportAccount'] as const;
+
+export const getUpdateSupportAccountMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportAccount>>, TError,UpdateSupportAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSupportAccount>>, TError,UpdateSupportAccountMutationVariables, TContext> => {
+
+const mutationKey = getUpdateSupportAccountMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSupportAccount>>, UpdateSupportAccountMutationVariables> = (props) => {
+          const {accountId,data} = props ?? {};
+
+          return  updateSupportAccount(accountId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSupportAccountMutationResult = NonNullable<Awaited<ReturnType<typeof updateSupportAccount>>>
+    export type UpdateSupportAccountMutationBody = BodyType<SupportAccountUpdate>
+    export type UpdateSupportAccountMutationError = ErrorType<NotFoundResponse>
+    export type UpdateSupportAccountMutationVariables = {accountId: string;data: BodyType<SupportAccountUpdate>}
+
+    /**
+ * @summary Update a support account
+ */
+export const useUpdateSupportAccount = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportAccount>>, TError,UpdateSupportAccountMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSupportAccount>>,
+        TError,
+        UpdateSupportAccountMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateSupportAccountMutationOptions(options));
     }
 
 export const getGetFulfillmentOverviewUrl = () => {

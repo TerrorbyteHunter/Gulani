@@ -5,7 +5,13 @@
  * Gulani marketplace API
  * OpenAPI spec version: 0.1.0
  */
-import type { Order } from './order';
+import type { VendorCustomer } from './vendorCustomer';
+import type { VendorInventoryItem } from './vendorInventoryItem';
+import type { VendorOrder } from './vendorOrder';
+import type { VendorSalesPoint } from './vendorSalesPoint';
+import type { VendorSettings } from './vendorSettings';
+import type { VendorStorefront } from './vendorStorefront';
+import type { VendorVerification } from './vendorVerification';
 
 export interface VendorDashboard {
   vendorName: string;
@@ -13,5 +19,22 @@ export interface VendorDashboard {
   productsLive: number;
   revenueThisMonth: number;
   rating: number;
-  recentOrders: Order[];
+  totalSales: number;
+  todaySales: number;
+  ordersAwaitingShipment: number;
+  completedOrders: number;
+  cancelledRefundedOrders: number;
+  productsInStock: number;
+  lowStockAlerts: number;
+  unreadCustomerMessages: number;
+  pendingDisputes: number;
+  availableBalance: number;
+  pendingBalance: number;
+  recentOrders: VendorOrder[];
+  salesChart: VendorSalesPoint[];
+  customers: VendorCustomer[];
+  inventory: VendorInventoryItem[];
+  storefront: VendorStorefront;
+  verification: VendorVerification;
+  settings: VendorSettings;
 }
