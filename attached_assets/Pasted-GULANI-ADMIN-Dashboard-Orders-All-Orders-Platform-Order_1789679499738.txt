@@ -1,0 +1,116 @@
+GULANI ADMIN
+
+├── Dashboard
+│
+├── Orders
+│   ├── All Orders
+│   ├── Platform Orders
+│   ├── Vendor Orders
+│   ├── Pending
+│   ├── Processing
+│   ├── Awaiting Shipment
+│   ├── Shipped
+│   ├── Delivered
+│   ├── Cancelled
+│   ├── Returns
+│   ├── Refunds
+│   └── Disputes
+│
+├── Products
+│   ├── All Products
+│   ├── Platform Products
+│   ├── Vendor Products
+│   ├── Pending Approval
+│   ├── Categories
+│   ├── Attributes
+│   ├── Inventory
+│   └── Product Reports
+│
+├── Vendors
+│   ├── All Vendors
+│   ├── Applications
+│   ├── Verification / KYC
+│   ├── Active
+│   ├── Suspended
+│   ├── Vendor Payouts
+│   ├── Vendor Performance
+│   └── Vendor Disputes
+│
+├── Customers
+│   ├── All Customers
+│   ├── New Customers
+│   ├── Suspended
+│   ├── Customer Orders
+│   ├── Reviews
+│   └── Customer Activity
+│
+├── Sourcing
+│   ├── Global Products
+│   ├── Sourcing Queue
+│   ├── Supplier Orders
+│   ├── Import/Sync
+│   └── Sourcing Costs
+│
+├── Fulfillment
+│   ├── Fulfillment Queue
+│   ├── Awaiting Pickup
+│   ├── Awaiting Shipment
+│   ├── In Transit
+│   ├── Delivered
+│   ├── Failed Delivery
+│   └── Delivery Partners
+│
+├── Finance
+│   ├── Transactions
+│   ├── Sales
+│   ├── Vendor Payouts
+│   ├── Refunds
+│   ├── Platform Revenue
+│   ├── Payment Failures
+│   └── Reconciliation
+│
+├── Promotions
+│   ├── Coupons
+│   ├── Discounts
+│   ├── Flash Sales
+│   ├── Campaigns
+│   └── Banners
+│
+├── Support
+│   ├── Tickets
+│   ├── Customer Messages
+│   ├── Vendor Messages
+│   ├── Disputes
+│   └── FAQs
+│
+├── Reviews & Moderation
+│   ├── Reviews
+│   ├── Reported Reviews
+│   ├── Reported Products
+│   └── Reported Users
+│
+├── Analytics & Reports
+│   ├── Sales
+│   ├── Customers
+│   ├── Vendors
+│   ├── Products
+│   ├── Orders
+│   └── Financial Reports
+│
+├── Notifications
+│
+├── Admin Management
+│   ├── Administrators
+│   ├── Roles
+│   ├── Permissions
+│   └── Activity Logs
+│
+└── Settings
+    ├── Marketplace
+    ├── Payments
+    ├── Shipping
+    ├── Taxes
+    ├── Commissions
+    ├── Notifications
+    ├── Security
+    └── General

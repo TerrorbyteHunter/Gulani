@@ -35,6 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import NotFound from '@/pages/not-found';
 import { Link, Route, Router as WouterRouter, Switch, useLocation, useParams } from 'wouter';
 import { PublicVendorStorefront, VendorWorkspace } from '@/pages/vendor-workspace';
+import { AdminWorkspace } from '@/pages/admin-workspace';
 
 const queryClient = new QueryClient();
 const money = (value: number, currency = 'ZMW') => `${currency} ${value.toFixed(2)}`;
@@ -439,7 +440,7 @@ function AdminDeskPage() {
 
 function Router() {
   const [location] = useLocation();
-  return <ErrorBoundary resetKey={location}><Shell><Switch><Route path="/" component={Home} /><Route path="/product/:id" component={ProductDetail} /><Route path="/cart" component={CartPage} /><Route path="/checkout" component={CheckoutPage} /><Route path="/order/:id" component={OrderPage} /><Route path="/orders" component={OrdersPage} /><Route path="/sell" component={SellPage} /><Route path="/vendor" component={VendorWorkspace} /><Route path="/store/:vendorId" component={PublicVendorStorefront} /><Route path="/admin" component={AdminDeskPage} /><Route path="/admin/orders" component={AdminDeskPage} /><Route path="/admin/vendors" component={AdminDeskPage} /><Route path="/admin/tickets" component={AdminDeskPage} /><Route path="/admin/fulfillment" component={AdminDeskPage} /><Route path="/admin/sales" component={AdminDeskPage} /><Route path="/admin/pricing" component={AdminDeskPage} /><Route path="/admin/settings" component={AdminDeskPage} /><Route component={NotFound} /></Switch></Shell></ErrorBoundary>;
+  return <ErrorBoundary resetKey={location}><Shell><Switch><Route path="/" component={Home} /><Route path="/product/:id" component={ProductDetail} /><Route path="/cart" component={CartPage} /><Route path="/checkout" component={CheckoutPage} /><Route path="/order/:id" component={OrderPage} /><Route path="/orders" component={OrdersPage} /><Route path="/sell" component={SellPage} /><Route path="/vendor" component={VendorWorkspace} /><Route path="/store/:vendorId" component={PublicVendorStorefront} /><Route path="/admin" component={AdminWorkspace} /><Route path="/admin/:section" component={AdminWorkspace} /><Route component={NotFound} /></Switch></Shell></ErrorBoundary>;
 }
 
 function App() {
