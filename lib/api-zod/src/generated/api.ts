@@ -385,6 +385,387 @@ export const GetOrderResponse = zod.object({
 
 
 /**
+ * @summary List conversations visible to the current user
+ */
+export const listConversationsQueryLimitDefault = 50;
+export const listConversationsQueryLimitMax = 100;
+
+
+
+export const ListConversationsQueryParams = zod.object({
+  "type": zod.enum(['buyer_vendor', 'customer_support', 'vendor_support']).optional(),
+  "status": zod.enum(['active', 'archived', 'closed']).optional(),
+  "limit": zod.coerce.number().int().min(1).max(listConversationsQueryLimitMax).default(listConversationsQueryLimitDefault)
+})
+
+export const ListConversationsResponseItem = zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['buyer_vendor', 'customer_support', 'vendor_support']),
+  "buyerId": zod.string().nullable(),
+  "vendorId": zod.string().nullable(),
+  "contextType": zod.enum(['product', 'order', 'shop', 'general']),
+  "contextId": zod.string().nullable(),
+  "status": zod.enum(['active', 'archived', 'closed']),
+  "lastMessageAt": zod.string().nullable(),
+  "lastMessagePreview": zod.string().nullable(),
+  "unreadCount": zod.number().int(),
+  "participants": zod.array(zod.object({
+  "userId": zod.string(),
+  "roleInChat": zod.enum(['customer', 'vendor', 'support', 'master_admin', 'system_admin']),
+  "lastReadMessageId": zod.string().nullable(),
+  "muted": zod.boolean()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListConversationsResponse = zod.array(ListConversationsResponseItem)
+
+
+/**
+ * @summary Start a buyer/vendor or support conversation
+ */
+export const CreateConversationBody = zod.object({
+  "type": zod.enum(['buyer_vendor', 'customer_support', 'vendor_support']),
+  "vendorId": zod.string().optional(),
+  "contextType": zod.enum(['product', 'order', 'shop', 'general']),
+  "contextId": zod.string().optional()
+})
+
+export const CreateConversationResponse = zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['buyer_vendor', 'customer_support', 'vendor_support']),
+  "buyerId": zod.string().nullable(),
+  "vendorId": zod.string().nullable(),
+  "contextType": zod.enum(['product', 'order', 'shop', 'general']),
+  "contextId": zod.string().nullable(),
+  "status": zod.enum(['active', 'archived', 'closed']),
+  "lastMessageAt": zod.string().nullable(),
+  "lastMessagePreview": zod.string().nullable(),
+  "unreadCount": zod.number().int(),
+  "participants": zod.array(zod.object({
+  "userId": zod.string(),
+  "roleInChat": zod.enum(['customer', 'vendor', 'support', 'master_admin', 'system_admin']),
+  "lastReadMessageId": zod.string().nullable(),
+  "muted": zod.boolean()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get a visible conversation
+ */
+export const GetConversationParams = zod.object({
+  "conversationId": zod.coerce.string()
+})
+
+export const GetConversationResponse = zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['buyer_vendor', 'customer_support', 'vendor_support']),
+  "buyerId": zod.string().nullable(),
+  "vendorId": zod.string().nullable(),
+  "contextType": zod.enum(['product', 'order', 'shop', 'general']),
+  "contextId": zod.string().nullable(),
+  "status": zod.enum(['active', 'archived', 'closed']),
+  "lastMessageAt": zod.string().nullable(),
+  "lastMessagePreview": zod.string().nullable(),
+  "unreadCount": zod.number().int(),
+  "participants": zod.array(zod.object({
+  "userId": zod.string(),
+  "roleInChat": zod.enum(['customer', 'vendor', 'support', 'master_admin', 'system_admin']),
+  "lastReadMessageId": zod.string().nullable(),
+  "muted": zod.boolean()
+})),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary List conversation messages
+ */
+export const ListConversationMessagesParams = zod.object({
+  "conversationId": zod.coerce.string()
+})
+
+export const ListConversationMessagesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "conversationId": zod.string(),
+  "senderId": zod.string().nullable(),
+  "senderRole": zod.enum(['customer', 'vendor', 'support', 'master_admin', 'system_admin', 'system']),
+  "type": zod.enum(['text', 'image', 'file', 'product_card', 'order_card', 'system', 'internal_note']),
+  "body": zod.string().nullable(),
+  "metadata": zod.record(zod.string(), zod.unknown()).nullable(),
+  "replyToMessageId": zod.string().nullable(),
+  "clientMessageId": zod.string().nullable(),
+  "deliveryStatus": zod.enum(['sent', 'delivered', 'read']),
+  "createdAt": zod.string(),
+  "editedAt": zod.string().nullable(),
+  "deletedAt": zod.string().nullable()
+})),
+  "nextCursor": zod.string().nullable(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Send an idempotent conversation message
+ */
+export const SendConversationMessageParams = zod.object({
+  "conversationId": zod.coerce.string()
+})
+
+export const sendConversationMessageBodyBodyMax = 5000;
+
+export const sendConversationMessageBodyClientMessageIdMax = 128;
+
+
+
+export const SendConversationMessageBody = zod.object({
+  "body": zod.string().min(1).max(sendConversationMessageBodyBodyMax),
+  "type": zod.enum(['text', 'image', 'file', 'product_card', 'order_card', 'internal_note']).optional(),
+  "metadata": zod.record(zod.string(), zod.unknown()).optional(),
+  "replyToMessageId": zod.string().optional(),
+  "clientMessageId": zod.string().min(1).max(sendConversationMessageBodyClientMessageIdMax)
+})
+
+export const SendConversationMessageResponse = zod.object({
+  "id": zod.string(),
+  "conversationId": zod.string(),
+  "senderId": zod.string().nullable(),
+  "senderRole": zod.enum(['customer', 'vendor', 'support', 'master_admin', 'system_admin', 'system']),
+  "type": zod.enum(['text', 'image', 'file', 'product_card', 'order_card', 'system', 'internal_note']),
+  "body": zod.string().nullable(),
+  "metadata": zod.record(zod.string(), zod.unknown()).nullable(),
+  "replyToMessageId": zod.string().nullable(),
+  "clientMessageId": zod.string().nullable(),
+  "deliveryStatus": zod.enum(['sent', 'delivered', 'read']),
+  "createdAt": zod.string(),
+  "editedAt": zod.string().nullable(),
+  "deletedAt": zod.string().nullable()
+})
+
+
+/**
+ * @summary Mark a conversation read through a message
+ */
+export const MarkConversationReadParams = zod.object({
+  "conversationId": zod.coerce.string()
+})
+
+export const MarkConversationReadBody = zod.object({
+  "messageId": zod.string()
+})
+
+export const MarkConversationReadResponse = zod.void()
+
+
+/**
+ * @summary List support tickets visible to the current user
+ */
+export const listChatTicketsQueryLimitDefault = 50;
+export const listChatTicketsQueryLimitMax = 100;
+
+
+
+export const ListChatTicketsQueryParams = zod.object({
+  "status": zod.enum(['new', 'open', 'pending', 'on_hold', 'resolved', 'closed']).optional(),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']).optional(),
+  "requesterType": zod.enum(['customer', 'vendor']).optional(),
+  "limit": zod.coerce.number().int().min(1).max(listChatTicketsQueryLimitMax).default(listChatTicketsQueryLimitDefault)
+})
+
+export const ListChatTicketsResponseItem = zod.object({
+  "id": zod.string(),
+  "ticketNumber": zod.string(),
+  "conversationId": zod.string(),
+  "requesterId": zod.string(),
+  "requesterType": zod.enum(['customer', 'vendor']),
+  "category": zod.string(),
+  "subject": zod.string(),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']),
+  "status": zod.enum(['new', 'open', 'pending', 'on_hold', 'resolved', 'closed']),
+  "assignedAgentId": zod.string().nullable(),
+  "relatedOrderId": zod.string().nullable(),
+  "relatedProductId": zod.string().nullable(),
+  "relatedVendorId": zod.string().nullable(),
+  "sourceConversationId": zod.string().nullable(),
+  "resolutionCode": zod.string().nullable(),
+  "resolutionNote": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListChatTicketsResponse = zod.array(ListChatTicketsResponseItem)
+
+
+/**
+ * @summary Create a support ticket and conversation
+ */
+export const createChatTicketBodyCategoryMin = 2;
+export const createChatTicketBodyCategoryMax = 80;
+
+export const createChatTicketBodySubjectMin = 3;
+export const createChatTicketBodySubjectMax = 160;
+
+export const createChatTicketBodyMessageMax = 5000;
+
+export const createChatTicketBodyPriorityDefault = `normal`;
+export const createChatTicketBodyClientMessageIdMax = 128;
+
+
+
+export const CreateChatTicketBody = zod.object({
+  "category": zod.string().min(createChatTicketBodyCategoryMin).max(createChatTicketBodyCategoryMax),
+  "subject": zod.string().min(createChatTicketBodySubjectMin).max(createChatTicketBodySubjectMax),
+  "message": zod.string().min(1).max(createChatTicketBodyMessageMax),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']).default(createChatTicketBodyPriorityDefault),
+  "relatedOrderId": zod.string().optional(),
+  "relatedProductId": zod.string().optional(),
+  "relatedVendorId": zod.string().optional(),
+  "clientMessageId": zod.string().min(1).max(createChatTicketBodyClientMessageIdMax)
+})
+
+export const CreateChatTicketResponse = zod.object({
+  "id": zod.string(),
+  "ticketNumber": zod.string(),
+  "conversationId": zod.string(),
+  "requesterId": zod.string(),
+  "requesterType": zod.enum(['customer', 'vendor']),
+  "category": zod.string(),
+  "subject": zod.string(),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']),
+  "status": zod.enum(['new', 'open', 'pending', 'on_hold', 'resolved', 'closed']),
+  "assignedAgentId": zod.string().nullable(),
+  "relatedOrderId": zod.string().nullable(),
+  "relatedProductId": zod.string().nullable(),
+  "relatedVendorId": zod.string().nullable(),
+  "sourceConversationId": zod.string().nullable(),
+  "resolutionCode": zod.string().nullable(),
+  "resolutionNote": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get a support ticket
+ */
+export const GetChatTicketParams = zod.object({
+  "ticketId": zod.coerce.string()
+})
+
+export const GetChatTicketResponse = zod.object({
+  "id": zod.string(),
+  "ticketNumber": zod.string(),
+  "conversationId": zod.string(),
+  "requesterId": zod.string(),
+  "requesterType": zod.enum(['customer', 'vendor']),
+  "category": zod.string(),
+  "subject": zod.string(),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']),
+  "status": zod.enum(['new', 'open', 'pending', 'on_hold', 'resolved', 'closed']),
+  "assignedAgentId": zod.string().nullable(),
+  "relatedOrderId": zod.string().nullable(),
+  "relatedProductId": zod.string().nullable(),
+  "relatedVendorId": zod.string().nullable(),
+  "sourceConversationId": zod.string().nullable(),
+  "resolutionCode": zod.string().nullable(),
+  "resolutionNote": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update support ticket workflow fields
+ */
+export const UpdateChatTicketParams = zod.object({
+  "ticketId": zod.coerce.string()
+})
+
+export const updateChatTicketBodyCategoryMin = 2;
+export const updateChatTicketBodyCategoryMax = 80;
+
+export const updateChatTicketBodyResolutionCodeMin = 2;
+export const updateChatTicketBodyResolutionCodeMax = 80;
+
+export const updateChatTicketBodyResolutionNoteMin = 2;
+export const updateChatTicketBodyResolutionNoteMax = 2000;
+
+
+
+export const UpdateChatTicketBody = zod.object({
+  "status": zod.enum(['new', 'open', 'pending', 'on_hold', 'resolved', 'closed']).optional(),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']).optional(),
+  "assignedAgentId": zod.string().nullish(),
+  "category": zod.string().min(updateChatTicketBodyCategoryMin).max(updateChatTicketBodyCategoryMax).optional(),
+  "resolutionCode": zod.string().min(updateChatTicketBodyResolutionCodeMin).max(updateChatTicketBodyResolutionCodeMax).optional(),
+  "resolutionNote": zod.string().min(updateChatTicketBodyResolutionNoteMin).max(updateChatTicketBodyResolutionNoteMax).optional()
+})
+
+export const UpdateChatTicketResponse = zod.object({
+  "id": zod.string(),
+  "ticketNumber": zod.string(),
+  "conversationId": zod.string(),
+  "requesterId": zod.string(),
+  "requesterType": zod.enum(['customer', 'vendor']),
+  "category": zod.string(),
+  "subject": zod.string(),
+  "priority": zod.enum(['low', 'normal', 'high', 'urgent']),
+  "status": zod.enum(['new', 'open', 'pending', 'on_hold', 'resolved', 'closed']),
+  "assignedAgentId": zod.string().nullable(),
+  "relatedOrderId": zod.string().nullable(),
+  "relatedProductId": zod.string().nullable(),
+  "relatedVendorId": zod.string().nullable(),
+  "sourceConversationId": zod.string().nullable(),
+  "resolutionCode": zod.string().nullable(),
+  "resolutionNote": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Send a message to a support ticket
+ */
+export const SendChatTicketMessageParams = zod.object({
+  "ticketId": zod.coerce.string()
+})
+
+export const sendChatTicketMessageBodyBodyMax = 5000;
+
+export const sendChatTicketMessageBodyClientMessageIdMax = 128;
+
+
+
+export const SendChatTicketMessageBody = zod.object({
+  "body": zod.string().min(1).max(sendChatTicketMessageBodyBodyMax),
+  "type": zod.enum(['text', 'image', 'file', 'product_card', 'order_card', 'internal_note']).optional(),
+  "metadata": zod.record(zod.string(), zod.unknown()).optional(),
+  "replyToMessageId": zod.string().optional(),
+  "clientMessageId": zod.string().min(1).max(sendChatTicketMessageBodyClientMessageIdMax)
+})
+
+export const SendChatTicketMessageResponse = zod.object({
+  "id": zod.string(),
+  "conversationId": zod.string(),
+  "senderId": zod.string().nullable(),
+  "senderRole": zod.enum(['customer', 'vendor', 'support', 'master_admin', 'system_admin', 'system']),
+  "type": zod.enum(['text', 'image', 'file', 'product_card', 'order_card', 'system', 'internal_note']),
+  "body": zod.string().nullable(),
+  "metadata": zod.record(zod.string(), zod.unknown()).nullable(),
+  "replyToMessageId": zod.string().nullable(),
+  "clientMessageId": zod.string().nullable(),
+  "deliveryStatus": zod.enum(['sent', 'delivered', 'read']),
+  "createdAt": zod.string(),
+  "editedAt": zod.string().nullable(),
+  "deletedAt": zod.string().nullable()
+})
+
+
+/**
  * @summary Submit a vendor application
  */
 export const submitVendorApplicationBodyBusinessNameMin = 2;

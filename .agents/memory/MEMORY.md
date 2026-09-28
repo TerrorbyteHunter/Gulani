@@ -1,1 +1,2 @@
 - [Global sourced marketplace](catalog-pricing.md) — Gulani is global and source-aware; imported supplier costs are repriced by configurable source-specific markup rules.
+- [Chat foundation](chat-foundation.md) — Phase 1 routes require an explicit actor boundary until session auth and durable persistence are available.

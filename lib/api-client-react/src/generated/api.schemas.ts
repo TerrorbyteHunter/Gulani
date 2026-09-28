@@ -13,6 +13,342 @@ export interface Error {
   error: string;
 }
 
+export type ChatParticipantRoleInChat = typeof ChatParticipantRoleInChat[keyof typeof ChatParticipantRoleInChat];
+
+
+export const ChatParticipantRoleInChat = {
+  customer: 'customer',
+  vendor: 'vendor',
+  support: 'support',
+  master_admin: 'master_admin',
+  system_admin: 'system_admin',
+} as const;
+
+export interface ChatParticipant {
+  userId: string;
+  roleInChat: ChatParticipantRoleInChat;
+  /** @nullable */
+  lastReadMessageId: string | null;
+  muted: boolean;
+}
+
+export type ChatConversationType = typeof ChatConversationType[keyof typeof ChatConversationType];
+
+
+export const ChatConversationType = {
+  buyer_vendor: 'buyer_vendor',
+  customer_support: 'customer_support',
+  vendor_support: 'vendor_support',
+} as const;
+
+export type ChatConversationContextType = typeof ChatConversationContextType[keyof typeof ChatConversationContextType];
+
+
+export const ChatConversationContextType = {
+  product: 'product',
+  order: 'order',
+  shop: 'shop',
+  general: 'general',
+} as const;
+
+export type ChatConversationStatus = typeof ChatConversationStatus[keyof typeof ChatConversationStatus];
+
+
+export const ChatConversationStatus = {
+  active: 'active',
+  archived: 'archived',
+  closed: 'closed',
+} as const;
+
+export interface ChatConversation {
+  id: string;
+  type: ChatConversationType;
+  /** @nullable */
+  buyerId: string | null;
+  /** @nullable */
+  vendorId: string | null;
+  contextType: ChatConversationContextType;
+  /** @nullable */
+  contextId: string | null;
+  status: ChatConversationStatus;
+  /** @nullable */
+  lastMessageAt: string | null;
+  /** @nullable */
+  lastMessagePreview: string | null;
+  unreadCount: number;
+  participants: ChatParticipant[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateConversationType = typeof CreateConversationType[keyof typeof CreateConversationType];
+
+
+export const CreateConversationType = {
+  buyer_vendor: 'buyer_vendor',
+  customer_support: 'customer_support',
+  vendor_support: 'vendor_support',
+} as const;
+
+export type CreateConversationContextType = typeof CreateConversationContextType[keyof typeof CreateConversationContextType];
+
+
+export const CreateConversationContextType = {
+  product: 'product',
+  order: 'order',
+  shop: 'shop',
+  general: 'general',
+} as const;
+
+export interface CreateConversation {
+  type: CreateConversationType;
+  vendorId?: string;
+  contextType: CreateConversationContextType;
+  contextId?: string;
+}
+
+export type ChatMessageSenderRole = typeof ChatMessageSenderRole[keyof typeof ChatMessageSenderRole];
+
+
+export const ChatMessageSenderRole = {
+  customer: 'customer',
+  vendor: 'vendor',
+  support: 'support',
+  master_admin: 'master_admin',
+  system_admin: 'system_admin',
+  system: 'system',
+} as const;
+
+export type ChatMessageType = typeof ChatMessageType[keyof typeof ChatMessageType];
+
+
+export const ChatMessageType = {
+  text: 'text',
+  image: 'image',
+  file: 'file',
+  product_card: 'product_card',
+  order_card: 'order_card',
+  system: 'system',
+  internal_note: 'internal_note',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ChatMessageMetadata = { [key: string]: unknown } | null;
+
+export type ChatMessageDeliveryStatus = typeof ChatMessageDeliveryStatus[keyof typeof ChatMessageDeliveryStatus];
+
+
+export const ChatMessageDeliveryStatus = {
+  sent: 'sent',
+  delivered: 'delivered',
+  read: 'read',
+} as const;
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  /** @nullable */
+  senderId: string | null;
+  senderRole: ChatMessageSenderRole;
+  type: ChatMessageType;
+  /** @nullable */
+  body: string | null;
+  /** @nullable */
+  metadata: ChatMessageMetadata;
+  /** @nullable */
+  replyToMessageId: string | null;
+  /** @nullable */
+  clientMessageId: string | null;
+  deliveryStatus: ChatMessageDeliveryStatus;
+  createdAt: string;
+  /** @nullable */
+  editedAt: string | null;
+  /** @nullable */
+  deletedAt: string | null;
+}
+
+export interface ChatMessagePage {
+  items: ChatMessage[];
+  /** @nullable */
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
+export type SendChatMessageType = typeof SendChatMessageType[keyof typeof SendChatMessageType];
+
+
+export const SendChatMessageType = {
+  text: 'text',
+  image: 'image',
+  file: 'file',
+  product_card: 'product_card',
+  order_card: 'order_card',
+  internal_note: 'internal_note',
+} as const;
+
+export type SendChatMessageMetadata = { [key: string]: unknown };
+
+export interface SendChatMessage {
+  /**
+     * @minLength 1
+     * @maxLength 5000
+     */
+  body: string;
+  type?: SendChatMessageType;
+  metadata?: SendChatMessageMetadata;
+  replyToMessageId?: string;
+  /**
+     * @minLength 1
+     * @maxLength 128
+     */
+  clientMessageId: string;
+}
+
+export interface MarkConversationRead {
+  messageId: string;
+}
+
+export type ChatTicketRequesterType = typeof ChatTicketRequesterType[keyof typeof ChatTicketRequesterType];
+
+
+export const ChatTicketRequesterType = {
+  customer: 'customer',
+  vendor: 'vendor',
+} as const;
+
+export type ChatTicketPriority = typeof ChatTicketPriority[keyof typeof ChatTicketPriority];
+
+
+export const ChatTicketPriority = {
+  low: 'low',
+  normal: 'normal',
+  high: 'high',
+  urgent: 'urgent',
+} as const;
+
+export type ChatTicketStatus = typeof ChatTicketStatus[keyof typeof ChatTicketStatus];
+
+
+export const ChatTicketStatus = {
+  new: 'new',
+  open: 'open',
+  pending: 'pending',
+  on_hold: 'on_hold',
+  resolved: 'resolved',
+  closed: 'closed',
+} as const;
+
+export interface ChatTicket {
+  id: string;
+  ticketNumber: string;
+  conversationId: string;
+  requesterId: string;
+  requesterType: ChatTicketRequesterType;
+  category: string;
+  subject: string;
+  priority: ChatTicketPriority;
+  status: ChatTicketStatus;
+  /** @nullable */
+  assignedAgentId: string | null;
+  /** @nullable */
+  relatedOrderId: string | null;
+  /** @nullable */
+  relatedProductId: string | null;
+  /** @nullable */
+  relatedVendorId: string | null;
+  /** @nullable */
+  sourceConversationId: string | null;
+  /** @nullable */
+  resolutionCode: string | null;
+  /** @nullable */
+  resolutionNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateChatTicketPriority = typeof CreateChatTicketPriority[keyof typeof CreateChatTicketPriority];
+
+
+export const CreateChatTicketPriority = {
+  low: 'low',
+  normal: 'normal',
+  high: 'high',
+  urgent: 'urgent',
+} as const;
+
+export interface CreateChatTicket {
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  category: string;
+  /**
+     * @minLength 3
+     * @maxLength 160
+     */
+  subject: string;
+  /**
+     * @minLength 1
+     * @maxLength 5000
+     */
+  message: string;
+  priority?: CreateChatTicketPriority;
+  relatedOrderId?: string;
+  relatedProductId?: string;
+  relatedVendorId?: string;
+  /**
+     * @minLength 1
+     * @maxLength 128
+     */
+  clientMessageId: string;
+}
+
+export type UpdateChatTicketStatus = typeof UpdateChatTicketStatus[keyof typeof UpdateChatTicketStatus];
+
+
+export const UpdateChatTicketStatus = {
+  new: 'new',
+  open: 'open',
+  pending: 'pending',
+  on_hold: 'on_hold',
+  resolved: 'resolved',
+  closed: 'closed',
+} as const;
+
+export type UpdateChatTicketPriority = typeof UpdateChatTicketPriority[keyof typeof UpdateChatTicketPriority];
+
+
+export const UpdateChatTicketPriority = {
+  low: 'low',
+  normal: 'normal',
+  high: 'high',
+  urgent: 'urgent',
+} as const;
+
+export interface UpdateChatTicket {
+  status?: UpdateChatTicketStatus;
+  priority?: UpdateChatTicketPriority;
+  /** @nullable */
+  assignedAgentId?: string | null;
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  category?: string;
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  resolutionCode?: string;
+  /**
+     * @minLength 2
+     * @maxLength 2000
+     */
+  resolutionNote?: string;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -1080,6 +1416,21 @@ export type NotFoundResponse = Error;
  */
 export type BadRequestResponse = Error;
 
+/**
+ * Authentication required
+ */
+export type UnauthorizedResponse = Error;
+
+/**
+ * Insufficient permission
+ */
+export type ForbiddenResponse = Error;
+
+/**
+ * Request conflicts with current resource state
+ */
+export type ConflictResponse = Error;
+
 export type ListProductsParams = {
 search?: string;
 category?: string;
@@ -1100,6 +1451,75 @@ export const ListProductsSort = {
   price_asc: 'price_asc',
   price_desc: 'price_desc',
   top_rated: 'top_rated',
+} as const;
+
+export type ListConversationsParams = {
+type?: ListConversationsType;
+status?: ListConversationsStatus;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+};
+
+export type ListConversationsType = typeof ListConversationsType[keyof typeof ListConversationsType];
+
+
+export const ListConversationsType = {
+  buyer_vendor: 'buyer_vendor',
+  customer_support: 'customer_support',
+  vendor_support: 'vendor_support',
+} as const;
+
+export type ListConversationsStatus = typeof ListConversationsStatus[keyof typeof ListConversationsStatus];
+
+
+export const ListConversationsStatus = {
+  active: 'active',
+  archived: 'archived',
+  closed: 'closed',
+} as const;
+
+export type ListChatTicketsParams = {
+status?: ListChatTicketsStatus;
+priority?: ListChatTicketsPriority;
+requesterType?: ListChatTicketsRequesterType;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+};
+
+export type ListChatTicketsStatus = typeof ListChatTicketsStatus[keyof typeof ListChatTicketsStatus];
+
+
+export const ListChatTicketsStatus = {
+  new: 'new',
+  open: 'open',
+  pending: 'pending',
+  on_hold: 'on_hold',
+  resolved: 'resolved',
+  closed: 'closed',
+} as const;
+
+export type ListChatTicketsPriority = typeof ListChatTicketsPriority[keyof typeof ListChatTicketsPriority];
+
+
+export const ListChatTicketsPriority = {
+  low: 'low',
+  normal: 'normal',
+  high: 'high',
+  urgent: 'urgent',
+} as const;
+
+export type ListChatTicketsRequesterType = typeof ListChatTicketsRequesterType[keyof typeof ListChatTicketsRequesterType];
+
+
+export const ListChatTicketsRequesterType = {
+  customer: 'customer',
+  vendor: 'vendor',
 } as const;
 
 export type ListAdminOrdersParams = {

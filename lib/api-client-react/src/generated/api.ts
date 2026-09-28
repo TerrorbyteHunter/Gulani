@@ -33,17 +33,28 @@ import type {
   CartItemUpdate,
   CatalogSummary,
   Category,
+  ChatConversation,
+  ChatMessage,
+  ChatMessagePage,
+  ChatTicket,
   CheckoutInput,
   CheckoutResult,
+  ConflictResponse,
   CreateAdminMessage,
+  CreateChatTicket,
+  CreateConversation,
   CreateSupportAccount,
+  ForbiddenResponse,
   FulfillmentOverview,
   HealthStatus,
   ListAdminOrdersParams,
   ListAdminVendorApplicationsParams,
   ListAdminVendorsParams,
+  ListChatTicketsParams,
+  ListConversationsParams,
   ListProductsParams,
   ListSupportTicketsParams,
+  MarkConversationRead,
   MarketplaceSettings,
   MarketplaceSettingsUpdate,
   NotFoundResponse,
@@ -53,10 +64,13 @@ import type {
   Product,
   PublicVendorStorefront,
   SalesOverview,
+  SendChatMessage,
   SupportAccount,
   SupportAccountUpdate,
   SupportTicket,
   SupportTicketUpdate,
+  UnauthorizedResponse,
+  UpdateChatTicket,
   VendorAnalytics,
   VendorApplication,
   VendorApplicationInput,
@@ -1072,6 +1086,937 @@ export function useGetOrder<TData = Awaited<ReturnType<typeof getOrder>>, TError
 
 
 
+
+export const getListConversationsUrl = (params?: ListConversationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/conversations?${stringifiedParams}` : `/api/conversations`
+}
+
+/**
+ * @summary List conversations visible to the current user
+ */
+export const listConversations = async (params?: ListConversationsParams, options?: Parameters<typeof customFetch>[1]): Promise<ChatConversation[]> => {
+
+  return customFetch<ChatConversation[]>(getListConversationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListConversationsQueryKey = (params?: ListConversationsParams,) => {
+    return [
+    `/api/conversations`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListConversationsQueryOptions = <TData = Awaited<ReturnType<typeof listConversations>>, TError = ErrorType<UnauthorizedResponse>>(params?: ListConversationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListConversationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listConversations>>> = ({ signal }) => listConversations(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListConversationsQueryResult = NonNullable<Awaited<ReturnType<typeof listConversations>>>
+export type ListConversationsQueryError = ErrorType<UnauthorizedResponse>
+
+
+/**
+ * @summary List conversations visible to the current user
+ */
+
+export function useListConversations<TData = Awaited<ReturnType<typeof listConversations>>, TError = ErrorType<UnauthorizedResponse>>(
+ params?: ListConversationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListConversationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateConversationUrl = () => {
+
+
+
+
+  return `/api/conversations`
+}
+
+/**
+ * @summary Start a buyer/vendor or support conversation
+ */
+export const createConversation = async (createConversationBody: CreateConversation, options?: Parameters<typeof customFetch>[1]): Promise<ChatConversation> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChatConversation>(getCreateConversationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createConversationBody)
+  }
+);}
+
+
+
+
+
+export const getCreateConversationMutationKey = () => ['createConversation'] as const;
+
+export const getCreateConversationMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConversation>>, TError,CreateConversationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createConversation>>, TError,CreateConversationMutationVariables, TContext> => {
+
+const mutationKey = getCreateConversationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createConversation>>, CreateConversationMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createConversation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateConversationMutationResult = NonNullable<Awaited<ReturnType<typeof createConversation>>>
+    export type CreateConversationMutationBody = BodyType<CreateConversation>
+    export type CreateConversationMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>
+    export type CreateConversationMutationVariables = {data: BodyType<CreateConversation>}
+
+    /**
+ * @summary Start a buyer/vendor or support conversation
+ */
+export const useCreateConversation = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConversation>>, TError,CreateConversationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createConversation>>,
+        TError,
+        CreateConversationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateConversationMutationOptions(options));
+    }
+
+export const getGetConversationUrl = (conversationId: string,) => {
+
+
+
+
+  return `/api/conversations/${conversationId}`
+}
+
+/**
+ * @summary Get a visible conversation
+ */
+export const getConversation = async (conversationId: string, options?: Parameters<typeof customFetch>[1]): Promise<ChatConversation> => {
+
+  return customFetch<ChatConversation>(getGetConversationUrl(conversationId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConversationQueryKey = (conversationId: string,) => {
+    return [
+    `/api/conversations/${conversationId}`
+    ] as const;
+    }
+
+
+export const getGetConversationQueryOptions = <TData = Awaited<ReturnType<typeof getConversation>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>>(conversationId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConversation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConversationQueryKey(conversationId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversation>>> = ({ signal }) => getConversation(conversationId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: conversationId !== null && conversationId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConversation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConversationQueryResult = NonNullable<Awaited<ReturnType<typeof getConversation>>>
+export type GetConversationQueryError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>
+
+
+/**
+ * @summary Get a visible conversation
+ */
+
+export function useGetConversation<TData = Awaited<ReturnType<typeof getConversation>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>>(
+ conversationId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConversation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConversationQueryOptions(conversationId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListConversationMessagesUrl = (conversationId: string,) => {
+
+
+
+
+  return `/api/conversations/${conversationId}/messages`
+}
+
+/**
+ * @summary List conversation messages
+ */
+export const listConversationMessages = async (conversationId: string, options?: Parameters<typeof customFetch>[1]): Promise<ChatMessagePage> => {
+
+  return customFetch<ChatMessagePage>(getListConversationMessagesUrl(conversationId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListConversationMessagesQueryKey = (conversationId: string,) => {
+    return [
+    `/api/conversations/${conversationId}/messages`
+    ] as const;
+    }
+
+
+export const getListConversationMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listConversationMessages>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>>(conversationId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversationMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListConversationMessagesQueryKey(conversationId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listConversationMessages>>> = ({ signal }) => listConversationMessages(conversationId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: conversationId !== null && conversationId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listConversationMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListConversationMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listConversationMessages>>>
+export type ListConversationMessagesQueryError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>
+
+
+/**
+ * @summary List conversation messages
+ */
+
+export function useListConversationMessages<TData = Awaited<ReturnType<typeof listConversationMessages>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>>(
+ conversationId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversationMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListConversationMessagesQueryOptions(conversationId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendConversationMessageUrl = (conversationId: string,) => {
+
+
+
+
+  return `/api/conversations/${conversationId}/messages`
+}
+
+/**
+ * @summary Send an idempotent conversation message
+ */
+export const sendConversationMessage = async (conversationId: string,
+    sendChatMessage: SendChatMessage, options?: Parameters<typeof customFetch>[1]): Promise<ChatMessage> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChatMessage>(getSendConversationMessageUrl(conversationId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sendChatMessage)
+  }
+);}
+
+
+
+
+
+export const getSendConversationMessageMutationKey = () => ['sendConversationMessage'] as const;
+
+export const getSendConversationMessageMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse | ConflictResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendConversationMessage>>, TError,SendConversationMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendConversationMessage>>, TError,SendConversationMessageMutationVariables, TContext> => {
+
+const mutationKey = getSendConversationMessageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendConversationMessage>>, SendConversationMessageMutationVariables> = (props) => {
+          const {conversationId,data} = props ?? {};
+
+          return  sendConversationMessage(conversationId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendConversationMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendConversationMessage>>>
+    export type SendConversationMessageMutationBody = BodyType<SendChatMessage>
+    export type SendConversationMessageMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse | ConflictResponse>
+    export type SendConversationMessageMutationVariables = {conversationId: string;data: BodyType<SendChatMessage>}
+
+    /**
+ * @summary Send an idempotent conversation message
+ */
+export const useSendConversationMessage = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse | ConflictResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendConversationMessage>>, TError,SendConversationMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendConversationMessage>>,
+        TError,
+        SendConversationMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSendConversationMessageMutationOptions(options));
+    }
+
+export const getMarkConversationReadUrl = (conversationId: string,) => {
+
+
+
+
+  return `/api/conversations/${conversationId}/read`
+}
+
+/**
+ * @summary Mark a conversation read through a message
+ */
+export const markConversationRead = async (conversationId: string,
+    markConversationReadBody: MarkConversationRead, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getMarkConversationReadUrl(conversationId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(markConversationReadBody)
+  }
+);}
+
+
+
+
+
+export const getMarkConversationReadMutationKey = () => ['markConversationRead'] as const;
+
+export const getMarkConversationReadMutationOptions = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markConversationRead>>, TError,MarkConversationReadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markConversationRead>>, TError,MarkConversationReadMutationVariables, TContext> => {
+
+const mutationKey = getMarkConversationReadMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markConversationRead>>, MarkConversationReadMutationVariables> = (props) => {
+          const {conversationId,data} = props ?? {};
+
+          return  markConversationRead(conversationId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkConversationReadMutationResult = NonNullable<Awaited<ReturnType<typeof markConversationRead>>>
+    export type MarkConversationReadMutationBody = BodyType<MarkConversationRead>
+    export type MarkConversationReadMutationError = ErrorType<UnauthorizedResponse | ForbiddenResponse>
+    export type MarkConversationReadMutationVariables = {conversationId: string;data: BodyType<MarkConversationRead>}
+
+    /**
+ * @summary Mark a conversation read through a message
+ */
+export const useMarkConversationRead = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markConversationRead>>, TError,MarkConversationReadMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markConversationRead>>,
+        TError,
+        MarkConversationReadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMarkConversationReadMutationOptions(options));
+    }
+
+export const getListChatTicketsUrl = (params?: ListChatTicketsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/support/tickets?${stringifiedParams}` : `/api/support/tickets`
+}
+
+/**
+ * @summary List support tickets visible to the current user
+ */
+export const listChatTickets = async (params?: ListChatTicketsParams, options?: Parameters<typeof customFetch>[1]): Promise<ChatTicket[]> => {
+
+  return customFetch<ChatTicket[]>(getListChatTicketsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListChatTicketsQueryKey = (params?: ListChatTicketsParams,) => {
+    return [
+    `/api/support/tickets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListChatTicketsQueryOptions = <TData = Awaited<ReturnType<typeof listChatTickets>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>>(params?: ListChatTicketsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listChatTickets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListChatTicketsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listChatTickets>>> = ({ signal }) => listChatTickets(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listChatTickets>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListChatTicketsQueryResult = NonNullable<Awaited<ReturnType<typeof listChatTickets>>>
+export type ListChatTicketsQueryError = ErrorType<UnauthorizedResponse | ForbiddenResponse>
+
+
+/**
+ * @summary List support tickets visible to the current user
+ */
+
+export function useListChatTickets<TData = Awaited<ReturnType<typeof listChatTickets>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>>(
+ params?: ListChatTicketsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listChatTickets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListChatTicketsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateChatTicketUrl = () => {
+
+
+
+
+  return `/api/support/tickets`
+}
+
+/**
+ * @summary Create a support ticket and conversation
+ */
+export const createChatTicket = async (createChatTicketBody: CreateChatTicket, options?: Parameters<typeof customFetch>[1]): Promise<ChatTicket> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChatTicket>(getCreateChatTicketUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createChatTicketBody)
+  }
+);}
+
+
+
+
+
+export const getCreateChatTicketMutationKey = () => ['createChatTicket'] as const;
+
+export const getCreateChatTicketMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChatTicket>>, TError,CreateChatTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createChatTicket>>, TError,CreateChatTicketMutationVariables, TContext> => {
+
+const mutationKey = getCreateChatTicketMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChatTicket>>, CreateChatTicketMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createChatTicket(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateChatTicketMutationResult = NonNullable<Awaited<ReturnType<typeof createChatTicket>>>
+    export type CreateChatTicketMutationBody = BodyType<CreateChatTicket>
+    export type CreateChatTicketMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>
+    export type CreateChatTicketMutationVariables = {data: BodyType<CreateChatTicket>}
+
+    /**
+ * @summary Create a support ticket and conversation
+ */
+export const useCreateChatTicket = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChatTicket>>, TError,CreateChatTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createChatTicket>>,
+        TError,
+        CreateChatTicketMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateChatTicketMutationOptions(options));
+    }
+
+export const getGetChatTicketUrl = (ticketId: string,) => {
+
+
+
+
+  return `/api/support/tickets/${ticketId}`
+}
+
+/**
+ * @summary Get a support ticket
+ */
+export const getChatTicket = async (ticketId: string, options?: Parameters<typeof customFetch>[1]): Promise<ChatTicket> => {
+
+  return customFetch<ChatTicket>(getGetChatTicketUrl(ticketId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetChatTicketQueryKey = (ticketId: string,) => {
+    return [
+    `/api/support/tickets/${ticketId}`
+    ] as const;
+    }
+
+
+export const getGetChatTicketQueryOptions = <TData = Awaited<ReturnType<typeof getChatTicket>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>>(ticketId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatTicket>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChatTicketQueryKey(ticketId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatTicket>>> = ({ signal }) => getChatTicket(ticketId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: ticketId !== null && ticketId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatTicket>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetChatTicketQueryResult = NonNullable<Awaited<ReturnType<typeof getChatTicket>>>
+export type GetChatTicketQueryError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>
+
+
+/**
+ * @summary Get a support ticket
+ */
+
+export function useGetChatTicket<TData = Awaited<ReturnType<typeof getChatTicket>>, TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>>(
+ ticketId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatTicket>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetChatTicketQueryOptions(ticketId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateChatTicketUrl = (ticketId: string,) => {
+
+
+
+
+  return `/api/support/tickets/${ticketId}`
+}
+
+/**
+ * @summary Update support ticket workflow fields
+ */
+export const updateChatTicket = async (ticketId: string,
+    updateChatTicketBody: UpdateChatTicket, options?: Parameters<typeof customFetch>[1]): Promise<ChatTicket> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChatTicket>(getUpdateChatTicketUrl(ticketId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateChatTicketBody)
+  }
+);}
+
+
+
+
+
+export const getUpdateChatTicketMutationKey = () => ['updateChatTicket'] as const;
+
+export const getUpdateChatTicketMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateChatTicket>>, TError,UpdateChatTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateChatTicket>>, TError,UpdateChatTicketMutationVariables, TContext> => {
+
+const mutationKey = getUpdateChatTicketMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateChatTicket>>, UpdateChatTicketMutationVariables> = (props) => {
+          const {ticketId,data} = props ?? {};
+
+          return  updateChatTicket(ticketId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateChatTicketMutationResult = NonNullable<Awaited<ReturnType<typeof updateChatTicket>>>
+    export type UpdateChatTicketMutationBody = BodyType<UpdateChatTicket>
+    export type UpdateChatTicketMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>
+    export type UpdateChatTicketMutationVariables = {ticketId: string;data: BodyType<UpdateChatTicket>}
+
+    /**
+ * @summary Update support ticket workflow fields
+ */
+export const useUpdateChatTicket = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateChatTicket>>, TError,UpdateChatTicketMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateChatTicket>>,
+        TError,
+        UpdateChatTicketMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateChatTicketMutationOptions(options));
+    }
+
+export const getSendChatTicketMessageUrl = (ticketId: string,) => {
+
+
+
+
+  return `/api/support/tickets/${ticketId}/messages`
+}
+
+/**
+ * @summary Send a message to a support ticket
+ */
+export const sendChatTicketMessage = async (ticketId: string,
+    sendChatMessage: SendChatMessage, options?: Parameters<typeof customFetch>[1]): Promise<ChatMessage> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChatMessage>(getSendChatTicketMessageUrl(ticketId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sendChatMessage)
+  }
+);}
+
+
+
+
+
+export const getSendChatTicketMessageMutationKey = () => ['sendChatTicketMessage'] as const;
+
+export const getSendChatTicketMessageMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendChatTicketMessage>>, TError,SendChatTicketMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendChatTicketMessage>>, TError,SendChatTicketMessageMutationVariables, TContext> => {
+
+const mutationKey = getSendChatTicketMessageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendChatTicketMessage>>, SendChatTicketMessageMutationVariables> = (props) => {
+          const {ticketId,data} = props ?? {};
+
+          return  sendChatTicketMessage(ticketId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendChatTicketMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendChatTicketMessage>>>
+    export type SendChatTicketMessageMutationBody = BodyType<SendChatMessage>
+    export type SendChatTicketMessageMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>
+    export type SendChatTicketMessageMutationVariables = {ticketId: string;data: BodyType<SendChatMessage>}
+
+    /**
+ * @summary Send a message to a support ticket
+ */
+export const useSendChatTicketMessage = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendChatTicketMessage>>, TError,SendChatTicketMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendChatTicketMessage>>,
+        TError,
+        SendChatTicketMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSendChatTicketMessageMutationOptions(options));
+    }
 
 export const getSubmitVendorApplicationUrl = () => {
 

@@ -20,6 +20,10 @@ tags:
     description: Customer orders
   - name: vendors
     description: Vendor applications and portal
+  - name: chat
+    description: Conversations and messaging
+  - name: support
+    description: Customer and vendor support tickets
   - name: admin
     description: Marketplace operations
 paths:
@@ -225,6 +229,289 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Order"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /conversations:
+    get:
+      operationId: listConversations
+      tags: [chat]
+      summary: List conversations visible to the current user
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [buyer_vendor, customer_support, vendor_support]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, archived, closed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatConversation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createConversation
+      tags: [chat]
+      summary: Start a buyer/vendor or support conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConversation"
+      responses:
+        "201":
+          description: Conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatConversation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /conversations/{conversationId}:
+    get:
+      operationId: getConversation
+      tags: [chat]
+      summary: Get a visible conversation
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      responses:
+        "200":
+          description: Conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatConversation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /conversations/{conversationId}/messages:
+    get:
+      operationId: listConversationMessages
+      tags: [chat]
+      summary: List conversation messages
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      responses:
+        "200":
+          description: Paginated messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessagePage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: sendConversationMessage
+      tags: [chat]
+      summary: Send an idempotent conversation message
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendChatMessage"
+      responses:
+        "201":
+          description: Message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /conversations/{conversationId}/read:
+    post:
+      operationId: markConversationRead
+      tags: [chat]
+      summary: Mark a conversation read through a message
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkConversationRead"
+      responses:
+        "204":
+          description: Read state updated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /support/tickets:
+    get:
+      operationId: listChatTickets
+      tags: [support]
+      summary: List support tickets visible to the current user
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [new, open, pending, on_hold, resolved, closed]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, normal, high, urgent]
+        - name: requesterType
+          in: query
+          schema:
+            type: string
+            enum: [customer, vendor]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Support tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatTicket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: createChatTicket
+      tags: [support]
+      summary: Create a support ticket and conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateChatTicket"
+      responses:
+        "201":
+          description: Support ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatTicket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /support/tickets/{ticketId}:
+    get:
+      operationId: getChatTicket
+      tags: [support]
+      summary: Get a support ticket
+      parameters:
+        - $ref: "#/components/parameters/TicketId"
+      responses:
+        "200":
+          description: Support ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatTicket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateChatTicket
+      tags: [support]
+      summary: Update support ticket workflow fields
+      parameters:
+        - $ref: "#/components/parameters/TicketId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateChatTicket"
+      responses:
+        "200":
+          description: Updated support ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatTicket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /support/tickets/{ticketId}/messages:
+    post:
+      operationId: sendChatTicketMessage
+      tags: [support]
+      summary: Send a message to a support ticket
+      parameters:
+        - $ref: "#/components/parameters/TicketId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendChatMessage"
+      responses:
+        "201":
+          description: Message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
   /vendors/applications:
@@ -1085,6 +1372,18 @@ components:
       required: true
       schema:
         type: string
+    ConversationId:
+      name: conversationId
+      in: path
+      required: true
+      schema:
+        type: string
+    TicketId:
+      name: ticketId
+      in: path
+      required: true
+      schema:
+        type: string
   responses:
     NotFound:
       description: Resource not found
@@ -1094,6 +1393,24 @@ components:
             $ref: "#/components/schemas/Error"
     BadRequest:
       description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Insufficient permission
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Request conflicts with current resource state
       content:
         application/json:
           schema:
@@ -1112,6 +1429,126 @@ components:
         error:
           type: string
       required: [error]
+    ChatParticipant:
+      type: object
+      properties:
+        userId: { type: string }
+        roleInChat: { type: string, enum: [customer, vendor, support, master_admin, system_admin] }
+        lastReadMessageId: { type: ["string", "null"] }
+        muted: { type: boolean }
+      required: [userId, roleInChat, lastReadMessageId, muted]
+    ChatConversation:
+      type: object
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [buyer_vendor, customer_support, vendor_support] }
+        buyerId: { type: ["string", "null"] }
+        vendorId: { type: ["string", "null"] }
+        contextType: { type: string, enum: [product, order, shop, general] }
+        contextId: { type: ["string", "null"] }
+        status: { type: string, enum: [active, archived, closed] }
+        lastMessageAt: { type: ["string", "null"] }
+        lastMessagePreview: { type: ["string", "null"] }
+        unreadCount: { type: integer }
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatParticipant"
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required: [id, type, buyerId, vendorId, contextType, contextId, status, lastMessageAt, lastMessagePreview, unreadCount, participants, createdAt, updatedAt]
+    CreateConversation:
+      type: object
+      properties:
+        type: { type: string, enum: [buyer_vendor, customer_support, vendor_support] }
+        vendorId: { type: string }
+        contextType: { type: string, enum: [product, order, shop, general] }
+        contextId: { type: string }
+      required: [type, contextType]
+    ChatMessage:
+      type: object
+      properties:
+        id: { type: string }
+        conversationId: { type: string }
+        senderId: { type: ["string", "null"] }
+        senderRole: { type: string, enum: [customer, vendor, support, master_admin, system_admin, system] }
+        type: { type: string, enum: [text, image, file, product_card, order_card, system, internal_note] }
+        body: { type: ["string", "null"] }
+        metadata: { type: ["object", "null"], additionalProperties: true }
+        replyToMessageId: { type: ["string", "null"] }
+        clientMessageId: { type: ["string", "null"] }
+        deliveryStatus: { type: string, enum: [sent, delivered, read] }
+        createdAt: { type: string }
+        editedAt: { type: ["string", "null"] }
+        deletedAt: { type: ["string", "null"] }
+      required: [id, conversationId, senderId, senderRole, type, body, metadata, replyToMessageId, clientMessageId, deliveryStatus, createdAt, editedAt, deletedAt]
+    ChatMessagePage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        nextCursor: { type: ["string", "null"] }
+        hasMore: { type: boolean }
+      required: [items, nextCursor, hasMore]
+    SendChatMessage:
+      type: object
+      properties:
+        body: { type: string, minLength: 1, maxLength: 5000 }
+        type: { type: string, enum: [text, image, file, product_card, order_card, internal_note] }
+        metadata: { type: object, additionalProperties: true }
+        replyToMessageId: { type: string }
+        clientMessageId: { type: string, minLength: 1, maxLength: 128 }
+      required: [body, clientMessageId]
+    MarkConversationRead:
+      type: object
+      properties:
+        messageId: { type: string }
+      required: [messageId]
+    ChatTicket:
+      type: object
+      properties:
+        id: { type: string }
+        ticketNumber: { type: string }
+        conversationId: { type: string }
+        requesterId: { type: string }
+        requesterType: { type: string, enum: [customer, vendor] }
+        category: { type: string }
+        subject: { type: string }
+        priority: { type: string, enum: [low, normal, high, urgent] }
+        status: { type: string, enum: [new, open, pending, on_hold, resolved, closed] }
+        assignedAgentId: { type: ["string", "null"] }
+        relatedOrderId: { type: ["string", "null"] }
+        relatedProductId: { type: ["string", "null"] }
+        relatedVendorId: { type: ["string", "null"] }
+        sourceConversationId: { type: ["string", "null"] }
+        resolutionCode: { type: ["string", "null"] }
+        resolutionNote: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+      required: [id, ticketNumber, conversationId, requesterId, requesterType, category, subject, priority, status, assignedAgentId, relatedOrderId, relatedProductId, relatedVendorId, sourceConversationId, resolutionCode, resolutionNote, createdAt, updatedAt]
+    CreateChatTicket:
+      type: object
+      properties:
+        category: { type: string, minLength: 2, maxLength: 80 }
+        subject: { type: string, minLength: 3, maxLength: 160 }
+        message: { type: string, minLength: 1, maxLength: 5000 }
+        priority: { type: string, enum: [low, normal, high, urgent], default: normal }
+        relatedOrderId: { type: string }
+        relatedProductId: { type: string }
+        relatedVendorId: { type: string }
+        clientMessageId: { type: string, minLength: 1, maxLength: 128 }
+      required: [category, subject, message, clientMessageId]
+    UpdateChatTicket:
+      type: object
+      properties:
+        status: { type: string, enum: [new, open, pending, on_hold, resolved, closed] }
+        priority: { type: string, enum: [low, normal, high, urgent] }
+        assignedAgentId: { type: ["string", "null"] }
+        category: { type: string, minLength: 2, maxLength: 80 }
+        resolutionCode: { type: string, minLength: 2, maxLength: 80 }
+        resolutionNote: { type: string, minLength: 2, maxLength: 2000 }
     Category:
       type: object
       properties:

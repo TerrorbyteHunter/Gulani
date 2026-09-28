@@ -1,0 +1,121 @@
+# TASK: Add a complete In-App Chat + Support Ticket System to Gulani
+
+## 0. WORKING RULES
+You already know this codebase, so build this into the existing app using its current auth, roles/permissions (RBAC), database, notification/email setup, audit log, and UI design language. Do not rebuild or restructure anything that already works.
+1. Use additive database migrations only. Never drop or destructively alter existing tables/columns.
+2. Give me a SHORT plan first (new tables, routes, pages, permissions), then build in the phases in section 12 and stop after each phase so I can test.
+3. If anything here conflicts with how the app is already built, choose the least disruptive option and tell me what you chose and why.
+
+## 1. GOAL
+A Taobao-style messaging system inside the app (web-responsive now, with an API designed so the future native mobile app can reuse it), with THREE conversation types:
+
+A. BUYER ↔ VENDOR chat (pre-sale questions, order questions, after-sale)
+B. CUSTOMER ↔ CUSTOMER SERVICE chat
+C. VENDOR ↔ CUSTOMER SERVICE chat
+
+Types B and C are TICKETS with a lifecycle, assignment, priority, and a resolved/closed state. Type A is a normal chat, but either party can escalate it to customer service, which creates a linked ticket.
+
+## 2. ROLES & ACCESS
+- Customer: chat with vendors (from product, shop, or order pages); open and view own support tickets.
+- Vendor: chat with their own customers only; open and view own support tickets.
+- Customer Service agent (existing "Customer Service" admin role): support inbox, reply, assign, escalate, resolve.
+- Master Admin / System Admin: full access, settings, reports, and read access to any conversation for dispute resolution (always audit-logged).
+- Guest checkout users: limited support chat tied to their order number plus phone/email verification. Buyer↔vendor chat requires an account.
+- Enforce everything server-side on every API route and socket event. Add new permissions to the existing RBAC, e.g. chat.use, support.view_inbox, support.reply, support.assign, support.resolve, support.reopen, support.view_all_conversations, support.manage_settings, support.view_reports, support.manage_canned_replies.
+
+## 3. DATA MODEL (follow existing naming conventions)
+- conversations: type (buyer_vendor | customer_support | vendor_support), buyer_id, vendor_id, context_type (product | order | shop | general), context_id, status, last_message_at, last_message_preview, timestamps.
+- conversation_participants: user_id, role_in_chat, last_read_message_id, muted, joined_at, left_at (supports multiple agents over time).
+- messages: conversation_id, sender_id, sender_role, type (text | image | file | product_card | order_card | system | internal_note), body, metadata JSON, reply_to_message_id, client_message_id (idempotency), delivery status, edited_at, deleted_at. internal_note messages must NEVER reach buyer/vendor clients.
+- message_attachments: file_url, type, size, thumbnail_url.
+- tickets: ticket_number (e.g. GUL-000123), conversation_id, requester_id, requester_type (customer | vendor), category, subject, priority (low | normal | high | urgent), status, assigned_agent_id, related_order_id / product_id / vendor_id, source_conversation_id (for escalations), first_response_at, resolved_at, closed_at, resolution_code, resolution_note, csat_rating, csat_comment, timestamps.
+- ticket_events: full history timeline (created, assigned, status/priority changed, escalated, note added, reopened, resolved, closed) with actor, old/new value.
+- ticket_categories (admin-managed, separate lists for customer and vendor tickets), e.g. Order issue, Payment issue (mobile money/Visa), Delivery, Refund/Return, Product issue, Vendor payout, Account, Listing approval, Dispute, Other.
+- canned_replies, chat_reports, blocked_users, and chat_settings (admin-editable: support hours, auto-reply text, SLA targets, auto-close days, max file size, allowed file types, banned words, contact-masking on/off).
+Add proper indexes on conversation_id + created_at, user_id, status, assigned_agent_id, ticket_number.
+
+## 4. REAL-TIME MESSAGING
+- WebSockets (or the best fit for this stack), authenticated with the existing session, with server-side authorization for joining each conversation.
+- Instant send/receive, typing indicators, presence/last seen, delivery states (sent → delivered → read), unread counts per conversation and in total, upward infinite-scroll pagination (30 at a time), optimistic UI with retry, auto-reconnect with catch-up of missed messages.
+- Graceful polling fallback for weak mobile connections. Keep payloads small and lazy-load images, since many users are on slow mobile data.
+- Idempotent sends via client_message_id so retries never create duplicates.
+- Per-user rate limiting to stop flooding.
+
+## 5. CHAT UI (mobile-first, matches existing design)
+Customer side:
+- "Messages" page plus header icon with unread badge; conversation list with avatar, name, last message preview, time, unread badge; tabs: All | Vendors | Support.
+- "Chat with seller" buttons on product pages, shop pages, and order detail pages. Starting from a product/order auto-attaches a product_card/order_card for context.
+- "Contact Support" from the account area and from each order page: form with category, subject, message, optional order, attachments. Creates a ticket and chat.
+- "My Tickets" page (ticket number, subject, status, last update). Ticket detail shows the chat plus a status timeline.
+Vendor side (vendor dashboard):
+- "Customer Messages" inbox with filters (unread, by order, by product) and search.
+- "Support" section to open and track tickets to customer service.
+- Saved quick replies and an away/auto-reply setting.
+Chat window: text, emoji, multiple image upload, PDF/file upload, image lightbox, reply-to-message, delete own message (soft delete with placeholder), send product/order card, timestamps and day separators, read receipts, scroll-to-latest button, empty/loading/error states.
+
+## 6. TICKET WORKFLOW
+Statuses: New → Open → Pending (waiting on requester) → On Hold → Resolved → Closed. Reopen allowed within a configurable window (default 7 days).
+- Creation: automatic when a customer or vendor starts a support chat, with an auto-acknowledgement system message showing the ticket number and expected response time.
+- Assignment: shared unassigned queue; agents can "Take" a ticket; admins/supervisors assign or reassign; optional round-robin auto-assign (setting, off by default); collaborators allowed.
+- Status automation: agent reply → Pending; requester reply → Open; no reply for X days → reminder, then auto-close.
+- Resolving: agent marks Resolved with a required resolution code and note. Requester is notified and can confirm, reopen, or ignore (auto-closes after X days). Closed tickets make the chat read-only with a banner offering to start a new ticket or reopen. After resolution, show a 1–5 star CSAT rating plus optional comment.
+- Escalation from buyer↔vendor chat: "Report a problem / Get help from Gulani" button creates a ticket linked to the original chat and order, posts a system message in the original chat, and lets customer service view the history (audit-logged) and join as a third participant labeled "Gulani Support".
+- Internal escalation: an agent can escalate to a supervisor or to another admin role (Order Manager, Finance Admin, Vendor Manager) with a note.
+- Priority and SLA: configurable first-response and resolution targets per priority, with countdown/overdue badges in the inbox and overdue tickets surfaced at the top.
+- Internal notes with @mentions, visible to staff only.
+- Basic linking of duplicate tickets.
+
+## 7. CUSTOMER SERVICE CONSOLE (admin panel)
+- Support Inbox tabs: Unassigned | Mine | All open | Pending | Overdue | Resolved | Closed. Filters: type (customer/vendor), category, priority, agent, date, order number, vendor. Search by ticket number, user name/email/phone, and keywords.
+- Desktop three-panel layout: ticket list | chat | context sidebar (user profile, recent orders, related order and status, related product, vendor info, previous tickets, quick actions).
+- Reply box with canned replies (type "/" to search), attachments, internal-note toggle, and status/priority/assignee dropdowns.
+- Agent workload visibility for supervisors and bulk actions (assign, change priority, close).
+- Reports dashboard: tickets by status/category/type, average first-response and resolution time, SLA compliance %, volume over time, per-agent performance, CSAT average, top vendors by complaints, CSV export.
+- Settings page for chat_settings, categories, SLA targets, canned replies, and support hours.
+
+## 8. NOTIFICATIONS
+- In-app: header badge, dropdown, tab-title unread count, optional sound.
+- Email through the existing email setup: offline new-message alerts (batched, not one email per message), ticket created/assigned/resolved/reopened. Per-user notification preferences.
+- Build the notification layer so SMS/WhatsApp/push can be added later.
+- Emit events to the existing automation/event framework (ticket.created, ticket.resolved, message.received, etc.).
+
+## 9. SAFETY, ABUSE PREVENTION & PRIVACY
+- Block/report user from any chat. Customer service can always reach users.
+- Optional, admin-toggleable masking of phone numbers, emails, and external links in buyer↔vendor chats before an order is placed, with a gentle notice to the sender.
+- Admin-managed banned-word list and duplicate/spam throttling.
+- File uploads: whitelist types (jpg, png, webp, pdf), size limits, server-side MIME validation, randomized filenames, stored in the app's existing storage or object storage, never executed.
+- Sanitize message content against XSS, use parameterized queries, and test every endpoint for IDOR (vendors only see their own conversations, customers only theirs).
+- Audit-log all staff actions: viewing conversations they aren't part of, status/assignee/priority changes, message deletions, exports, and settings changes.
+- Data retention setting, and the ability to export or delete a user's chat data on request. Admins can hide abusive messages (soft delete with reason, kept in the audit trail).
+
+## 10. API SURFACE (match existing style)
+REST: conversations (list/create), messages (paginated, send, upload), mark read, mute/block/report, tickets (create, list/filter, get, update status/priority/assignee/category), internal notes, resolve/close/reopen, CSAT, canned replies CRUD, settings CRUD, reports.
+Socket events: message:new, message:delivered, message:read, typing:start/stop, presence:update, conversation:updated, ticket:updated, ticket:assigned, notification:new.
+Validate all input server-side, use consistent error formats, and paginate every list.
+
+## 11. NON-FUNCTIONAL
+- Fast on low-end phones and slow connections: small bundles, lazy loading, image compression/thumbnails on upload.
+- Store times in UTC, display in Africa/Lusaka.
+- Keep chat logic in a service layer separate from the UI so the native app can reuse the API later.
+- Provide a seed/demo data script (sample chats and tickets) that can never run in production.
+- Write basic tests for permissions, ticket status transitions, and message idempotency.
+- Log errors properly and never leak stack traces to clients.
+
+## 12. BUILD PHASES (stop after each for my testing)
+1. Foundation: migrations, permissions, conversation/message models, REST API, permission checks.
+2. Real-time buyer↔vendor chat: sockets, customer and vendor UI, product/order cards, unread badges, attachments, read receipts.
+3. Support tickets: Contact Support flows for customers and vendors, ticket creation, My Tickets pages, ticket numbers, statuses.
+4. Agent console: inbox, filters, assignment, queue, context sidebar, canned replies, internal notes, resolve/close/reopen, CSAT.
+5. Escalation and automation: buyer↔vendor escalation, SLA timers, auto-close/reminders, priority handling, email notifications.
+6. Safety and admin: block/report, contact-masking, banned words, audit logging, settings page, reports dashboard, retention/export.
+7. Hardening: security review (XSS, IDOR, upload abuse, rate limits), performance pass, tests, cleanup.
+
+## 13. DEFINITION OF DONE
+- A buyer can message a vendor from a product or order page, with real-time delivery, unread counts, and read receipts.
+- A customer and a vendor can each open a support ticket, chat with customer service, and see the ticket status.
+- An agent can work the queue, take/assign tickets, use canned replies and internal notes, escalate, and mark a ticket Resolved with a note; the requester can rate it or reopen it.
+- Buyer↔vendor chats can be escalated into a linked ticket.
+- Nothing existing is broken (login, orders, admin functions all still work).
+- At the end, summarize what was built, the new tables/routes/permissions, any environment variables or services I need to set up, and anything you skipped or need me to decide.
+
+Ask me at most 5 clarifying questions ONLY if something is truly blocking. Otherwise state your assumptions and start Phase 1.
