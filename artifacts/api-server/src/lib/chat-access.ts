@@ -88,7 +88,8 @@ export function getChatActor(req: Request): ChatActor | null {
   const role = req.header("x-gulani-user-role")?.trim() as ChatUserRole | undefined;
   if (!id || !role || !roles.has(role)) return null;
 
-  const vendorId = req.header("x-gulani-vendor-id")?.trim() || undefined;
+  const vendorHeader = req.header("x-gulani-vendor-id")?.trim() || undefined;
+  const vendorId = role === "vendor" ? vendorHeader || id : undefined;
   return { id, role, vendorId };
 }
 

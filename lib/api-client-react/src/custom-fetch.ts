@@ -8,6 +8,12 @@ export type BodyType<T> = T;
 
 export type AuthTokenGetter = () => Promise<string | null> | string | null;
 
+export type ChatIdentity = {
+  userId: string;
+  role: "customer" | "vendor" | "support" | "master_admin" | "system_admin" | "operations" | "finance";
+  vendorId?: string;
+};
+
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
@@ -17,6 +23,7 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _chatIdentity: ChatIdentity | null = null;
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -42,6 +49,16 @@ export function setBaseUrl(url: string | null): void {
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
+}
+
+/**
+ * Temporary identity adapter for the pre-session web app.
+ *
+ * The server uses these headers only for the in-memory chat foundation. A
+ * session principal should replace this adapter before production chat use.
+ */
+export function setChatIdentity(identity: ChatIdentity | null): void {
+  _chatIdentity = identity;
 }
 
 function isRequest(input: RequestInfo | URL): input is Request {
@@ -347,6 +364,18 @@ export async function customFetch<T = unknown>(
 
   if (responseType === "json" && !headers.has("accept")) {
     headers.set("accept", DEFAULT_JSON_ACCEPT);
+  }
+
+  if (_chatIdentity) {
+    if (!headers.has("x-gulani-user-id")) {
+      headers.set("x-gulani-user-id", _chatIdentity.userId);
+    }
+    if (!headers.has("x-gulani-user-role")) {
+      headers.set("x-gulani-user-role", _chatIdentity.role);
+    }
+    if (_chatIdentity.vendorId && !headers.has("x-gulani-vendor-id")) {
+      headers.set("x-gulani-vendor-id", _chatIdentity.vendorId);
+    }
   }
 
   // Attach bearer token when an auth getter is configured and no
