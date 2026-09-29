@@ -19,16 +19,51 @@ type TicketRecord = ChatTicket & {
   firstResponseAt: string | null;
   resolvedAt: string | null;
   closedAt: string | null;
+  csatRating: number | null;
+  csatComment: string | null;
+};
+
+export type TicketEvent = {
+  id: string;
+  ticketId: string;
+  eventType: string;
+  actorId: string | null;
+  oldValue: Record<string, unknown> | null;
+  newValue: Record<string, unknown> | null;
+  note: string | null;
+  createdAt: string;
 };
 
 const conversations = new Map<string, ConversationRecord>();
 const messages = new Map<string, ChatMessage>();
 const tickets = new Map<string, TicketRecord>();
+const ticketEvents = new Map<string, TicketEvent[]>();
 const idempotentMessages = new Map<string, ChatMessage>();
 let ticketSequence = 123;
 
 const now = () => new Date().toISOString();
 const nullable = (value?: string) => value ?? null;
+
+function addTicketEvent(
+  ticketId: string,
+  eventType: string,
+  actorId: string | null,
+  oldValue: Record<string, unknown> | null = null,
+  newValue: Record<string, unknown> | null = null,
+  note: string | null = null,
+) {
+  const event: TicketEvent = {
+    id: randomUUID(),
+    ticketId,
+    eventType,
+    actorId,
+    oldValue,
+    newValue,
+    note,
+    createdAt: now(),
+  };
+  ticketEvents.set(ticketId, [...(ticketEvents.get(ticketId) ?? []), event]);
+}
 
 function participant(conversation: ConversationRecord, userId: string) {
   return conversation.participants.find((entry) => entry.userId === userId);
@@ -224,9 +259,13 @@ export function sendMessage(actor: ChatActor, conversationId: string, input: Sen
 
   const ticket = [...tickets.values()].find((entry) => entry.conversationId === conversationId);
   if (ticket && input.type !== "internal_note") {
+    const previousStatus = ticket.status;
     ticket.status = isStaff(actor) ? "pending" : "open";
     if (isStaff(actor) && !ticket.firstResponseAt) ticket.firstResponseAt = message.createdAt;
     ticket.updatedAt = message.createdAt;
+    if (previousStatus !== ticket.status) {
+      addTicketEvent(ticket.id, "status_changed", actor.id, { status: previousStatus }, { status: ticket.status });
+    }
   }
   return message;
 }
@@ -251,6 +290,12 @@ export function getTicket(actor: ChatActor, ticketId: string): ChatTicket | null
   const ticket = tickets.get(ticketId);
   if (!ticket || !canAccessTicket(actor, ticket)) return null;
   return ticket;
+}
+
+export function listTicketEvents(actor: ChatActor, ticketId: string): TicketEvent[] {
+  const ticket = tickets.get(ticketId);
+  if (!ticket || !canAccessTicket(actor, ticket)) throw new ChatServiceError(404, "Support ticket not found");
+  return ticketEvents.get(ticketId) ?? [];
 }
 
 export function createTicket(actor: ChatActor, input: CreateChatTicket): ChatTicket {
@@ -290,10 +335,13 @@ export function createTicket(actor: ChatActor, input: CreateChatTicket): ChatTic
     firstResponseAt: null,
     resolvedAt: null,
     closedAt: null,
+    csatRating: null,
+    csatComment: null,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
   tickets.set(ticket.id, ticket);
+  addTicketEvent(ticket.id, "created", actor.id, null, { status: ticket.status, priority: ticket.priority });
   addMessage(null, conversation, {
     body: `Thanks for contacting Gulani Support. Your ticket number is ${ticketNumber}. A support agent will review it shortly.`,
     clientMessageId: `system:${ticketNumber}`,
@@ -321,6 +369,17 @@ export function updateTicket(actor: ChatActor, ticketId: string, input: UpdateCh
     if (!hasChatPermission(actor, "support.assign")) throw new ChatServiceError(403, "Ticket management permission required");
   }
   if (input.status !== undefined) {
+    const allowedTransitions: Record<string, string[]> = {
+      new: ["open", "resolved", "closed"],
+      open: ["pending", "on_hold", "resolved", "closed"],
+      pending: ["open", "on_hold", "resolved", "closed"],
+      on_hold: ["open", "pending", "resolved", "closed"],
+      resolved: ["open", "closed"],
+      closed: ["open"],
+    };
+    if (input.status !== ticket.status && !allowedTransitions[ticket.status]?.includes(input.status)) {
+      throw new ChatServiceError(409, `Cannot move a ${ticket.status} ticket to ${input.status}`);
+    }
     const isReopen = ["resolved", "closed"].includes(ticket.status) && input.status === "open";
     if (isRequester && !isReopen) {
       throw new ChatServiceError(403, "Only support agents can change this ticket status");
@@ -331,6 +390,7 @@ export function updateTicket(actor: ChatActor, ticketId: string, input: UpdateCh
     if (input.status === "resolved" && (!input.resolutionCode || !input.resolutionNote) && (!ticket.resolutionCode || !ticket.resolutionNote)) {
       throw new ChatServiceError(400, "resolutionCode and resolutionNote are required to resolve a ticket");
     }
+    const previousStatus = ticket.status;
     if (input.status === "resolved") ticket.resolvedAt = now();
     if (input.status === "closed") ticket.closedAt = now();
     if (isReopen) {
@@ -338,13 +398,45 @@ export function updateTicket(actor: ChatActor, ticketId: string, input: UpdateCh
       ticket.closedAt = null;
     }
     ticket.status = input.status;
+    addTicketEvent(
+      ticket.id,
+      input.status === "resolved" ? "resolved" : input.status === "closed" ? "closed" : isReopen ? "reopened" : "status_changed",
+      actor.id,
+      { status: previousStatus },
+      { status: input.status },
+    );
   }
-  if (input.priority !== undefined) ticket.priority = input.priority;
-  if (input.assignedAgentId !== undefined) ticket.assignedAgentId = input.assignedAgentId;
-  if (input.category !== undefined) ticket.category = input.category;
+  if (input.priority !== undefined && input.priority !== ticket.priority) {
+    const previousPriority = ticket.priority;
+    ticket.priority = input.priority;
+    addTicketEvent(ticket.id, "priority_changed", actor.id, { priority: previousPriority }, { priority: input.priority });
+  }
+  if (input.assignedAgentId !== undefined && input.assignedAgentId !== ticket.assignedAgentId) {
+    const previousAgent = ticket.assignedAgentId;
+    ticket.assignedAgentId = input.assignedAgentId;
+    addTicketEvent(ticket.id, "assigned", actor.id, { assignedAgentId: previousAgent }, { assignedAgentId: input.assignedAgentId });
+  }
+  if (input.category !== undefined && input.category !== ticket.category) {
+    const previousCategory = ticket.category;
+    ticket.category = input.category;
+    addTicketEvent(ticket.id, "category_changed", actor.id, { category: previousCategory }, { category: input.category });
+  }
   if (input.resolutionCode !== undefined) ticket.resolutionCode = input.resolutionCode;
   if (input.resolutionNote !== undefined) ticket.resolutionNote = input.resolutionNote;
   ticket.updatedAt = now();
+  return ticket;
+}
+
+export function rateTicket(actor: ChatActor, ticketId: string, rating: number, comment?: string): ChatTicket {
+  const ticket = tickets.get(ticketId);
+  if (!ticket || !canAccessTicket(actor, ticket)) throw new ChatServiceError(404, "Support ticket not found");
+  if (ticket.requesterId !== actor.id) throw new ChatServiceError(403, "Only the requester can rate a ticket");
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new ChatServiceError(400, "Rating must be between 1 and 5");
+  if (!["resolved", "closed"].includes(ticket.status)) throw new ChatServiceError(409, "Only resolved tickets can be rated");
+  ticket.csatRating = rating;
+  ticket.csatComment = comment?.trim() || null;
+  ticket.updatedAt = now();
+  addTicketEvent(ticket.id, "note_added", actor.id, null, { csatRating: rating }, comment?.trim() || null);
   return ticket;
 }
 

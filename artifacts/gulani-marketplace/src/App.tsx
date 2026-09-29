@@ -21,7 +21,8 @@ import {
   useListAdminOrders, useUpdateAdminOrderStatus, useListAdminVendorApplications,
   useUpdateVendorApplicationStatus, useListSupportTickets, useUpdateSupportTicket,
   useGetFulfillmentOverview, useGetSalesOverview, useGetAdminSettings,
-  useUpdateAdminSettings, useListPricingRules, useUpdatePricingRule,
+  useUpdateAdminSettings, useListPricingRules, useUpdatePricingRule, setChatIdentity,
+  useCreateConversation,
 } from '@workspace/api-client-react';
 import type {
   AdminDashboard, Cart, CartItem, CheckoutInput, Product, ProductVariant,
@@ -36,8 +37,10 @@ import NotFound from '@/pages/not-found';
 import { Link, Route, Router as WouterRouter, Switch, useLocation, useParams } from 'wouter';
 import { PublicVendorStorefront, VendorWorkspace } from '@/pages/vendor-workspace';
 import { AdminWorkspace } from '@/pages/admin-workspace';
+import { MessagesPage, SupportPage, TicketPage } from '@/pages/chat-workspace';
 
 const queryClient = new QueryClient();
+setChatIdentity({ userId: 'demo-customer', role: 'customer' });
 const money = (value: number, currency = 'ZMW') => `${currency} ${value.toFixed(2)}`;
 const fallbackImage = (title: string) => {
   const label = title.slice(0, 18).replace(/[<>&"]/g, '');
@@ -45,14 +48,22 @@ const fallbackImage = (title: string) => {
 };
 
 function Shell({ children }: { children: ReactNode }) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [mobileNav, setMobileNav] = useState(false);
   const cart = useGetCart({ query: { queryKey: getGetCartQueryKey() } });
   const health = useHealthCheck({ query: { queryKey: getHealthCheckQueryKey(), staleTime: 60000 } });
+  const createConversation = useCreateConversation();
   const count = cart.data?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+  const productId = location.startsWith('/product/') ? location.split('/')[2] : null;
+  useEffect(() => {
+    if (location.startsWith('/admin')) setChatIdentity({ userId: 'demo-support', role: 'support' });
+    else if (location.startsWith('/vendor')) setChatIdentity({ userId: 'vendor-1001', role: 'vendor', vendorId: 'vendor-1001' });
+    else setChatIdentity({ userId: 'demo-customer', role: 'customer' });
+  }, [location]);
   const links = [
     { href: '/', label: 'Discover', icon: Sparkles },
     { href: '/orders', label: 'Your orders', icon: Package },
+    { href: '/messages', label: 'Messages', icon: Headphones },
     { href: '/sell', label: 'Sell on Gulani', icon: Store },
   ];
   return (
@@ -96,6 +107,7 @@ function Shell({ children }: { children: ReactNode }) {
         </nav>}
       </header>
       <main>{children}</main>
+      {productId && <button type="button" onClick={() => createConversation.mutate({ data: { type: 'buyer_vendor', vendorId: 'vendor-1001', contextType: 'product', contextId: productId } }, { onSuccess: conversation => setLocation(`/messages/${conversation.id}`) })} className="fixed bottom-5 right-5 z-30 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5 disabled:opacity-60" disabled={createConversation.isPending}><Headphones size={16} /> {createConversation.isPending ? 'Opening chat…' : 'Message seller'}</button>}
       <footer className="mt-20 border-t border-border/70 bg-secondary/35">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
           <div><div className="font-display text-2xl font-bold tracking-[-.05em]">gulani<span className="text-accent">.</span></div><p className="mt-3 max-w-xs text-sm leading-6 text-muted-foreground">The considered way to shop from local makers and international sourcing partners.</p></div>
@@ -213,11 +225,13 @@ function ProductDetail() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const add = useAddCartItem();
+  const createConversation = useCreateConversation();
   const p = product.data;
   const variant = selected || p?.variants?.[0];
   if (product.isLoading) return <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><LoadingGrid /></div>;
   if (product.isError || !p) return <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8"><ErrorState title="This product is not on the shelf" retry={() => product.refetch()} /></div>;
   const addItem = () => { if (!variant) return; add.mutate({ data: { productId: p.id, variantId: variant.id, quantity } }, { onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() }); toast({ title: 'Added to your basket', description: `${quantity} × ${p.title}` }); }, onError: () => toast({ title: 'Could not add that item', variant: 'destructive' }) }); };
+  const chatSeller = () => createConversation.mutate({ data: { type: 'buyer_vendor', vendorId: 'vendor-1001', contextType: 'product', contextId: p.id } }, { onSuccess: (conversation) => setLocation(`/messages/${conversation.id}`), onError: () => toast({ title: 'Could not open seller chat', description: 'Please try again.', variant: 'destructive' }) });
   return <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"><Link href="/" className="mb-8 inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-primary"><ArrowLeft size={15} /> Back to discover</Link><div className="grid gap-10 lg:grid-cols-[1.02fr_.98fr] lg:gap-16"><div className="overflow-hidden rounded-[28px] bg-secondary"><ImageFrame src={p.imageUrl} alt={p.title} className="aspect-square sm:aspect-[1.06]" /></div><div className="flex flex-col justify-center"><div className="flex items-center gap-2"><span className="rounded-full bg-secondary px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-primary">{p.category}</span>{p.source && p.source !== 'local-vendors' && <span className="rounded-full bg-primary/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-primary">Sourced via {p.source}</span>}</div><h1 className="mt-5 max-w-xl font-display text-4xl font-bold leading-[1.02] tracking-[-.06em] sm:text-5xl">{p.title}</h1><div className="mt-4 flex items-center gap-3 text-sm"><Star size={15} className="fill-accent text-accent" /><span className="font-bold">{p.vendorRating.toFixed(1)}</span><span className="text-muted-foreground">from</span><span className="font-bold text-primary">{p.vendorName}</span></div><p className="mt-7 max-w-xl text-sm leading-7 text-muted-foreground">{p.description}</p>{p.variants?.length > 0 && <div className="mt-8"><div className="mb-3 flex justify-between"><p className="text-xs font-bold uppercase tracking-[.12em]">Choose an option</p><p className="font-mono text-[10px] text-muted-foreground">{variant?.stockQty} available</p></div><div className="flex flex-wrap gap-2">{p.variants.map(v => <button type="button" key={v.id} onClick={() => setSelected(v)} className={`rounded-xl border px-4 py-3 text-left text-sm font-semibold ${variant?.id === v.id ? 'border-primary bg-primary/10 text-primary' : 'border-border'}`}><span className="block">{v.name}</span><span className="mt-1 block font-mono text-xs font-normal">{money(v.price, p.currency)}</span></button>)}</div></div>}<div className="mt-9 flex flex-wrap gap-3"><div className="flex items-center rounded-xl border border-border"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="grid h-12 w-11 place-items-center hover:bg-secondary"><Minus size={16} /></button><span className="w-8 text-center font-mono text-sm">{quantity}</span><button type="button" onClick={() => setQuantity(Math.min(20, quantity + 1))} className="grid h-12 w-11 place-items-center hover:bg-secondary"><Plus size={16} /></button></div><button type="button" disabled={add.isPending || !variant?.stockQty} onClick={addItem} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-primary-foreground disabled:opacity-60 sm:flex-none">{add.isPending ? 'Adding…' : <><ShoppingBag size={17} /> Add to basket · {money((variant?.price || p.price) * quantity, p.currency)}</>}</button></div><button type="button" onClick={() => { addItem(); setLocation('/cart'); }} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-primary py-3 text-sm font-bold text-primary hover:bg-primary/5"><Zap size={16} /> Buy this, delivered to you</button><div className="mt-8 grid grid-cols-2 gap-3 border-t border-border pt-6 text-xs text-muted-foreground"><span className="flex items-center gap-2"><Truck size={16} className="text-primary" /> Delivery available</span><span className="flex items-center gap-2"><BadgeCheck size={16} className="text-primary" /> Trusted seller</span></div></div></div></div>;
 }
 
@@ -440,7 +454,7 @@ function AdminDeskPage() {
 
 function Router() {
   const [location] = useLocation();
-  return <ErrorBoundary resetKey={location}><Shell><Switch><Route path="/" component={Home} /><Route path="/product/:id" component={ProductDetail} /><Route path="/cart" component={CartPage} /><Route path="/checkout" component={CheckoutPage} /><Route path="/order/:id" component={OrderPage} /><Route path="/orders" component={OrdersPage} /><Route path="/sell" component={SellPage} /><Route path="/vendor" component={VendorWorkspace} /><Route path="/store/:vendorId" component={PublicVendorStorefront} /><Route path="/admin" component={AdminWorkspace} /><Route path="/admin/:section" component={AdminWorkspace} /><Route component={NotFound} /></Switch></Shell></ErrorBoundary>;
+  return <ErrorBoundary resetKey={location}><Shell><Switch><Route path="/" component={Home} /><Route path="/product/:id" component={ProductDetail} /><Route path="/cart" component={CartPage} /><Route path="/checkout" component={CheckoutPage} /><Route path="/order/:id" component={OrderPage} /><Route path="/orders" component={OrdersPage} /><Route path="/messages/:id" component={MessagesPage} /><Route path="/messages" component={MessagesPage} /><Route path="/support/:id" component={TicketPage} /><Route path="/support" component={SupportPage} /><Route path="/sell" component={SellPage} /><Route path="/vendor" component={VendorWorkspace} /><Route path="/store/:vendorId" component={PublicVendorStorefront} /><Route path="/admin" component={AdminWorkspace} /><Route path="/admin/:section" component={AdminWorkspace} /><Route component={NotFound} /></Switch></Shell></ErrorBoundary>;
 }
 
 function App() {

@@ -8,3 +8,9 @@ The chat foundation currently uses required `x-gulani-user-id`, `x-gulani-user-r
 **Why:** Existing marketplace/admin routes are seeded and unauthenticated, so inferring identity or importing the database connection into the API would create a false production-security boundary or crash environments without `DATABASE_URL`.
 
 **How to apply:** Replace the header adapter with the real session principal before enabling chat UI in production, then move the service maps to the additive Drizzle schema/migration without changing the REST authorization rules.
+
+The web client must initialize the temporary chat identity before mounting chat queries; setting it only in a route effect can cache an initial 401 response in React Query.
+
+**Why:** The Messages page can render before the route effect runs, and React Query will otherwise retain the unauthorized result until invalidated.
+
+**How to apply:** Keep an early demo identity only for the current seeded environment, and replace it with the authenticated session principal when auth is added.
