@@ -101,10 +101,18 @@ function createConversationRecord(
     },
   ] as ChatConversation["participants"];
 
-  if (isBuyerVendor && input.vendorId && input.vendorId !== actor.id) {
+  if ((isBuyerVendor || input.type === "vendor_support") && input.vendorId && input.vendorId !== actor.id) {
     participants.push({
       userId: input.vendorId,
       roleInChat: "vendor",
+      lastReadMessageId: null,
+      muted: false,
+    });
+  }
+  if (input.type === "customer_support" && isStaff(actor) && input.recipientId && input.recipientId !== actor.id) {
+    participants.push({
+      userId: input.recipientId,
+      roleInChat: "customer",
       lastReadMessageId: null,
       muted: false,
     });
@@ -113,7 +121,7 @@ function createConversationRecord(
   const record: ConversationRecord = {
     id,
     type: input.type,
-    buyerId: actor.role === "customer" ? actor.id : null,
+    buyerId: actor.role === "customer" ? actor.id : input.type === "customer_support" ? input.recipientId ?? null : null,
     vendorId: input.vendorId ?? (actor.role === "vendor" ? actor.vendorId ?? actor.id : null),
     contextType: input.contextType,
     contextId: nullable(input.contextId),
@@ -217,11 +225,34 @@ export function createConversation(actor: ChatActor, input: CreateConversation):
   if (input.type === "buyer_vendor") {
     if (actor.role !== "customer") throw new ChatServiceError(403, "Only customers can start buyer/vendor chats");
     if (!input.vendorId) throw new ChatServiceError(400, "vendorId is required for buyer/vendor chats");
-  } else if (actor.role !== "customer" && actor.role !== "vendor") {
-    throw new ChatServiceError(403, "Only customers or vendors can start support conversations");
+  } else if (input.type === "customer_support") {
+    if (actor.role === "customer") {
+      if (input.recipientId) throw new ChatServiceError(403, "Customers cannot choose a support recipient");
+    } else if (!isStaff(actor) || !hasChatPermission(actor, "support.view_inbox")) {
+      throw new ChatServiceError(403, "Only customers or support staff can start customer support conversations");
+    } else if (!input.recipientId) {
+      throw new ChatServiceError(400, "recipientId is required when staff starts a customer conversation");
+    }
+  } else if (input.type === "vendor_support") {
+    if (actor.role === "vendor") {
+      if (input.vendorId && input.vendorId !== actor.vendorId && input.vendorId !== actor.id) {
+        throw new ChatServiceError(403, "Vendors cannot choose another vendor for support");
+      }
+    } else if (!isStaff(actor) || !hasChatPermission(actor, "support.view_inbox")) {
+      throw new ChatServiceError(403, "Only vendors or support staff can start vendor support conversations");
+    } else if (!input.vendorId) {
+      throw new ChatServiceError(400, "vendorId is required when staff starts a vendor conversation");
+    }
   }
 
-  return publicConversation(actor, createConversationRecord(actor, input));
+  const conversation = createConversationRecord(actor, input);
+  if (input.initialMessage) {
+    addMessage(actor, conversation, {
+      body: input.initialMessage,
+      clientMessageId: `thread-start-${conversation.id}`,
+    });
+  }
+  return publicConversation(actor, conversation);
 }
 
 export function listMessages(actor: ChatActor, conversationId: string): { items: ChatMessage[]; nextCursor: string | null; hasMore: boolean } {

@@ -10,6 +10,7 @@ import type { CartItemFulfillment } from './cartItemFulfillment';
 export interface CartItem {
   id: string;
   productId: string;
+  vendorId: string;
   title: string;
   vendorName: string;
   imageUrl: string;

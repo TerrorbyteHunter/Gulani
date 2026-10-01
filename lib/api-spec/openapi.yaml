@@ -1462,6 +1462,8 @@ components:
       properties:
         type: { type: string, enum: [buyer_vendor, customer_support, vendor_support] }
         vendorId: { type: string }
+        recipientId: { type: string, minLength: 1 }
+        initialMessage: { type: string, minLength: 1, maxLength: 4000 }
         contextType: { type: string, enum: [product, order, shop, general] }
         contextId: { type: string }
       required: [type, contextType]
@@ -1574,6 +1576,7 @@ components:
       type: object
       properties:
         id: { type: string }
+        vendorId: { type: string }
         title: { type: string }
         slug: { type: string }
         description: { type: string }
@@ -1594,7 +1597,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ProductVariant"
-      required: [id, title, slug, description, category, vendorName, vendorRating, price, currency, imageUrl, fulfillment, variants]
+      required: [id, vendorId, title, slug, description, category, vendorName, vendorRating, price, currency, imageUrl, fulfillment, variants]
     CatalogSummary:
       type: object
       properties:
@@ -1617,6 +1620,7 @@ components:
       properties:
         id: { type: string }
         productId: { type: string }
+        vendorId: { type: string }
         title: { type: string }
         vendorName: { type: string }
         imageUrl: { type: string }
@@ -1624,7 +1628,7 @@ components:
         unitPrice: { type: number }
         quantity: { type: integer }
         fulfillment: { type: string, enum: [local, sourced] }
-      required: [id, productId, title, vendorName, imageUrl, variantName, unitPrice, quantity, fulfillment]
+      required: [id, productId, vendorId, title, vendorName, imageUrl, variantName, unitPrice, quantity, fulfillment]
     Cart:
       type: object
       properties:

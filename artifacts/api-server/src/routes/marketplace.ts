@@ -164,6 +164,7 @@ const pricingRules: PricingRule[] = [
 const products: Product[] = [
   {
     id: "p-001",
+    vendorId: "vendor-1001",
     title: "Handwoven Lupita Basket",
     slug: "handwoven-lupita-basket",
     description:
@@ -185,6 +186,7 @@ const products: Product[] = [
   },
   {
     id: "p-002",
+    vendorId: "vendor-1002",
     title: "Everyday Linen Set",
     slug: "everyday-linen-set",
     description:
@@ -206,6 +208,7 @@ const products: Product[] = [
   },
   {
     id: "p-003",
+    vendorId: "vendor-1004",
     title: "Sable Leather Crossbody",
     slug: "sable-leather-crossbody",
     description:
@@ -226,6 +229,7 @@ const products: Product[] = [
   },
   {
     id: "p-004",
+    vendorId: "vendor-1005",
     title: "Pour Over Coffee Kit",
     slug: "pour-over-coffee-kit",
     description:
@@ -246,6 +250,7 @@ const products: Product[] = [
   },
   {
     id: "p-005",
+    vendorId: "vendor-1003",
     title: "Citrus & Cedar Candle",
     slug: "citrus-cedar-candle",
     description:
@@ -266,6 +271,7 @@ const products: Product[] = [
   },
   {
     id: "p-006",
+    vendorId: "vendor-1002",
     title: "Minimal Desk Lamp",
     slug: "minimal-desk-lamp",
     description:
@@ -701,6 +707,36 @@ const adminVendors: AdminVendor[] = [
     orderCount: 19,
     lastActiveAt: "2026-09-08T11:25:00.000Z",
   },
+  {
+    id: "vendor-1004",
+    businessName: "Sable Studio",
+    contactName: "Sable Phiri",
+    email: "studio@sablestudio.zm",
+    phone: "+260 97 333 4100",
+    category: "Fashion",
+    description: "Small-batch leather goods made for everyday use.",
+    verificationStatus: "approved",
+    accountStatus: "active",
+    joinedAt: "2026-06-18T09:00:00.000Z",
+    productCount: 6,
+    orderCount: 14,
+    lastActiveAt: "2026-09-09T13:20:00.000Z",
+  },
+  {
+    id: "vendor-1005",
+    businessName: "Copper & Clay",
+    contactName: "Tandiwe Chileshe",
+    email: "hello@copperandclay.zm",
+    phone: "+260 96 215 8200",
+    category: "Kitchen",
+    description: "Thoughtful coffee and kitchen pieces from independent makers.",
+    verificationStatus: "approved",
+    accountStatus: "active",
+    joinedAt: "2026-07-02T09:00:00.000Z",
+    productCount: 9,
+    orderCount: 21,
+    lastActiveAt: "2026-09-10T09:40:00.000Z",
+  },
 ];
 const supportTickets: SupportTicket[] = [
   {
@@ -831,6 +867,7 @@ function productToCartItem(product: Product, variantId: string, quantity: number
   return {
     id: randomUUID(),
     productId: product.id,
+    vendorId: product.vendorId,
     title: product.title,
     vendorName: product.vendorName,
     imageUrl: product.imageUrl,

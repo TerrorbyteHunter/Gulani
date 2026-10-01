@@ -23,6 +23,7 @@ export const HealthCheckResponse = zod.object({
 export const GetCatalogSummaryResponse = zod.object({
   "featured": zod.array(zod.object({
   "id": zod.string(),
+  "vendorId": zod.string(),
   "title": zod.string(),
   "slug": zod.string(),
   "description": zod.string(),
@@ -52,6 +53,7 @@ export const GetCatalogSummaryResponse = zod.object({
 })),
   "trending": zod.array(zod.object({
   "id": zod.string(),
+  "vendorId": zod.string(),
   "title": zod.string(),
   "slug": zod.string(),
   "description": zod.string(),
@@ -121,6 +123,7 @@ export const ListProductsQueryParams = zod.object({
 
 export const ListProductsResponseItem = zod.object({
   "id": zod.string(),
+  "vendorId": zod.string(),
   "title": zod.string(),
   "slug": zod.string(),
   "description": zod.string(),
@@ -160,6 +163,7 @@ export const GetProductParams = zod.object({
 
 export const GetProductResponse = zod.object({
   "id": zod.string(),
+  "vendorId": zod.string(),
   "title": zod.string(),
   "slug": zod.string(),
   "description": zod.string(),
@@ -196,6 +200,7 @@ export const GetCartResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string(),
   "productId": zod.string(),
+  "vendorId": zod.string(),
   "title": zod.string(),
   "vendorName": zod.string(),
   "imageUrl": zod.string(),
@@ -228,6 +233,7 @@ export const AddCartItemResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string(),
   "productId": zod.string(),
+  "vendorId": zod.string(),
   "title": zod.string(),
   "vendorName": zod.string(),
   "imageUrl": zod.string(),
@@ -262,6 +268,7 @@ export const UpdateCartItemResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string(),
   "productId": zod.string(),
+  "vendorId": zod.string(),
   "title": zod.string(),
   "vendorName": zod.string(),
   "imageUrl": zod.string(),
@@ -288,6 +295,7 @@ export const RemoveCartItemResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string(),
   "productId": zod.string(),
+  "vendorId": zod.string(),
   "title": zod.string(),
   "vendorName": zod.string(),
   "imageUrl": zod.string(),
@@ -424,9 +432,16 @@ export const ListConversationsResponse = zod.array(ListConversationsResponseItem
 /**
  * @summary Start a buyer/vendor or support conversation
  */
+
+export const createConversationBodyInitialMessageMax = 4000;
+
+
+
 export const CreateConversationBody = zod.object({
   "type": zod.enum(['buyer_vendor', 'customer_support', 'vendor_support']),
   "vendorId": zod.string().optional(),
+  "recipientId": zod.string().min(1).optional(),
+  "initialMessage": zod.string().min(1).max(createConversationBodyInitialMessageMax).optional(),
   "contextType": zod.enum(['product', 'order', 'shop', 'general']),
   "contextId": zod.string().optional()
 })

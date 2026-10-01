@@ -11,6 +11,13 @@ import type { CreateConversationType } from './createConversationType';
 export interface CreateConversation {
   type: CreateConversationType;
   vendorId?: string;
+  /** @minLength 1 */
+  recipientId?: string;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  initialMessage?: string;
   contextType: CreateConversationContextType;
   contextId?: string;
 }

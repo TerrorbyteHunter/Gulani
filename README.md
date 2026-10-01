@@ -11,6 +11,7 @@ The project is currently a working first-phase application with seeded in-memory
 - Discover featured, trending, and category-based products
 - Search products and vendors
 - View product details, variants, prices, stock, sourcing method, and vendor information
+- Ask a product's seller a question from its product page or basket item
 - Add multiple products and vendor items to a cart
 - Check out as a guest
 - Pay using MTN Mobile Money, Airtel Money, or Visa
@@ -50,6 +51,7 @@ Available at `/admin`. The operations desk includes:
 - Finance and sales reporting
 - Promotions and pricing rules
 - Support tickets and operations workflows
+- Customer/vendor message threads, including operations-started conversations with an opening message
 - Reviews and moderation
 - Analytics and reporting
 - Notifications
@@ -87,6 +89,7 @@ The admin workspace uses dedicated APIs where they exist. Some newer sections cu
 | `/admin/finance` | Sales and finance overview |
 | `/admin/promotions` | Pricing and promotion controls |
 | `/admin/support` | Support ticket operations |
+| `/admin/messages` | Start and manage customer/vendor conversations |
 | `/admin/moderation` | Reviews and marketplace trust signals |
 | `/admin/analytics` | Business analytics |
 | `/admin/notifications` | Operations notifications |

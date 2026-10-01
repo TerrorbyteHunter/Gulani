@@ -103,6 +103,13 @@ export const CreateConversationContextType = {
 export interface CreateConversation {
   type: CreateConversationType;
   vendorId?: string;
+  /** @minLength 1 */
+  recipientId?: string;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  initialMessage?: string;
   contextType: CreateConversationContextType;
   contextId?: string;
 }
@@ -379,6 +386,7 @@ export const ProductFulfillment = {
 
 export interface Product {
   id: string;
+  vendorId: string;
   title: string;
   slug: string;
   description: string;
@@ -419,6 +427,7 @@ export const CartItemFulfillment = {
 export interface CartItem {
   id: string;
   productId: string;
+  vendorId: string;
   title: string;
   vendorName: string;
   imageUrl: string;

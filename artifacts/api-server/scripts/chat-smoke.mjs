@@ -7,6 +7,7 @@ const vendor = {
   "x-gulani-vendor-id": `smoke-vendor-${suffix}`,
 };
 const support = { "x-gulani-user-id": `smoke-support-${suffix}`, "x-gulani-user-role": "support" };
+const operations = { "x-gulani-user-id": `smoke-admin-${suffix}`, "x-gulani-user-role": "master_admin" };
 
 async function request(path, { method = "GET", headers = {}, body } = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -32,13 +33,35 @@ async function run() {
   const unauthenticated = await request("/conversations");
   assert(unauthenticated.status === 401, "unauthenticated conversation access must return 401");
 
+  const productResponse = await request("/catalog/products/p-003");
+  assert(productResponse.status === 200 && productResponse.data.vendorId === "vendor-1004", "product details must expose the correct seller ID");
+  const cartResponse = await request("/cart", {
+    method: "POST",
+    headers: customer,
+    body: { productId: productResponse.data.id, variantId: "v-005", quantity: 1 },
+  });
+  assert(
+    cartResponse.status === 201 &&
+      cartResponse.data.items.some((item) => item.productId === productResponse.data.id && item.vendorId === productResponse.data.vendorId),
+    "cart items must retain the product's seller ID",
+  );
+
   const conversationResponse = await request("/conversations", {
     method: "POST",
     headers: customer,
-    body: { type: "buyer_vendor", vendorId: vendor["x-gulani-vendor-id"], contextType: "product", contextId: `product-${suffix}` },
+    body: { type: "buyer_vendor", vendorId: productResponse.data.vendorId, contextType: "product", contextId: productResponse.data.id },
   });
   assert(conversationResponse.status === 201, "customer should create a buyer/vendor conversation");
   const conversationId = conversationResponse.data.id;
+  const productSeller = {
+    "x-gulani-user-id": productResponse.data.vendorId,
+    "x-gulani-user-role": "vendor",
+    "x-gulani-vendor-id": productResponse.data.vendorId,
+  };
+  assert(
+    conversationResponse.data.participants.some((entry) => entry.userId === productResponse.data.vendorId && entry.roleInChat === "vendor"),
+    "a product conversation must include the product's real seller",
+  );
 
   const idor = await request(`/conversations/${conversationId}`, {
     headers: { "x-gulani-user-id": `other-${suffix}`, "x-gulani-user-role": "customer" },
@@ -51,8 +74,49 @@ async function run() {
   assert(firstMessage.status === 201 && duplicateMessage.status === 201, "customer message sends should succeed");
   assert(firstMessage.data.id === duplicateMessage.data.id, "duplicate client message IDs must be idempotent");
 
-  const vendorMessages = await request(`/conversations/${conversationId}/messages`, { headers: vendor });
+  const vendorMessages = await request(`/conversations/${conversationId}/messages`, { headers: productSeller });
   assert(vendorMessages.status === 200 && vendorMessages.data.items.some((item) => item.id === firstMessage.data.id), "vendor should see buyer messages");
+
+  const staffVendorConversation = await request("/conversations", {
+    method: "POST",
+    headers: operations,
+    body: {
+      type: "vendor_support",
+      vendorId: vendor["x-gulani-vendor-id"],
+      contextType: "general",
+      initialMessage: "Following up from operations.",
+    },
+  });
+  assert(staffVendorConversation.status === 201, "staff should be able to start a vendor conversation");
+  const operationsInbox = await request("/conversations", { headers: operations });
+  assert(
+    operationsInbox.status === 200 && operationsInbox.data.some((item) => item.id === staffVendorConversation.data.id),
+    "operations should be able to load the inbox after starting a conversation",
+  );
+  const vendorConversationMessages = await request(`/conversations/${staffVendorConversation.data.id}/messages`, { headers: vendor });
+  assert(
+    vendorConversationMessages.status === 200 &&
+      vendorConversationMessages.data.items.some((item) => item.body === "Following up from operations."),
+    "the vendor should see the first message from operations",
+  );
+
+  const staffCustomerConversation = await request("/conversations", {
+    method: "POST",
+    headers: operations,
+    body: {
+      type: "customer_support",
+      recipientId: customer["x-gulani-user-id"],
+      contextType: "general",
+      initialMessage: "We are checking in from operations.",
+    },
+  });
+  assert(staffCustomerConversation.status === 201, "staff should be able to start a customer conversation");
+  const customerConversationMessages = await request(`/conversations/${staffCustomerConversation.data.id}/messages`, { headers: customer });
+  assert(
+    customerConversationMessages.status === 200 &&
+      customerConversationMessages.data.items.some((item) => item.body === "We are checking in from operations."),
+    "the customer should see the first message from operations",
+  );
 
   const ticketResponse = await request("/support/tickets", {
     method: "POST",

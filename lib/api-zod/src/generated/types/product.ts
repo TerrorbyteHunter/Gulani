@@ -10,6 +10,7 @@ import type { ProductVariant } from './productVariant';
 
 export interface Product {
   id: string;
+  vendorId: string;
   title: string;
   slug: string;
   description: string;
