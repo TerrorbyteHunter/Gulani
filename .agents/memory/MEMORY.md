@@ -1,3 +1,3 @@
 - [Global sourced marketplace](catalog-pricing.md) — Gulani is global and source-aware; imported supplier costs are repriced by configurable source-specific markup rules.
-- [Chat foundation](chat-foundation.md) — Keep messaging identity server-verified and admin/vendor entry points separate; route separation never replaces authorization.
+- [Chat foundation](chat-foundation.md) — Use `/admin/login` and `/vendor/login`; require verified roles and server-controlled vendor links.
 - [Clerk setup for imported projects](clerk-import-setup.md) — Replit-managed Clerk uses the workspace title; ZIP-derived names can fail even when the artifact title is clean.
