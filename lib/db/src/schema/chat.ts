@@ -160,6 +160,7 @@ export const messages = pgTable(
     index("messages_sender_id_idx").on(table.senderId),
     uniqueIndex("messages_conversation_client_message_idx").on(
       table.conversationId,
+      table.senderId,
       table.clientMessageId,
     ),
   ],

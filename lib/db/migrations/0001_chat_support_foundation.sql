@@ -60,7 +60,7 @@ CREATE TABLE "messages" (
 );
 CREATE INDEX "messages_conversation_created_idx" ON "messages" ("conversation_id", "created_at");
 CREATE INDEX "messages_sender_id_idx" ON "messages" ("sender_id");
-CREATE UNIQUE INDEX "messages_conversation_client_message_idx" ON "messages" ("conversation_id", "client_message_id");
+CREATE UNIQUE INDEX "messages_conversation_client_message_idx" ON "messages" ("conversation_id", "sender_id", "client_message_id");
 
 CREATE TABLE "message_attachments" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

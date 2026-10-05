@@ -3,14 +3,14 @@ name: Chat foundation
 description: Phase 1 chat/support API constraints and the transition path to production auth and persistence.
 ---
 
-The chat foundation currently uses required `x-gulani-user-id`, `x-gulani-user-role`, and optional `x-gulani-vendor-id` headers because the repository does not yet have session authentication or database-backed marketplace routes. New chat endpoints deny requests without an identity and centralize permission checks so the future session middleware can provide the same actor shape.
+The chat/support service stores conversations, participants and read markers, messages, tickets, and ticket events in the existing Drizzle/PostgreSQL schema. The remaining security boundary is the actor: remove the temporary demo-header adapter and derive identity from a verified session plus trusted server-side role/vendor associations. Never trust browser-supplied role or vendor IDs.
 
-**Why:** Existing marketplace/admin routes are seeded and unauthenticated, so inferring identity or importing the database connection into the API would create a false production-security boundary or crash environments without `DATABASE_URL`.
+**Why:** The original headers only separated test actors before session auth existed; they are not proof of identity or authorization. Seller access must not be self-assigned through a request.
 
-**How to apply:** Replace the header adapter with the real session principal before enabling chat UI in production, then move the service maps to the additive Drizzle schema/migration without changing the REST authorization rules.
+**How to apply:** Replace the adapter with the authenticated session principal and an operations-controlled vendor membership before enabling buyer/seller messaging for real accounts. Preserve participant checks and staff permission checks.
 
-The web client must initialize the temporary chat identity before mounting chat queries; setting it only in a route effect can cache an initial 401 response in React Query.
+The web client must establish the authenticated session before mounting chat queries; otherwise React Query can cache an initial 401 result.
 
 **Why:** The Messages page can render before the route effect runs, and React Query will otherwise retain the unauthorized result until invalidated.
 
-**How to apply:** Keep an early demo identity only for the current seeded environment, and replace it with the authenticated session principal when auth is added.
+**How to apply:** Wait for Clerk's signed-in state before enabling chat queries, and invalidate relevant queries when the session changes.

@@ -1,2 +1,3 @@
 - [Global sourced marketplace](catalog-pricing.md) — Gulani is global and source-aware; imported supplier costs are repriced by configurable source-specific markup rules.
-- [Chat foundation](chat-foundation.md) — Phase 1 routes require an explicit actor boundary until session auth and durable persistence are available.
+- [Chat foundation](chat-foundation.md) — Keep messaging identity server-verified; browser-supplied roles and vendor IDs are never trusted.
+- [Clerk setup for imported projects](clerk-import-setup.md) — Replit-managed Clerk uses the workspace title; ZIP-derived names can fail even when the artifact title is clean.

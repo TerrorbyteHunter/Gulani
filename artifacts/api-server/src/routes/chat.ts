@@ -55,7 +55,7 @@ function requireActor(req: Parameters<typeof getChatActor>[0], res: any): ChatAc
 
 function respondError(res: any, error: unknown) {
   if (error instanceof ChatServiceError) return res.status(error.statusCode).json({ error: error.message });
-  return res.status(400).json({ error: "Invalid chat request" });
+  return res.status(500).json({ error: "Internal server error" });
 }
 
 function parseOrRespond<T>(schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false } }, value: unknown, res: any): T | null {
@@ -75,80 +75,84 @@ function requirePermission(actor: ChatActor, permission: Parameters<typeof hasCh
   return true;
 }
 
-router.get("/conversations", (req, res) => {
+router.get("/conversations", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor) return;
   const filters = parseOrRespond(ListConversationsQueryParams, req.query, res);
   if (!filters) return;
   try {
-    return res.json(ListConversationsResponse.parse(listConversations(actor, filters)));
+    return res.json(ListConversationsResponse.parse(await listConversations(actor, filters)));
   } catch (error) {
     return respondError(res, error);
   }
 });
 
-router.post("/conversations", (req, res) => {
+router.post("/conversations", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor || !requirePermission(actor, "chat.use", res)) return;
   const body = parseOrRespond(CreateConversationBody, req.body, res);
   if (!body) return;
   try {
-    return res.status(201).json(CreateConversationResponse.parse(createConversation(actor, body)));
+    return res.status(201).json(CreateConversationResponse.parse(await createConversation(actor, body)));
   } catch (error) {
     return respondError(res, error);
   }
 });
 
-router.get("/conversations/:conversationId", (req, res) => {
+router.get("/conversations/:conversationId", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor) return;
   const params = parseOrRespond(GetConversationParams, req.params, res);
   if (!params) return;
-  const conversation = getConversation(actor, params.conversationId);
-  if (!conversation) return res.status(404).json({ error: "Conversation not found" });
-  return res.json(GetConversationResponse.parse(conversation));
+  try {
+    const conversation = await getConversation(actor, params.conversationId);
+    if (!conversation) return res.status(404).json({ error: "Conversation not found" });
+    return res.json(GetConversationResponse.parse(conversation));
+  } catch (error) {
+    return respondError(res, error);
+  }
 });
 
-router.get("/conversations/:conversationId/messages", (req, res) => {
+router.get("/conversations/:conversationId/messages", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor) return;
   const params = parseOrRespond(ListConversationMessagesParams, req.params, res);
   if (!params) return;
   try {
-    return res.json(ListConversationMessagesResponse.parse(listMessages(actor, params.conversationId)));
+    return res.json(ListConversationMessagesResponse.parse(await listMessages(actor, params.conversationId)));
   } catch (error) {
     return respondError(res, error);
   }
 });
 
-router.post("/conversations/:conversationId/messages", (req, res) => {
+router.post("/conversations/:conversationId/messages", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor || !requirePermission(actor, "chat.use", res)) return;
   const params = parseOrRespond(SendConversationMessageParams, req.params, res);
   const body = parseOrRespond(SendConversationMessageBody, req.body, res);
   if (!params || !body) return;
   try {
-    return res.status(201).json(SendConversationMessageResponse.parse(sendMessage(actor, params.conversationId, body)));
+    return res.status(201).json(SendConversationMessageResponse.parse(await sendMessage(actor, params.conversationId, body)));
   } catch (error) {
     return respondError(res, error);
   }
 });
 
-router.post("/conversations/:conversationId/read", (req, res) => {
+router.post("/conversations/:conversationId/read", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor) return;
   const params = parseOrRespond(MarkConversationReadParams, req.params, res);
   const body = parseOrRespond(MarkConversationReadBody, req.body, res);
   if (!params || !body) return;
   try {
-    markRead(actor, params.conversationId, body.messageId);
+    await markRead(actor, params.conversationId, body.messageId);
     return res.status(204).send();
   } catch (error) {
     return respondError(res, error);
   }
 });
 
-router.get("/support/tickets", (req, res) => {
+router.get("/support/tickets", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor) return;
   if (["customer", "vendor"].includes(actor.role) && !hasChatPermission(actor, "chat.use")) {
@@ -157,55 +161,59 @@ router.get("/support/tickets", (req, res) => {
   const filters = parseOrRespond(ListChatTicketsQueryParams, req.query, res);
   if (!filters) return;
   try {
-    return res.json(ListChatTicketsResponse.parse(listTickets(actor, filters)));
+    return res.json(ListChatTicketsResponse.parse(await listTickets(actor, filters)));
   } catch (error) {
     return respondError(res, error);
   }
 });
 
-router.post("/support/tickets", (req, res) => {
+router.post("/support/tickets", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor || !requirePermission(actor, "chat.use", res)) return;
   const body = parseOrRespond(CreateChatTicketBody, req.body, res);
   if (!body) return;
   try {
-    return res.status(201).json(CreateChatTicketResponse.parse(createTicket(actor, body)));
+    return res.status(201).json(CreateChatTicketResponse.parse(await createTicket(actor, body)));
   } catch (error) {
     return respondError(res, error);
   }
 });
 
-router.get("/support/tickets/:ticketId", (req, res) => {
+router.get("/support/tickets/:ticketId", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor) return;
   const params = parseOrRespond(GetChatTicketParams, req.params, res);
   if (!params) return;
-  const ticket = getTicket(actor, params.ticketId);
-  if (!ticket) return res.status(404).json({ error: "Support ticket not found" });
-  return res.json(GetChatTicketResponse.parse(ticket));
+  try {
+    const ticket = await getTicket(actor, params.ticketId);
+    if (!ticket) return res.status(404).json({ error: "Support ticket not found" });
+    return res.json(GetChatTicketResponse.parse(ticket));
+  } catch (error) {
+    return respondError(res, error);
+  }
 });
 
-router.patch("/support/tickets/:ticketId", (req, res) => {
+router.patch("/support/tickets/:ticketId", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor) return;
   const params = parseOrRespond(UpdateChatTicketParams, req.params, res);
   const body = parseOrRespond(UpdateChatTicketBody, req.body, res);
   if (!params || !body) return;
   try {
-    return res.json(UpdateChatTicketResponse.parse(updateTicket(actor, params.ticketId, body)));
+    return res.json(UpdateChatTicketResponse.parse(await updateTicket(actor, params.ticketId, body)));
   } catch (error) {
     return respondError(res, error);
   }
 });
 
-router.post("/support/tickets/:ticketId/messages", (req, res) => {
+router.post("/support/tickets/:ticketId/messages", async (req, res) => {
   const actor = requireActor(req, res);
   if (!actor) return;
   const params = parseOrRespond(SendChatTicketMessageParams, req.params, res);
   const body = parseOrRespond(SendChatTicketMessageBody, req.body, res);
   if (!params || !body) return;
   try {
-    return res.status(201).json(SendChatTicketMessageResponse.parse(sendTicketMessage(actor, params.ticketId, body)));
+    return res.status(201).json(SendChatTicketMessageResponse.parse(await sendTicketMessage(actor, params.ticketId, body)));
   } catch (error) {
     return respondError(res, error);
   }
