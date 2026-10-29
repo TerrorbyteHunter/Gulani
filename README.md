@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Gulani Marketplace
 
 Gulani is a mobile-first marketplace for discovering products from local Zambian vendors and international sourcing partners. Customers can browse products, build a multi-vendor basket, check out with supported payment methods, and follow orders through local or sourced fulfillment. Vendors have a dedicated workspace, while operations teams use a broad admin control room to manage the marketplace.
@@ -402,3 +403,6 @@ Gulani is intentionally warm, editorial, and marketplace-led rather than a gener
 ## License
 
 This repository currently declares an MIT license in the root workspace package metadata.
+=======
+# Gulani
+>>>>>>> 49b691dab3cb0c3fad79e4be6309ff9f68c8f14f
