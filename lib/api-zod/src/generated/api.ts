@@ -312,6 +312,24 @@ export const RemoveCartItemResponse = zod.object({
 
 
 /**
+ * @summary Get delivery choices and estimates for a destination
+ */
+export const GetDeliveryOptionsQueryParams = zod.object({
+  "deliveryZone": zod.enum(['lusaka', 'copperbelt', 'other_zambia']),
+  "fulfillment": zod.enum(['local', 'sourced']).optional()
+})
+
+export const GetDeliveryOptionsResponseItem = zod.object({
+  "id": zod.enum(['shop_pickup', 'shop_delivery', 'yango_delivery', 'platinum_couriers']),
+  "name": zod.string(),
+  "description": zod.string(),
+  "fee": zod.number(),
+  "estimatedDelivery": zod.string()
+})
+export const GetDeliveryOptionsResponse = zod.array(GetDeliveryOptionsResponseItem)
+
+
+/**
  * Initiates a mobile-money or Visa payment. Cash on delivery is not supported.
  * @summary Place a paid order
  */
@@ -331,6 +349,7 @@ export const CreateCheckoutBody = zod.object({
   "fullName": zod.string().min(createCheckoutBodyFullNameMin),
   "address": zod.string().min(createCheckoutBodyAddressMin),
   "deliveryZone": zod.string().min(createCheckoutBodyDeliveryZoneMin),
+  "deliveryMethod": zod.enum(['shop_pickup', 'shop_delivery', 'yango_delivery', 'platinum_couriers']),
   "paymentMethod": zod.enum(['mtn_mobile_money', 'airtel_money', 'visa']),
   "paymentPhone": zod.string().nullish()
 })
@@ -354,6 +373,8 @@ export const ListOrdersResponseItem = zod.object({
   "total": zod.number(),
   "currency": zod.string(),
   "deliveryAddress": zod.string(),
+  "deliveryFee": zod.number().optional(),
+  "deliveryMethod": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -381,6 +402,8 @@ export const GetOrderResponse = zod.object({
   "total": zod.number(),
   "currency": zod.string(),
   "deliveryAddress": zod.string(),
+  "deliveryFee": zod.number().optional(),
+  "deliveryMethod": zod.string().optional(),
   "items": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),

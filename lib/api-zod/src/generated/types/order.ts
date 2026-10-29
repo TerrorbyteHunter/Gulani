@@ -15,5 +15,7 @@ export interface Order {
   total: number;
   currency: string;
   deliveryAddress: string;
+  deliveryFee?: number;
+  deliveryMethod?: string;
   items: OrderItem[];
 }

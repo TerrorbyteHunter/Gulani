@@ -463,6 +463,34 @@ export interface CartItemUpdate {
   quantity: number;
 }
 
+export type DeliveryOptionId = typeof DeliveryOptionId[keyof typeof DeliveryOptionId];
+
+
+export const DeliveryOptionId = {
+  shop_pickup: 'shop_pickup',
+  shop_delivery: 'shop_delivery',
+  yango_delivery: 'yango_delivery',
+  platinum_couriers: 'platinum_couriers',
+} as const;
+
+export interface DeliveryOption {
+  id: DeliveryOptionId;
+  name: string;
+  description: string;
+  fee: number;
+  estimatedDelivery: string;
+}
+
+export type CheckoutInputDeliveryMethod = typeof CheckoutInputDeliveryMethod[keyof typeof CheckoutInputDeliveryMethod];
+
+
+export const CheckoutInputDeliveryMethod = {
+  shop_pickup: 'shop_pickup',
+  shop_delivery: 'shop_delivery',
+  yango_delivery: 'yango_delivery',
+  platinum_couriers: 'platinum_couriers',
+} as const;
+
 export type CheckoutInputPaymentMethod = typeof CheckoutInputPaymentMethod[keyof typeof CheckoutInputPaymentMethod];
 
 
@@ -482,6 +510,7 @@ export interface CheckoutInput {
   address: string;
   /** @minLength 2 */
   deliveryZone: string;
+  deliveryMethod: CheckoutInputDeliveryMethod;
   paymentMethod: CheckoutInputPaymentMethod;
   /** @nullable */
   paymentPhone?: string | null;
@@ -521,6 +550,8 @@ export interface Order {
   total: number;
   currency: string;
   deliveryAddress: string;
+  deliveryFee?: number;
+  deliveryMethod?: string;
   items: OrderItem[];
 }
 
@@ -1460,6 +1491,28 @@ export const ListProductsSort = {
   price_asc: 'price_asc',
   price_desc: 'price_desc',
   top_rated: 'top_rated',
+} as const;
+
+export type GetDeliveryOptionsParams = {
+deliveryZone: GetDeliveryOptionsDeliveryZone;
+fulfillment?: GetDeliveryOptionsFulfillment;
+};
+
+export type GetDeliveryOptionsDeliveryZone = typeof GetDeliveryOptionsDeliveryZone[keyof typeof GetDeliveryOptionsDeliveryZone];
+
+
+export const GetDeliveryOptionsDeliveryZone = {
+  lusaka: 'lusaka',
+  copperbelt: 'copperbelt',
+  other_zambia: 'other_zambia',
+} as const;
+
+export type GetDeliveryOptionsFulfillment = typeof GetDeliveryOptionsFulfillment[keyof typeof GetDeliveryOptionsFulfillment];
+
+
+export const GetDeliveryOptionsFulfillment = {
+  local: 'local',
+  sourced: 'sourced',
 } as const;
 
 export type ListConversationsParams = {

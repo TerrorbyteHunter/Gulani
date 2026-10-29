@@ -3,6 +3,8 @@ import { Router, type IRouter } from "express";
 import {
   AddCartItemBody,
   CreateCheckoutBody,
+  GetDeliveryOptionsQueryParams,
+  GetDeliveryOptionsResponse,
   GetProductParams,
   GetProductResponse,
   GetCatalogSummaryResponse,
@@ -48,6 +50,8 @@ import {
   type CartItem,
   type Order as OrderData,
   type Product as ProductData,
+  type DeliveryOption,
+  type GetDeliveryOptionsParams,
   type AdminOrder,
   type AdminVendorApplication,
   type AdminVendor,
@@ -854,6 +858,63 @@ let adminSettings: MarketplaceSettings = {
   maintenanceMode: false,
 };
 
+const deliveryRates: Record<GetDeliveryOptionsParams["deliveryZone"], Partial<Record<DeliveryOption["id"], number>>> = {
+  lusaka: {
+    shop_pickup: 0,
+    shop_delivery: 30,
+    yango_delivery: 45,
+    platinum_couriers: 100,
+  },
+  copperbelt: {
+    shop_delivery: 75,
+    platinum_couriers: 140,
+  },
+  other_zambia: {
+    shop_delivery: 130,
+    platinum_couriers: 220,
+  },
+};
+
+function deliveryOptionsFor(
+  deliveryZone: GetDeliveryOptionsParams["deliveryZone"],
+  fulfillment: GetDeliveryOptionsParams["fulfillment"] = "local",
+): DeliveryOption[] {
+  const choices: Omit<DeliveryOption, "fee">[] = [
+    {
+      id: "shop_pickup",
+      name: "Collect from shop",
+      description: "Pick up directly from the seller in Lusaka.",
+      estimatedDelivery: "Ready when the seller confirms",
+    },
+    {
+      id: "shop_delivery",
+      name: "Shop's own delivery",
+      description: "Delivery arranged directly by the seller.",
+      estimatedDelivery: deliveryZone === "lusaka" ? "Same day" : "1–3 business days",
+    },
+    {
+      id: "yango_delivery",
+      name: "Yango Delivery",
+      description: "On-demand delivery within Lusaka.",
+      estimatedDelivery: "About 1–3 hours",
+    },
+    {
+      id: "platinum_couriers",
+      name: "Platinum Couriers",
+      description: "Tracked courier delivery to your area.",
+      estimatedDelivery: deliveryZone === "lusaka" ? "Same day" : "1–3 business days",
+    },
+  ];
+
+  return choices.flatMap((choice) => {
+    if (choice.id === "shop_pickup" && (deliveryZone !== "lusaka" || fulfillment === "sourced")) {
+      return [];
+    }
+    const fee = deliveryRates[deliveryZone][choice.id];
+    return fee === undefined ? [] : [{ ...choice, fee }];
+  });
+}
+
 function calculateCart(): Cart {
   const subtotal = cart.items.reduce((sum: number, item: CartItem) => sum + item.unitPrice * item.quantity, 0);
   const deliveryFee = subtotal === 0 ? 0 : subtotal >= 600 ? 0 : 45;
@@ -916,6 +977,16 @@ router.get("/catalog/products/:productId", (req, res) => {
   return res.json(GetProductResponse.parse(product));
 });
 
+router.get("/delivery-options", (req, res) => {
+  const parsed = GetDeliveryOptionsQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const options = deliveryOptionsFor(parsed.data.deliveryZone, parsed.data.fulfillment);
+  res.json(GetDeliveryOptionsResponse.parse(options));
+});
+
 router.get("/cart", (_req, res) => res.json(GetCartResponse.parse(calculateCart())));
 
 router.post("/cart", (req, res) => {
@@ -950,8 +1021,30 @@ router.delete("/cart/items/:itemId", (req, res) => {
 
 router.post("/checkout", (req, res) => {
   const body = CreateCheckoutBody.parse(req.body);
-  calculateCart();
   if (!cart.items.length) return res.status(400).json({ error: "Your cart is empty" });
+  const deliveryParams = GetDeliveryOptionsQueryParams.safeParse({
+    deliveryZone: body.deliveryZone,
+    fulfillment: cart.items.some((item) => item.fulfillment === "sourced") ? "sourced" : "local",
+  });
+  if (!deliveryParams.success) {
+    res.status(400).json({ error: "Choose a supported delivery area." });
+    return;
+  }
+  const selectedDelivery = deliveryOptionsFor(
+    deliveryParams.data.deliveryZone,
+    deliveryParams.data.fulfillment,
+  ).find((option) => option.id === body.deliveryMethod);
+  if (!selectedDelivery) {
+    res.status(400).json({ error: "That delivery method is not available for this order and area." });
+    return;
+  }
+  const subtotal = cart.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  cart = {
+    ...cart,
+    subtotal,
+    deliveryFee: selectedDelivery.fee,
+    total: subtotal + selectedDelivery.fee,
+  };
   const orderId = randomUUID();
   const orderNumber = `GUL-${new Date().getFullYear()}-${String(orders.length + 921).padStart(6, "0")}`;
   const order: Order = {
@@ -961,7 +1054,9 @@ router.post("/checkout", (req, res) => {
     createdAt: new Date().toISOString(),
     total: cart.total,
     currency: cart.currency,
-    deliveryAddress: `${body.fullName}, ${body.address}`,
+    deliveryAddress: `${body.fullName}, ${body.address}, ${body.deliveryZone}`,
+    deliveryFee: selectedDelivery.fee,
+    deliveryMethod: selectedDelivery.name,
     items: cart.items.map((item: CartItem) => ({
       id: item.id,
       title: item.title,

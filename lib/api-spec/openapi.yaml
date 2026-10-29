@@ -180,6 +180,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Cart"
+  /delivery-options:
+    get:
+      operationId: getDeliveryOptions
+      tags: [checkout]
+      summary: Get delivery choices and estimates for a destination
+      parameters:
+        - in: query
+          name: deliveryZone
+          required: true
+          schema:
+            type: string
+            enum: [lusaka, copperbelt, other_zambia]
+        - in: query
+          name: fulfillment
+          required: false
+          schema:
+            type: string
+            enum: [local, sourced]
+      responses:
+        "200":
+          description: Delivery estimates for the selected destination
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DeliveryOption"
   /checkout:
     post:
       operationId: createCheckout
@@ -1653,6 +1680,15 @@ components:
       properties:
         quantity: { type: integer, minimum: 1, maximum: 20 }
       required: [quantity]
+    DeliveryOption:
+      type: object
+      properties:
+        id: { type: string, enum: [shop_pickup, shop_delivery, yango_delivery, platinum_couriers] }
+        name: { type: string }
+        description: { type: string }
+        fee: { type: number }
+        estimatedDelivery: { type: string }
+      required: [id, name, description, fee, estimatedDelivery]
     CheckoutInput:
       type: object
       properties:
@@ -1661,9 +1697,10 @@ components:
         fullName: { type: string, minLength: 2 }
         address: { type: string, minLength: 5 }
         deliveryZone: { type: string, minLength: 2 }
+        deliveryMethod: { type: string, enum: [shop_pickup, shop_delivery, yango_delivery, platinum_couriers] }
         paymentMethod: { type: string, enum: [mtn_mobile_money, airtel_money, visa] }
         paymentPhone: { type: ["string", "null"] }
-      required: [email, phone, fullName, address, deliveryZone, paymentMethod]
+      required: [email, phone, fullName, address, deliveryZone, deliveryMethod, paymentMethod]
     CheckoutResult:
       type: object
       properties:
@@ -1692,6 +1729,8 @@ components:
         total: { type: number }
         currency: { type: string }
         deliveryAddress: { type: string }
+        deliveryFee: { type: number }
+        deliveryMethod: { type: string }
         items:
           type: array
           items:

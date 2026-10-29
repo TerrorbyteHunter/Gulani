@@ -4,7 +4,7 @@ import {
   ArrowLeft, ArrowRight, BadgeCheck, Bike, Check, ChevronRight, CircleDollarSign,
   CircleAlert, Clock3, LayoutDashboard, MapPin, Menu, Minus,
   Package, Plus, Search, Settings, ShieldCheck, ShoppingBag, Sparkles, Star, Store,
-  Trash2, TrendingUp, Truck, UserRound, WalletCards, X, Zap, Headphones,
+  Trash2, TrendingUp, Truck, UserRound, WalletCards, X, Zap, Headphones, Share2,
 } from 'lucide-react';
 import {
   CheckoutInputPaymentMethod, getGetCartQueryKey, getGetCatalogSummaryQueryKey,
@@ -22,12 +22,12 @@ import {
   useUpdateVendorApplicationStatus, useListSupportTickets, useUpdateSupportTicket,
   useGetFulfillmentOverview, useGetSalesOverview, useGetAdminSettings,
   useUpdateAdminSettings, useListPricingRules, useUpdatePricingRule, setChatIdentity,
-  useCreateConversation,
+  useCreateConversation, useGetDeliveryOptions, getGetDeliveryOptionsQueryKey,
 } from '@workspace/api-client-react';
 import type {
   AdminDashboard, Cart, CartItem, CheckoutInput, Product, ProductVariant,
   VendorDashboard, AdminOrder, AdminVendorApplication, SupportTicket,
-  MarketplaceSettings, PricingRule,
+  MarketplaceSettings, PricingRule, DeliveryOption, GetDeliveryOptionsParams,
 } from '@workspace/api-client-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
@@ -45,6 +45,53 @@ const money = (value: number, currency = 'ZMW') => `${currency} ${value.toFixed(
 const fallbackImage = (title: string) => {
   const label = title.slice(0, 18).replace(/[<>&"]/g, '');
   return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900"><rect width="900" height="900" fill="#d9e7df"/><circle cx="720" cy="130" r="230" fill="#f18062" opacity=".8"/><circle cx="180" cy="780" r="280" fill="#164f4a" opacity=".95"/><path d="M0 450 C250 350 480 520 900 390V900H0Z" fill="#b5d3c8" opacity=".8"/><text x="56" y="110" fill="#164f4a" font-family="sans-serif" font-weight="700" font-size="42">${label}</text></svg>`)}`
+};
+
+type DeliveryZone = GetDeliveryOptionsParams['deliveryZone'];
+type DeliveryMethod = DeliveryOption['id'];
+type DeliveryPreferences = {
+  deliveryZone: DeliveryZone;
+  address: string;
+  deliveryMethod?: DeliveryMethod;
+};
+
+const DELIVERY_PREFERENCES_KEY = 'gulani-delivery-preferences';
+const defaultDeliveryPreferences: DeliveryPreferences = {
+  deliveryZone: 'lusaka',
+  address: '',
+  deliveryMethod: undefined,
+};
+
+function readDeliveryPreferences(): DeliveryPreferences {
+  if (typeof window === 'undefined') return defaultDeliveryPreferences;
+  try {
+    const saved = window.localStorage.getItem(DELIVERY_PREFERENCES_KEY);
+    if (!saved) return defaultDeliveryPreferences;
+    const parsed = JSON.parse(saved) as Partial<DeliveryPreferences>;
+    const zones: DeliveryZone[] = ['lusaka', 'copperbelt', 'other_zambia'];
+    const methods: DeliveryMethod[] = ['shop_pickup', 'shop_delivery', 'yango_delivery', 'platinum_couriers'];
+    return {
+      deliveryZone: zones.includes(parsed.deliveryZone as DeliveryZone) ? parsed.deliveryZone as DeliveryZone : 'lusaka',
+      address: typeof parsed.address === 'string' ? parsed.address : '',
+      deliveryMethod: methods.includes(parsed.deliveryMethod as DeliveryMethod) ? parsed.deliveryMethod : undefined,
+    };
+  } catch {
+    return defaultDeliveryPreferences;
+  }
+}
+
+function useDeliveryPreferences() {
+  const [preferences, setPreferences] = useState<DeliveryPreferences>(readDeliveryPreferences);
+  useEffect(() => {
+    window.localStorage.setItem(DELIVERY_PREFERENCES_KEY, JSON.stringify(preferences));
+  }, [preferences]);
+  return [preferences, setPreferences] as const;
+}
+
+const deliveryZoneLabels: Record<DeliveryZone, string> = {
+  lusaka: 'Lusaka',
+  copperbelt: 'Copperbelt',
+  other_zambia: 'Other Zambia',
 };
 
 function Shell({ children }: { children: ReactNode }) {
@@ -157,12 +204,34 @@ function Home() {
   const [search, setSearch] = useState('');
   const [submitted, setSubmitted] = useState('');
   const [location, setLocation] = useLocation();
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [carouselPaused, setCarouselPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const summary = useGetCatalogSummary({ query: { queryKey: getGetCatalogSummaryQueryKey() } });
   const categories = useListCategories({ query: { queryKey: getListCategoriesQueryKey() } });
   const params = useMemo(() => submitted ? { search: submitted, limit: 20 } : undefined, [submitted]);
   const results = useListProducts(params, { query: { queryKey: getListProductsQueryKey(params), enabled: !!submitted } });
   const add = useAddCartItem();
   const { toast } = useToast();
+  const promoted = useMemo(() => {
+    const products = [...(summary.data?.featured || []), ...(summary.data?.trending || [])];
+    return products.filter((product, index) => products.findIndex(candidate => candidate.id === product.id) === index).slice(0, 5);
+  }, [summary.data?.featured, summary.data?.trending]);
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => setReducedMotion(media.matches);
+    updateMotionPreference();
+    media.addEventListener?.('change', updateMotionPreference);
+    return () => media.removeEventListener?.('change', updateMotionPreference);
+  }, []);
+  useEffect(() => {
+    if (reducedMotion || carouselPaused || promoted.length < 2) return;
+    const timer = window.setInterval(() => setActiveSlide(current => (current + 1) % promoted.length), 5200);
+    return () => window.clearInterval(timer);
+  }, [carouselPaused, promoted.length, reducedMotion]);
+  useEffect(() => {
+    if (activeSlide >= promoted.length) setActiveSlide(0);
+  }, [activeSlide, promoted.length]);
   const addToCart = (product: Product) => {
     const variant = product.variants?.[0];
     if (!variant) return;
@@ -178,7 +247,52 @@ function Home() {
           <form onSubmit={submitSearch} className="mt-8 flex max-w-lg items-center gap-2 rounded-2xl bg-background p-2 text-foreground shadow-md"><Search className="ml-2 text-muted-foreground" size={19} /><input data-testid="input-home-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products or vendors" className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm outline-none" /><button type="submit" data-testid="button-home-search" className="rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-accent-foreground hover:brightness-110">Search</button></form>
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-primary-foreground/70"><span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Verified vendors</span><span className="flex items-center gap-1.5"><Bike size={14} /> 1–2 day delivery</span></div>
         </div>
-        <div className="relative hidden min-h-[340px] lg:block"><div className="absolute right-12 top-4 h-64 w-64 rotate-6 rounded-[38px] bg-accent shadow-2xl shadow-black/20" /><div className="absolute right-24 top-12 h-64 w-64 -rotate-6 overflow-hidden rounded-[38px] border-[10px] border-background/80 bg-secondary"><ImageFrame src={summary.data?.featured?.[0]?.imageUrl} alt="Gulani product selection" className="h-full w-full" /></div><div className="absolute bottom-6 left-6 rounded-2xl bg-background p-4 text-foreground shadow-xl"><p className="font-mono text-[9px] uppercase tracking-[.16em] text-muted-foreground">New on Gulani</p><p className="mt-1 font-display text-lg font-bold">Worth finding.</p><span className="mt-2 flex items-center gap-1 text-xs font-semibold text-primary"><TrendingUp size={13} /> New picks daily</span></div></div>
+         <div
+           className="relative min-h-[310px] overflow-hidden rounded-[28px] border border-primary-foreground/15 bg-primary-foreground/10 shadow-2xl shadow-black/15 sm:min-h-[390px] lg:min-h-[430px]"
+           data-testid="carousel-home-promotions"
+           onMouseEnter={() => setCarouselPaused(true)}
+           onMouseLeave={() => setCarouselPaused(false)}
+           onFocusCapture={() => setCarouselPaused(true)}
+           onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCarouselPaused(false); }}
+           aria-roledescription="carousel"
+           aria-label="Featured Gulani products"
+         >
+           {promoted.length ? promoted.map((product, index) => (
+             <Link
+               key={product.id}
+               href={`/product/${product.id}`}
+               tabIndex={index === activeSlide ? 0 : -1}
+               aria-hidden={index !== activeSlide}
+               aria-label={`Shop ${product.title}`}
+               data-testid={`link-promotion-${product.id}`}
+               className={`absolute inset-0 block transition-opacity duration-700 ${index === activeSlide ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+             >
+               <ImageFrame src={product.imageUrl} alt={product.title} className="h-full w-full" />
+               <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/5 to-transparent" />
+               <div className="absolute inset-x-5 bottom-6 text-primary-foreground sm:inset-x-8 sm:bottom-8">
+                 <p className="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-primary-foreground/70">On the Gulani shelf · {product.category}</p>
+                 <h2 className="mt-2 max-w-md font-display text-2xl font-bold leading-tight tracking-[-.04em] sm:text-3xl">{product.title}</h2>
+                 <p className="mt-2 font-mono text-sm">{money(product.variants?.[0]?.price ?? product.price, product.currency)}</p>
+                 <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-background px-4 py-2 text-xs font-bold text-foreground">Explore this find <ArrowRight size={14} /></span>
+               </div>
+             </Link>
+           )) : (
+             <div className="absolute inset-0">
+               <ImageFrame src={undefined} alt="A selection of finds on Gulani" className="h-full w-full" />
+               <div className="absolute inset-0 grid place-items-end bg-gradient-to-t from-foreground/80 to-transparent p-6 text-primary-foreground">
+                 <div><p className="font-mono text-[9px] uppercase tracking-[.18em]">Curated for you</p><p className="mt-2 font-display text-2xl font-bold">Good things are arriving.</p></div>
+               </div>
+             </div>
+           )}
+           {promoted.length > 1 && <>
+             <button type="button" data-testid="button-promotion-previous" aria-label="Previous featured product" onClick={() => setActiveSlide(current => (current - 1 + promoted.length) % promoted.length)} className="absolute left-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-background/90 text-foreground shadow-md transition-transform hover:scale-105"><ArrowLeft size={17} /></button>
+             <button type="button" data-testid="button-promotion-next" aria-label="Next featured product" onClick={() => setActiveSlide(current => (current + 1) % promoted.length)} className="absolute right-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-background/90 text-foreground shadow-md transition-transform hover:scale-105"><ArrowRight size={17} /></button>
+             <div className="absolute bottom-3 right-5 z-10 flex gap-1.5 sm:right-8 sm:bottom-4" role="group" aria-label="Choose featured product">
+               {promoted.map((product, index) => <button key={product.id} type="button" data-testid={`button-promotion-indicator-${index}`} aria-label={`Show featured product ${index + 1}: ${product.title}`} aria-current={index === activeSlide} onClick={() => setActiveSlide(index)} className={`h-2 rounded-full transition-all ${index === activeSlide ? 'w-7 bg-primary-foreground' : 'w-2 bg-primary-foreground/50 hover:bg-primary-foreground/80'}`} />)}
+             </div>
+           </>}
+           <span className="absolute left-5 top-5 z-10 flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[.13em] text-foreground"><TrendingUp size={12} className="text-primary" /> Fresh finds</span>
+         </div>
       </div>
     </section>
     <div className="border-b border-border bg-secondary/50"><div className="mx-auto flex max-w-7xl items-center gap-3 overflow-x-auto px-4 py-3 text-xs font-semibold sm:px-6 lg:px-8"><span className="shrink-0 font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Browse by mood</span>{(categories.data || summary.data?.categories || []).slice(0, 6).map(c => <button type="button" key={c.id} data-testid={`button-category-${c.slug}`} onClick={() => { setSubmitted(c.name); setSearch(c.name); }} className="shrink-0 rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary hover:text-primary">{c.name}</button>)}</div></div>
@@ -218,16 +332,94 @@ function ProductDetail() {
   const [selected, setSelected] = useState<ProductVariant | undefined>();
   const [quantity, setQuantity] = useState(1);
   const [location, setLocation] = useLocation();
+  const [preferences, setPreferences] = useDeliveryPreferences();
   const { toast } = useToast();
   const add = useAddCartItem();
   const createConversation = useCreateConversation();
   const p = product.data;
   const variant = selected || p?.variants?.[0];
+  const maxQuantity = Math.max(1, Math.min(20, variant?.stockQty ?? 20));
+  const deliveryParams = useMemo(() => ({
+    deliveryZone: preferences.deliveryZone,
+    ...(p ? { fulfillment: p.fulfillment } : {}),
+  }), [preferences.deliveryZone, p?.fulfillment]);
+  const delivery = useGetDeliveryOptions(deliveryParams, {
+    query: { queryKey: getGetDeliveryOptionsQueryKey(deliveryParams), enabled: !!p },
+  });
+  const selectedDelivery = delivery.data?.find(option => option.id === preferences.deliveryMethod) || delivery.data?.[0];
+  useEffect(() => {
+    if (delivery.data?.length && !delivery.data.some(option => option.id === preferences.deliveryMethod)) {
+      setPreferences(current => ({ ...current, deliveryMethod: delivery.data?.[0]?.id }));
+    }
+  }, [delivery.data, preferences.deliveryMethod, setPreferences]);
   if (product.isLoading) return <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><LoadingGrid /></div>;
   if (product.isError || !p) return <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8"><ErrorState title="This product is not on the shelf" retry={() => product.refetch()} /></div>;
-  const addItem = () => { if (!variant) return; add.mutate({ data: { productId: p.id, variantId: variant.id, quantity } }, { onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() }); toast({ title: 'Added to your basket', description: `${quantity} × ${p.title}` }); }, onError: () => toast({ title: 'Could not add that item', variant: 'destructive' }) }); };
+  const addItem = (next?: string) => { if (!variant) return; add.mutate({ data: { productId: p.id, variantId: variant.id, quantity } }, { onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() }); toast({ title: 'Added to your basket', description: `${quantity} × ${p.title}` }); if (next) setLocation(next); }, onError: () => toast({ title: 'Could not add that item', variant: 'destructive' }) }); };
   const chatSeller = () => createConversation.mutate({ data: { type: 'buyer_vendor', vendorId: p.vendorId, contextType: 'product', contextId: p.id } }, { onSuccess: (conversation) => setLocation(`/messages/${conversation.id}`), onError: () => toast({ title: 'Could not open seller chat', description: 'Please try again.', variant: 'destructive' }) });
-  return <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"><Link href="/" className="mb-8 inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-primary"><ArrowLeft size={15} /> Back to discover</Link><div className="grid gap-10 lg:grid-cols-[1.02fr_.98fr] lg:gap-16"><div className="overflow-hidden rounded-[28px] bg-secondary"><ImageFrame src={p.imageUrl} alt={p.title} className="aspect-square sm:aspect-[1.06]" /></div><div className="flex flex-col justify-center"><div className="flex items-center gap-2"><span className="rounded-full bg-secondary px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-primary">{p.category}</span>{p.source && p.source !== 'local-vendors' && <span className="rounded-full bg-primary/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-primary">Sourced via {p.source}</span>}</div><h1 className="mt-5 max-w-xl font-display text-4xl font-bold leading-[1.02] tracking-[-.06em] sm:text-5xl">{p.title}</h1><div className="mt-4 flex items-center gap-3 text-sm"><Star size={15} className="fill-accent text-accent" /><span className="font-bold">{p.vendorRating.toFixed(1)}</span><span className="text-muted-foreground">from</span><span className="font-bold text-primary">{p.vendorName}</span></div><p className="mt-7 max-w-xl text-sm leading-7 text-muted-foreground">{p.description}</p>{p.variants?.length > 0 && <div className="mt-8"><div className="mb-3 flex justify-between"><p className="text-xs font-bold uppercase tracking-[.12em]">Choose an option</p><p className="font-mono text-[10px] text-muted-foreground">{variant?.stockQty} available</p></div><div className="flex flex-wrap gap-2">{p.variants.map(v => <button type="button" key={v.id} onClick={() => setSelected(v)} className={`rounded-xl border px-4 py-3 text-left text-sm font-semibold ${variant?.id === v.id ? 'border-primary bg-primary/10 text-primary' : 'border-border'}`}><span className="block">{v.name}</span><span className="mt-1 block font-mono text-xs font-normal">{money(v.price, p.currency)}</span></button>)}</div></div>}<div className="mt-9 flex flex-wrap gap-3"><div className="flex items-center rounded-xl border border-border"><button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="grid h-12 w-11 place-items-center hover:bg-secondary"><Minus size={16} /></button><span className="w-8 text-center font-mono text-sm">{quantity}</span><button type="button" onClick={() => setQuantity(Math.min(20, quantity + 1))} className="grid h-12 w-11 place-items-center hover:bg-secondary"><Plus size={16} /></button></div><button type="button" disabled={add.isPending || !variant?.stockQty} onClick={addItem} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-primary-foreground disabled:opacity-60 sm:flex-none">{add.isPending ? 'Adding…' : <><ShoppingBag size={17} /> Add to basket · {money((variant?.price || p.price) * quantity, p.currency)}</>}</button></div><button type="button" onClick={() => { addItem(); setLocation('/cart'); }} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-primary py-3 text-sm font-bold text-primary hover:bg-primary/5"><Zap size={16} /> Buy this, delivered to you</button><button type="button" data-testid="button-message-seller" onClick={chatSeller} disabled={createConversation.isPending} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm font-bold text-foreground hover:border-primary hover:text-primary disabled:opacity-60"><Headphones size={16} /> {createConversation.isPending ? 'Opening message…' : `Ask ${p.vendorName} a question`}</button><div className="mt-8 grid grid-cols-2 gap-3 border-t border-border pt-6 text-xs text-muted-foreground"><span className="flex items-center gap-2"><Truck size={16} className="text-primary" /> Delivery available</span><span className="flex items-center gap-2"><BadgeCheck size={16} className="text-primary" /> Trusted seller</span></div></div></div></div>;
+  const shareProduct = async () => {
+    const shareData = { title: p.title, text: `Take a look at ${p.title} on Gulani`, url: window.location.href };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast({ title: 'Product shared', description: p.title });
+        return;
+      }
+      throw new Error('Share sheet unavailable');
+    } catch {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({ title: 'Link copied', description: 'Product link is ready to share.' });
+      } catch {
+        toast({ title: 'Could not share this product', description: 'Please copy the page address from your browser.', variant: 'destructive' });
+      }
+    }
+  };
+  return <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <Link href="/" data-testid="link-product-back" className="mb-7 inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-primary"><ArrowLeft size={15} /> Back to discover</Link>
+    <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)_320px]">
+      <div className="overflow-hidden rounded-[28px] border border-border bg-secondary lg:sticky lg:top-28"><ImageFrame src={p.imageUrl} alt={p.title} className="aspect-square" /></div>
+      <section className="min-w-0 py-1">
+        <div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-secondary px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-primary">{p.category}</span>{p.badge && <span className="rounded-full bg-accent px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-accent-foreground">{p.badge}</span>}{p.fulfillment === 'sourced' && <span className="rounded-full bg-primary/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[.14em] text-primary">Sourced selection</span>}</div>
+        <div className="mt-5 flex items-start justify-between gap-3"><h1 data-testid="text-product-title" className="font-display text-4xl font-bold leading-[1.02] tracking-[-.06em] sm:text-[2.7rem]">{p.title}</h1><button type="button" data-testid="button-share-product" onClick={shareProduct} aria-label="Share this product" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"><Share2 size={17} /></button></div>
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm"><span className="flex items-center gap-1 font-bold"><Star size={15} className="fill-accent text-accent" /> {p.vendorRating.toFixed(1)}</span><span className="text-muted-foreground">from</span><span className="font-bold text-primary">{p.vendorName}</span></div>
+        <p className="mt-6 text-sm leading-7 text-muted-foreground">{p.description}</p>
+        <div className="mt-7 border-y border-border py-5"><p className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Price</p><p data-testid="text-product-price" className="mt-1 font-mono text-2xl font-bold">{money(variant?.price ?? p.price, p.currency)}</p></div>
+        {p.variants?.length > 0 && <div className="mt-6">
+          <div className="mb-3 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.12em]">Color / option</p><p className="mt-1 text-[11px] text-muted-foreground">Select your preferred finish and size</p></div><p className="font-mono text-[10px] text-muted-foreground">{variant?.stockQty} available</p></div>
+          <div className="flex flex-wrap gap-2">{p.variants.map(v => <button type="button" key={v.id} data-testid={`button-variant-${v.id}`} aria-pressed={variant?.id === v.id} onClick={() => { setSelected(v); setQuantity(current => Math.min(current, Math.max(1, Math.min(20, v.stockQty)))); }} className={`max-w-full rounded-xl border px-3.5 py-3 text-left text-sm font-semibold transition-colors ${variant?.id === v.id ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/50'}`}><span className="block">{v.name}</span><span className="mt-1 block font-mono text-xs font-normal">{money(v.price, p.currency)}</span></button>)}</div>
+        </div>}
+        <div className="mt-7 flex flex-wrap gap-3">
+          <div className="flex h-12 items-center rounded-xl border border-border" aria-label="Quantity">
+            <button type="button" data-testid="button-quantity-decrease" aria-label="Decrease quantity" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="grid h-12 w-11 place-items-center hover:bg-secondary"><Minus size={16} /></button>
+            <span data-testid="text-product-quantity" className="w-8 text-center font-mono text-sm">{quantity}</span>
+            <button type="button" data-testid="button-quantity-increase" aria-label="Increase quantity" disabled={quantity >= maxQuantity} onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))} className="grid h-12 w-11 place-items-center hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"><Plus size={16} /></button>
+          </div>
+          <button type="button" data-testid="button-product-add" disabled={add.isPending || !variant?.stockQty} onClick={() => addItem()} className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground transition-all hover:brightness-110 active:scale-[.98] disabled:opacity-60">{add.isPending ? 'Adding…' : <><ShoppingBag size={17} /> Add to basket · {money((variant?.price || p.price) * quantity, p.currency)}</>}</button>
+        </div>
+        <button type="button" data-testid="button-buy-now" disabled={add.isPending || !variant?.stockQty} onClick={() => addItem('/cart')} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-primary py-3 text-sm font-bold text-primary hover:bg-primary/5 disabled:opacity-60"><Zap size={16} /> Buy this, delivered to you</button>
+        <button type="button" data-testid="button-message-seller" onClick={chatSeller} disabled={createConversation.isPending} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm font-bold text-foreground hover:border-primary hover:text-primary disabled:opacity-60"><Headphones size={16} /> {createConversation.isPending ? 'Opening message…' : `Ask ${p.vendorName} a question`}</button>
+        <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-border pt-5 text-xs text-muted-foreground"><span className="flex items-center gap-2"><BadgeCheck size={16} className="text-primary" /> Trusted seller</span><span className="flex items-center gap-2"><ShieldCheck size={16} className="text-primary" /> Secure payment</span></div>
+      </section>
+      <aside className="h-fit rounded-[24px] border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-24" data-testid="panel-product-delivery">
+        <div className="flex items-center justify-between gap-3"><div><p className="font-mono text-[10px] uppercase tracking-[.17em] text-muted-foreground">Delivery estimate</p><h2 className="mt-1 font-display text-xl font-bold">Getting it to you</h2></div><span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary text-primary"><Truck size={19} /></span></div>
+        <p className="mt-2 rounded-lg bg-accent/10 px-3 py-2 text-[11px] leading-5 text-foreground"><strong>Estimate only.</strong> Rates use the selected area, not street-level routing or live carrier quotes.</p>
+        <label className="mt-5 grid gap-2 text-xs font-bold">Delivery area
+          <select data-testid="select-delivery-zone-product" value={preferences.deliveryZone} onChange={e => setPreferences(current => ({ ...current, deliveryZone: e.target.value as DeliveryZone }))} className="h-11 rounded-xl border border-input bg-background px-3 text-sm font-medium outline-none focus:border-primary focus:ring-2 focus:ring-primary/10">
+            {(Object.entries(deliveryZoneLabels) as [DeliveryZone, string][]).map(([zone, label]) => <option key={zone} value={zone}>{label}</option>)}
+          </select>
+        </label>
+        <label className="mt-4 grid gap-2 text-xs font-bold">Delivery address or landmark
+          <input data-testid="input-delivery-address-product" value={preferences.address} onChange={e => setPreferences(current => ({ ...current, address: e.target.value }))} placeholder="Neighbourhood, street or landmark" className="h-11 rounded-xl border border-input bg-background px-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/10" />
+        </label>
+        <div className="mt-5">
+          <div className="mb-2 flex items-center justify-between"><p className="text-xs font-bold uppercase tracking-[.1em]">Delivery method</p>{delivery.isFetching && <span className="font-mono text-[9px] text-muted-foreground">Updating…</span>}</div>
+          {delivery.isLoading ? <div className="space-y-2"><div className="skeleton h-[68px] rounded-xl" /><div className="skeleton h-[68px] rounded-xl" /></div> : delivery.isError ? <div className="rounded-xl border border-accent/25 bg-accent/5 p-3 text-xs"><p>We could not load delivery estimates.</p><button type="button" data-testid="button-retry-delivery-product" onClick={() => delivery.refetch()} className="mt-2 font-bold text-primary">Try again</button></div> : delivery.data?.length ? <div className="space-y-2">{delivery.data.map(option => <button type="button" key={option.id} data-testid={`button-delivery-method-product-${option.id}`} aria-pressed={selectedDelivery?.id === option.id} onClick={() => setPreferences(current => ({ ...current, deliveryMethod: option.id }))} className={`w-full rounded-xl border p-3 text-left transition-colors ${selectedDelivery?.id === option.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}><span className="flex items-start justify-between gap-3"><span className="text-xs font-bold">{option.name}</span><span className="shrink-0 font-mono text-xs font-bold">{money(option.fee, p.currency)}</span></span><span className="mt-1 block text-[10px] leading-4 text-muted-foreground">{option.description}</span><span className="mt-1 block font-mono text-[9px] uppercase tracking-wide text-primary">{option.estimatedDelivery}</span></button>)}</div> : <p className="rounded-xl bg-secondary p-3 text-xs text-muted-foreground">No delivery methods are available for this area right now.</p>}
+        </div>
+        {selectedDelivery && <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-sm"><span className="text-muted-foreground">Estimated delivery</span><span className="font-mono font-bold">{money(selectedDelivery.fee, p.currency)}</span></div>}
+        <p className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground"><MapPin size={14} className="shrink-0 text-primary" /> {deliveryZoneLabels[preferences.deliveryZone]} estimate</p>
+      </aside>
+    </div>
+  </div>;
 }
 
 function LegacyProductDetail() {
@@ -252,8 +444,20 @@ function CartPage() {
   const remove = useRemoveCartItem();
   const createConversation = useCreateConversation();
   const [, setLocation] = useLocation();
+  const [preferences, setPreferences] = useDeliveryPreferences();
   const { toast } = useToast();
   const applyCart = (next: Cart) => queryClient.setQueryData(getGetCartQueryKey(), next);
+  const quoteParams = useMemo(() => ({
+    deliveryZone: preferences.deliveryZone,
+    fulfillment: cart.data?.items.some(item => item.fulfillment === 'sourced') ? 'sourced' as const : 'local' as const,
+  }), [preferences.deliveryZone, cart.data?.items]);
+  const delivery = useGetDeliveryOptions(quoteParams, { query: { queryKey: getGetDeliveryOptionsQueryKey(quoteParams), enabled: !!cart.data?.items.length } });
+  const selectedDelivery = delivery.data?.find(option => option.id === preferences.deliveryMethod) || delivery.data?.[0];
+  useEffect(() => {
+    if (delivery.data?.length && !delivery.data.some(option => option.id === preferences.deliveryMethod)) {
+      setPreferences(current => ({ ...current, deliveryMethod: delivery.data?.[0]?.id }));
+    }
+  }, [delivery.data, preferences.deliveryMethod, setPreferences]);
   if (cart.isLoading) return <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><LoadingGrid /></div>;
   if (cart.isError) return <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8"><ErrorState retry={() => cart.refetch()} /></div>;
   const data = cart.data;
@@ -262,23 +466,107 @@ function CartPage() {
   const removeItem = (item: CartItem) => remove.mutate({ itemId: item.id }, { onSuccess: applyCart, onError: () => toast({ title: 'Could not remove item', variant: 'destructive' }) });
   const askSeller = (item: CartItem) => createConversation.mutate({ data: { type: 'buyer_vendor', vendorId: item.vendorId, contextType: 'product', contextId: item.productId } }, { onSuccess: conversation => setLocation(`/messages/${conversation.id}`), onError: () => toast({ title: 'Could not open seller chat', description: 'Please try again.', variant: 'destructive' }) });
   const vendors = Array.from(new Set(data.items.map(i => i.vendorName)));
-  return <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8"><div className="mb-9 flex flex-wrap items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-accent">Your basket · {data.items.length} items</p><h1 className="mt-2 font-display text-4xl font-bold tracking-[-.06em]">Ready when you are.</h1></div><Link href="/" data-testid="link-cart-continue" className="flex items-center gap-1 text-xs font-bold text-primary">Keep shopping <ArrowRight size={14} /></Link></div><div className="grid gap-8 lg:grid-cols-[1fr_360px]"><div className="space-y-6">{vendors.map(vendor => <section key={vendor} className="rounded-2xl border border-border bg-card p-4 sm:p-6"><div className="mb-5 flex items-center gap-2 border-b border-border pb-4"><Store size={16} className="text-primary" /><h2 className="text-sm font-bold">{vendor}</h2><span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Verified shop</span></div><div className="space-y-5">{data.items.filter(i => i.vendorName === vendor).map(item => <div key={item.id} data-testid={`row-cart-item-${item.id}`} className="flex gap-3"><ImageFrame src={item.imageUrl} alt={item.title} className="h-20 w-20 shrink-0 rounded-xl" /><div className="min-w-0 flex-1"><h3 className="truncate text-sm font-bold">{item.title}</h3><p className="mt-1 text-xs text-muted-foreground">{item.variantName}</p><p className="mt-2 font-mono text-sm">{money(item.unitPrice)}</p><button type="button" data-testid={`button-message-seller-${item.id}`} onClick={() => askSeller(item)} disabled={createConversation.isPending} className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline disabled:opacity-50"><Headphones size={13} /> Ask seller about this item</button></div><div className="flex flex-col items-end justify-between"><button type="button" data-testid={`button-remove-${item.id}`} aria-label={`Remove ${item.title}`} onClick={() => removeItem(item)} className="text-muted-foreground hover:text-destructive"><Trash2 size={15} /></button><div className="flex items-center rounded-lg border border-border"><button type="button" data-testid={`button-decrease-${item.id}`} onClick={() => item.quantity > 1 ? adjust(item, item.quantity - 1) : removeItem(item)} className="grid h-7 w-7 place-items-center hover:bg-secondary"><Minus size={12} /></button><span data-testid={`text-quantity-${item.id}`} className="w-7 text-center font-mono text-xs">{item.quantity}</span><button type="button" data-testid={`button-increase-${item.id}`} onClick={() => adjust(item, Math.min(20, item.quantity + 1))} className="grid h-7 w-7 place-items-center hover:bg-secondary"><Plus size={12} /></button></div></div></div>)}</div></section>)}</div><aside className="h-fit rounded-2xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-24"><p className="font-mono text-[10px] uppercase tracking-[.18em] text-muted-foreground">Lusaka delivery estimate</p><div className="mt-3 flex items-start gap-3 rounded-xl bg-secondary p-3"><Truck className="mt-0.5 shrink-0 text-primary" size={18} /><p className="text-xs leading-5">Arrives in <strong>1–2 business days</strong>. We will confirm your exact fee at checkout.</p></div><div className="mt-6 space-y-3 border-b border-border pb-5 text-sm"><div className="flex justify-between"><span className="text-muted-foreground">Basket subtotal</span><span data-testid="text-cart-subtotal" className="font-mono">{money(data.subtotal, data.currency)}</span></div><div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span className="font-mono">{money(data.deliveryFee, data.currency)}</span></div></div><div className="flex justify-between pt-5"><span className="font-bold">Total</span><span data-testid="text-cart-total" className="font-mono text-lg font-bold">{money(data.total, data.currency)}</span></div><Link href="/checkout" data-testid="link-cart-checkout" className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground hover:brightness-110">Continue to checkout <ArrowRight size={16} /></Link><p className="mt-3 text-center text-[11px] text-muted-foreground">Paid delivery only · no cash on delivery</p></aside></div></div>;
+  return <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mb-9 flex flex-wrap items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-accent">Your basket · {data.items.length} items</p><h1 className="mt-2 font-display text-4xl font-bold tracking-[-.06em]">Ready when you are.</h1></div><Link href="/" data-testid="link-cart-continue" className="flex items-center gap-1 text-xs font-bold text-primary">Keep shopping <ArrowRight size={14} /></Link></div>
+    <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+      <div className="space-y-6">{vendors.map(vendor => <section key={vendor} className="rounded-2xl border border-border bg-card p-4 sm:p-6"><div className="mb-5 flex items-center gap-2 border-b border-border pb-4"><Store size={16} className="text-primary" /><h2 className="text-sm font-bold">{vendor}</h2><span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Verified shop</span></div><div className="space-y-5">{data.items.filter(i => i.vendorName === vendor).map(item => <div key={item.id} data-testid={`row-cart-item-${item.id}`} className="flex gap-3"><ImageFrame src={item.imageUrl} alt={item.title} className="h-20 w-20 shrink-0 rounded-xl" /><div className="min-w-0 flex-1"><h3 className="truncate text-sm font-bold">{item.title}</h3><p className="mt-1 text-xs text-muted-foreground">{item.variantName}</p><p className="mt-2 font-mono text-sm">{money(item.unitPrice, data.currency)}</p><button type="button" data-testid={`button-message-seller-${item.id}`} onClick={() => askSeller(item)} disabled={createConversation.isPending} className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline disabled:opacity-50"><Headphones size={13} /> Ask seller about this item</button></div><div className="flex flex-col items-end justify-between"><button type="button" data-testid={`button-remove-${item.id}`} aria-label={`Remove ${item.title}`} onClick={() => removeItem(item)} className="text-muted-foreground hover:text-destructive"><Trash2 size={15} /></button><div className="flex items-center rounded-lg border border-border"><button type="button" data-testid={`button-decrease-${item.id}`} aria-label={`Decrease ${item.title} quantity`} onClick={() => item.quantity > 1 ? adjust(item, item.quantity - 1) : removeItem(item)} className="grid h-7 w-7 place-items-center hover:bg-secondary"><Minus size={12} /></button><span data-testid={`text-quantity-${item.id}`} className="w-7 text-center font-mono text-xs">{item.quantity}</span><button type="button" data-testid={`button-increase-${item.id}`} aria-label={`Increase ${item.title} quantity`} onClick={() => adjust(item, Math.min(20, item.quantity + 1))} className="grid h-7 w-7 place-items-center hover:bg-secondary"><Plus size={12} /></button></div></div></div>)}</div></section>)}</div>
+      <aside className="h-fit rounded-2xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-24" data-testid="panel-cart-delivery">
+        <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary text-primary"><Truck size={19} /></span><div><p className="font-mono text-[10px] uppercase tracking-[.17em] text-muted-foreground">Delivery estimate</p><h2 className="font-display text-lg font-bold">Plan your delivery</h2></div></div>
+        <p className="mt-3 rounded-lg bg-accent/10 px-3 py-2 text-[11px] leading-5"><strong>Estimate only.</strong> Rates use the selected area, not street-level routing or live carrier quotes.</p>
+        <label className="mt-4 grid gap-2 text-xs font-bold">Delivery area<select data-testid="select-delivery-zone-cart" value={preferences.deliveryZone} onChange={e => setPreferences(current => ({ ...current, deliveryZone: e.target.value as DeliveryZone }))} className="h-11 rounded-xl border border-input bg-background px-3 text-sm font-medium outline-none focus:border-primary">{(Object.entries(deliveryZoneLabels) as [DeliveryZone, string][]).map(([zone, label]) => <option key={zone} value={zone}>{label}</option>)}</select></label>
+        <label className="mt-3 grid gap-2 text-xs font-bold">Address or landmark<input data-testid="input-delivery-address-cart" value={preferences.address} onChange={e => setPreferences(current => ({ ...current, address: e.target.value }))} placeholder="Neighbourhood, street or landmark" className="h-11 rounded-xl border border-input bg-background px-3 text-sm font-normal outline-none focus:border-primary" /></label>
+        <div className="mt-5">
+          <div className="mb-2 flex items-center justify-between"><p className="text-xs font-bold uppercase tracking-[.1em]">Choose delivery</p>{delivery.isFetching && <span className="font-mono text-[9px] text-muted-foreground">Updating…</span>}</div>
+          {delivery.isLoading ? <div className="space-y-2"><div className="skeleton h-16 rounded-xl" /><div className="skeleton h-16 rounded-xl" /></div> : delivery.isError ? <div className="rounded-xl border border-accent/25 bg-accent/5 p-3 text-xs"><p>Delivery estimates are unavailable.</p><button type="button" data-testid="button-retry-delivery-cart" onClick={() => delivery.refetch()} className="mt-2 font-bold text-primary">Try again</button></div> : delivery.data?.length ? <div className="space-y-2">{delivery.data.map(option => <button type="button" key={option.id} data-testid={`button-delivery-method-cart-${option.id}`} aria-pressed={selectedDelivery?.id === option.id} onClick={() => setPreferences(current => ({ ...current, deliveryMethod: option.id }))} className={`w-full rounded-xl border p-3 text-left transition-colors ${selectedDelivery?.id === option.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}><span className="flex justify-between gap-3"><span className="text-xs font-bold">{option.name}</span><span className="font-mono text-xs font-bold">{money(option.fee, data.currency)}</span></span><span className="mt-1 block text-[10px] leading-4 text-muted-foreground">{option.description}</span><span className="mt-1 block font-mono text-[9px] text-primary">{option.estimatedDelivery}</span></button>)}</div> : <p className="rounded-xl bg-secondary p-3 text-xs text-muted-foreground">No delivery methods are available for {deliveryZoneLabels[preferences.deliveryZone]}.</p>}
+        </div>
+        <div className="mt-6 space-y-3 border-y border-border py-5 text-sm"><div className="flex justify-between"><span className="text-muted-foreground">Basket subtotal</span><span data-testid="text-cart-subtotal" className="font-mono">{money(data.subtotal, data.currency)}</span></div><div className="flex justify-between gap-3"><span className="text-muted-foreground">{selectedDelivery?.name || 'Delivery'}</span><span data-testid="text-cart-delivery-fee" className="font-mono">{selectedDelivery ? money(selectedDelivery.fee, data.currency) : 'Quote unavailable'}</span></div></div>
+        <div className="flex justify-between pt-5"><span className="font-bold">Estimated total</span><span data-testid="text-cart-total" className="font-mono text-lg font-bold">{selectedDelivery ? money(data.subtotal + selectedDelivery.fee, data.currency) : '—'}</span></div>
+        <Link href="/checkout" data-testid="link-cart-checkout" className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground hover:brightness-110">Continue to checkout <ArrowRight size={16} /></Link>
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">Paid delivery only · no cash on delivery</p>
+      </aside>
+    </div>
+  </div>;
 }
 
 function CheckoutPage() {
   const cart = useGetCart({ query: { queryKey: getGetCartQueryKey() } });
   const checkout = useCreateCheckout();
   const [location, setLocation] = useLocation();
+  const [preferences, setPreferences] = useDeliveryPreferences();
   const [payment, setPayment] = useState<string>(CheckoutInputPaymentMethod.mtn_mobile_money);
-  const [form, setForm] = useState({ fullName: '', email: '', phone: '', address: '', paymentPhone: '' });
+  const [form, setForm] = useState({ fullName: '', email: '', phone: '', address: readDeliveryPreferences().address, paymentPhone: '' });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
-  const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [key]: e.target.value });
+  const quoteParams = useMemo(() => ({
+    deliveryZone: preferences.deliveryZone,
+    fulfillment: cart.data?.items.some(item => item.fulfillment === 'sourced') ? 'sourced' as const : 'local' as const,
+  }), [preferences.deliveryZone, cart.data?.items]);
+  const delivery = useGetDeliveryOptions(quoteParams, { query: { queryKey: getGetDeliveryOptionsQueryKey(quoteParams), enabled: !!cart.data?.items.length } });
+  const selectedDelivery = delivery.data?.find(option => option.id === preferences.deliveryMethod) || delivery.data?.[0];
+  useEffect(() => {
+    if (delivery.data?.length && !delivery.data.some(option => option.id === preferences.deliveryMethod)) {
+      setPreferences(current => ({ ...current, deliveryMethod: delivery.data?.[0]?.id }));
+    }
+  }, [delivery.data, preferences.deliveryMethod, setPreferences]);
+  const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setForm(current => ({ ...current, [key]: value }));
+    if (key === 'address') setPreferences(current => ({ ...current, address: value }));
+  };
   if (cart.isLoading) return <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8"><LoadingGrid /></div>;
   if (!cart.data?.items?.length) return <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6"><EmptyState icon={ShoppingBag} title="Your basket is empty" copy="Add something beautiful before you head to checkout." action={<Link href="/" data-testid="link-checkout-empty" className="inline-flex rounded-full bg-primary px-5 py-3 text-xs font-bold text-primary-foreground">Back to discovery</Link>} /></div>;
-  const submit = (e: React.FormEvent) => { e.preventDefault(); setSubmitted(true); setError(''); if (!form.fullName.trim() || !form.email.includes('@') || form.phone.trim().length < 7 || form.address.trim().length < 5 || ((payment !== 'visa') && form.paymentPhone.trim().length < 7)) { setError('Please check the highlighted details before continuing.'); return; } const data: CheckoutInput = { ...form, deliveryZone: 'global', paymentMethod: payment as CheckoutInput['paymentMethod'], paymentPhone: payment === 'visa' ? null : form.paymentPhone }; checkout.mutate({ data }, { onSuccess: (result) => { if (result.paymentStatus === 'failed') { setError('Payment did not go through. Check your details and try again.'); return; } setLocation(`/order/${result.orderId}`); }, onError: () => setError('We could not start the payment. Please try again.') }); };
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setError('');
+    if (!form.fullName.trim() || !form.email.includes('@') || form.phone.trim().length < 7 || form.address.trim().length < 5 || ((payment !== 'visa') && form.paymentPhone.trim().length < 7)) {
+      setError('Please check the highlighted details before continuing.');
+      return;
+    }
+    if (delivery.isLoading || delivery.isError || !selectedDelivery || !delivery.data?.some(option => option.id === selectedDelivery.id)) {
+      setError('A delivery estimate is required before checkout. Please choose an available method or try loading the estimate again.');
+      return;
+    }
+    const data: CheckoutInput = {
+      fullName: form.fullName,
+      email: form.email,
+      phone: form.phone,
+      address: form.address,
+      deliveryZone: preferences.deliveryZone,
+      deliveryMethod: selectedDelivery.id,
+      paymentMethod: payment as CheckoutInput['paymentMethod'],
+      paymentPhone: payment === 'visa' ? null : form.paymentPhone,
+    };
+    checkout.mutate({ data }, { onSuccess: (result) => { if (result.paymentStatus === 'failed') { setError('Payment did not go through. Check your details and try again.'); return; } setLocation(`/order/${result.orderId}`); }, onError: () => setError('We could not start the payment. Please try again.') });
+  };
   const field = (key: keyof typeof form, label: string, type = 'text', placeholder = '') => <label className="grid gap-2 text-xs font-bold">{label}<input data-testid={`input-checkout-${key}`} type={type} value={form[key]} onChange={update(key)} placeholder={placeholder} className={`h-11 rounded-xl border bg-background px-3 text-sm font-normal outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/10 ${submitted && (!form[key] || (key === 'email' && !form.email.includes('@')) || (key === 'phone' && form.phone.length < 7)) ? 'border-accent' : 'border-input'}`} /></label>;
-  return <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8"><Link href="/cart" data-testid="link-checkout-back" className="mb-8 inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-primary"><ArrowLeft size={15} /> Back to basket</Link><div className="grid gap-10 lg:grid-cols-[1fr_360px]"><div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-accent">Almost there</p><h1 className="mt-2 font-display text-4xl font-bold tracking-[-.06em]">A good delivery starts here.</h1><p className="mt-3 text-sm text-muted-foreground">Guest checkout · we only ask for what gets your order to you.</p>{error && <div data-testid="status-checkout-error" className="mt-6 flex items-start gap-3 rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm"><CircleAlert className="shrink-0 text-accent" size={18} /><span>{error}</span></div>}<form onSubmit={submit} className="mt-8 space-y-8"><section><h2 className="font-display text-xl font-bold">Your details</h2><div className="mt-4 grid gap-4 sm:grid-cols-2">{field('fullName', 'Full name', 'text', 'e.g. Naledi Mwape')}{field('email', 'Email address', 'email', 'you@example.com')}{field('phone', 'Phone number', 'tel', '+260 97 000 0000')}</div></section><section><h2 className="font-display text-xl font-bold">Where should we deliver?</h2><div className="mt-4 grid gap-4"><label className="grid gap-2 text-xs font-bold">Lusaka address<textarea data-testid="input-checkout-address" value={form.address} onChange={update('address')} placeholder="Plot, street, neighbourhood and a useful landmark" rows={4} className={`resize-none rounded-xl border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 ${submitted && form.address.length < 5 ? 'border-accent' : 'border-input'}`} /></label><div className="flex items-center gap-2 text-xs text-muted-foreground"><MapPin size={14} className="text-primary" /> Currently delivering across Lusaka.</div></div></section><section><h2 className="font-display text-xl font-bold">How would you like to pay?</h2><div className="mt-4 grid gap-3 sm:grid-cols-3">{[{value: CheckoutInputPaymentMethod.mtn_mobile_money, label: 'MTN Mobile Money', short: 'MTN'}, {value: CheckoutInputPaymentMethod.airtel_money, label: 'Airtel Money', short: 'Airtel'}, {value: CheckoutInputPaymentMethod.visa, label: 'Visa card', short: 'VISA'}].map(option => <button type="button" key={option.value} data-testid={`button-payment-${option.value}`} onClick={() => setPayment(option.value)} className={`rounded-xl border p-4 text-left transition-colors ${payment === option.value ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}><span className={`font-mono text-[10px] font-bold ${payment === option.value ? 'text-primary' : 'text-muted-foreground'}`}>{option.short}</span><span className="mt-2 block text-xs font-bold">{option.label}</span>{payment === option.value && <Check size={15} className="mt-2 text-primary" />}</button>)}</div>{payment !== 'visa' && <div className="mt-4 max-w-sm">{field('paymentPhone', 'Mobile Money number', 'tel', 'Number to charge')}</div>}<p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck size={15} className="text-primary" /> Your payment is processed securely.</p></section><button type="submit" data-testid="button-place-order" disabled={checkout.isPending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-60">{checkout.isPending ? 'Connecting to payment…' : <>Place paid order <ArrowRight size={16} /></>}</button></form></div><aside className="h-fit rounded-2xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-24"><p className="font-mono text-[10px] uppercase tracking-[.18em] text-muted-foreground">Order summary</p><div className="mt-5 space-y-4">{cart.data.items.map(item => <div key={item.id} className="flex gap-3"><ImageFrame src={item.imageUrl} alt={item.title} className="h-14 w-14 shrink-0 rounded-lg" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{item.title}</p><p className="mt-1 text-[11px] text-muted-foreground">{item.quantity} × {item.variantName}</p></div><span className="font-mono text-xs">{money(item.unitPrice * item.quantity, cart.data.currency)}</span></div>)}</div><div className="mt-5 space-y-3 border-t border-border pt-5 text-sm"><div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span className="font-mono">{money(cart.data.subtotal, cart.data.currency)}</span></div><div className="flex justify-between text-muted-foreground"><span>Delivery</span><span className="font-mono">{money(cart.data.deliveryFee, cart.data.currency)}</span></div><div className="flex justify-between pt-2 font-bold"><span>Total</span><span className="font-mono">{money(cart.data.total, cart.data.currency)}</span></div></div></aside></div></div>;
+  return <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <Link href="/cart" data-testid="link-checkout-back" className="mb-8 inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-primary"><ArrowLeft size={15} /> Back to basket</Link>
+    <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
+      <div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-accent">Almost there</p><h1 className="mt-2 font-display text-4xl font-bold tracking-[-.06em]">A good delivery starts here.</h1><p className="mt-3 text-sm text-muted-foreground">Guest checkout · we only ask for what gets your order to you.</p>
+        {error && <div data-testid="status-checkout-error" className="mt-6 flex items-start gap-3 rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm"><CircleAlert className="shrink-0 text-accent" size={18} /><span>{error}</span></div>}
+        <form onSubmit={submit} className="mt-8 space-y-8">
+          <section><h2 className="font-display text-xl font-bold">Your details</h2><div className="mt-4 grid gap-4 sm:grid-cols-2">{field('fullName', 'Full name', 'text', 'e.g. Naledi Mwape')}{field('email', 'Email address', 'email', 'you@example.com')}{field('phone', 'Phone number', 'tel', '+260 97 000 0000')}</div></section>
+          <section><h2 className="font-display text-xl font-bold">Where should we deliver?</h2><div className="mt-4 grid gap-4">
+            <label className="grid gap-2 text-xs font-bold">Delivery area<select data-testid="select-delivery-zone-checkout" value={preferences.deliveryZone} onChange={e => setPreferences(current => ({ ...current, deliveryZone: e.target.value as DeliveryZone }))} className="h-11 rounded-xl border border-input bg-background px-3 text-sm font-medium outline-none focus:border-primary">{(Object.entries(deliveryZoneLabels) as [DeliveryZone, string][]).map(([zone, label]) => <option key={zone} value={zone}>{label}</option>)}</select></label>
+            <label className="grid gap-2 text-xs font-bold">Delivery address or landmark<textarea data-testid="input-checkout-address" value={form.address} onChange={update('address')} placeholder="Plot, street, neighbourhood and a useful landmark" rows={4} className={`resize-none rounded-xl border bg-background px-3 py-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 ${submitted && form.address.length < 5 ? 'border-accent' : 'border-input'}`} /></label>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><MapPin size={14} className="text-primary" /> Estimate for {deliveryZoneLabels[preferences.deliveryZone]} · final availability and fee are confirmed when your order is placed.</div>
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-3"><p className="text-xs font-bold uppercase tracking-[.1em]">Delivery method</p>{delivery.isFetching && <span className="font-mono text-[9px] text-muted-foreground">Refreshing estimate…</span>}</div>
+              {delivery.isLoading ? <div className="space-y-2"><div className="skeleton h-20 rounded-xl" /><div className="skeleton h-20 rounded-xl" /></div> : delivery.isError ? <div className="rounded-xl border border-accent/25 bg-accent/5 p-4 text-xs"><p>We could not load delivery options for this area.</p><button type="button" data-testid="button-retry-delivery-checkout" onClick={() => delivery.refetch()} className="mt-2 font-bold text-primary">Try again</button></div> : delivery.data?.length ? <div className="grid gap-2 sm:grid-cols-2">{delivery.data.map(option => <button type="button" key={option.id} data-testid={`button-delivery-method-checkout-${option.id}`} aria-pressed={selectedDelivery?.id === option.id} onClick={() => setPreferences(current => ({ ...current, deliveryMethod: option.id }))} className={`rounded-xl border p-4 text-left transition-colors ${selectedDelivery?.id === option.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}><span className="flex items-start justify-between gap-3"><span className="text-xs font-bold">{option.name}</span><span className="font-mono text-xs font-bold">{money(option.fee, cart.data.currency)}</span></span><span className="mt-1 block text-[11px] leading-5 text-muted-foreground">{option.description}</span><span className="mt-2 block font-mono text-[9px] uppercase tracking-wide text-primary">{option.estimatedDelivery}</span></button>)}</div> : <p className="rounded-xl bg-secondary p-4 text-xs text-muted-foreground">No delivery options are available for this destination.</p>}
+              <p className="mt-2 text-[10px] leading-4 text-muted-foreground">Rates use the selected area, not street-level routing or live carrier quotes. The server verifies availability and the final fee at checkout.</p>
+            </div>
+          </div></section>
+          <section><h2 className="font-display text-xl font-bold">How would you like to pay?</h2><div className="mt-4 grid gap-3 sm:grid-cols-3">{[{value: CheckoutInputPaymentMethod.mtn_mobile_money, label: 'MTN Mobile Money', short: 'MTN'}, {value: CheckoutInputPaymentMethod.airtel_money, label: 'Airtel Money', short: 'Airtel'}, {value: CheckoutInputPaymentMethod.visa, label: 'Visa card', short: 'VISA'}].map(option => <button type="button" key={option.value} data-testid={`button-payment-${option.value}`} onClick={() => setPayment(option.value)} className={`rounded-xl border p-4 text-left transition-colors ${payment === option.value ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}><span className={`font-mono text-[10px] font-bold ${payment === option.value ? 'text-primary' : 'text-muted-foreground'}`}>{option.short}</span><span className="mt-2 block text-xs font-bold">{option.label}</span>{payment === option.value && <Check size={15} className="mt-2 text-primary" />}</button>)}</div>{payment !== 'visa' && <div className="mt-4 max-w-sm">{field('paymentPhone', 'Mobile Money number', 'tel', 'Number to charge')}</div>}<p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck size={15} className="text-primary" /> Your payment is processed securely.</p></section>
+          <button type="submit" data-testid="button-place-order" disabled={checkout.isPending || delivery.isLoading || delivery.isError || !selectedDelivery} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:opacity-60">{checkout.isPending ? 'Connecting to payment…' : <>Place paid order <ArrowRight size={16} /></>}</button>
+        </form>
+      </div>
+      <aside className="h-fit rounded-2xl border border-border bg-card p-5 sm:p-6 lg:sticky lg:top-24" data-testid="panel-checkout-summary"><p className="font-mono text-[10px] uppercase tracking-[.18em] text-muted-foreground">Order summary</p><div className="mt-5 space-y-4">{cart.data.items.map(item => <div key={item.id} className="flex gap-3"><ImageFrame src={item.imageUrl} alt={item.title} className="h-14 w-14 shrink-0 rounded-lg" /><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{item.title}</p><p className="mt-1 text-[11px] text-muted-foreground">{item.quantity} × {item.variantName}</p></div><span className="font-mono text-xs">{money(item.unitPrice * item.quantity, cart.data.currency)}</span></div>)}</div>
+        <div className="mt-5 space-y-3 border-t border-border pt-5 text-sm"><div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span className="font-mono">{money(cart.data.subtotal, cart.data.currency)}</span></div><div className="flex justify-between gap-3 text-muted-foreground"><span>{selectedDelivery?.name || 'Delivery estimate'}</span><span data-testid="text-checkout-delivery-fee" className="font-mono">{selectedDelivery ? money(selectedDelivery.fee, cart.data.currency) : 'Unavailable'}</span></div><div className="flex justify-between pt-2 font-bold"><span>Estimated total</span><span data-testid="text-checkout-total" className="font-mono">{selectedDelivery ? money(cart.data.subtotal + selectedDelivery.fee, cart.data.currency) : '—'}</span></div></div>
+        <p className="mt-4 rounded-lg bg-secondary px-3 py-2 text-[10px] leading-4 text-muted-foreground">This delivery quote is an estimate. Final price and availability are verified at checkout.</p>
+      </aside>
+    </div>
+  </div>;
 }
 
 function OrderTimeline({ status }: { status: string }) {

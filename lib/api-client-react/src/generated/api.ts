@@ -44,8 +44,10 @@ import type {
   CreateChatTicket,
   CreateConversation,
   CreateSupportAccount,
+  DeliveryOption,
   ForbiddenResponse,
   FulfillmentOverview,
+  GetDeliveryOptionsParams,
   HealthStatus,
   ListAdminOrdersParams,
   ListAdminVendorApplicationsParams,
@@ -843,6 +845,90 @@ export const useRemoveCartItem = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getRemoveCartItemMutationOptions(options));
     }
+
+export const getGetDeliveryOptionsUrl = (params: GetDeliveryOptionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/delivery-options?${stringifiedParams}` : `/api/delivery-options`
+}
+
+/**
+ * @summary Get delivery choices and estimates for a destination
+ */
+export const getDeliveryOptions = async (params: GetDeliveryOptionsParams, options?: Parameters<typeof customFetch>[1]): Promise<DeliveryOption[]> => {
+
+  return customFetch<DeliveryOption[]>(getGetDeliveryOptionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDeliveryOptionsQueryKey = (params?: GetDeliveryOptionsParams,) => {
+    return [
+    `/api/delivery-options`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetDeliveryOptionsQueryOptions = <TData = Awaited<ReturnType<typeof getDeliveryOptions>>, TError = ErrorType<unknown>>(params: GetDeliveryOptionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDeliveryOptions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDeliveryOptionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDeliveryOptions>>> = ({ signal }) => getDeliveryOptions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDeliveryOptions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDeliveryOptionsQueryResult = NonNullable<Awaited<ReturnType<typeof getDeliveryOptions>>>
+export type GetDeliveryOptionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get delivery choices and estimates for a destination
+ */
+
+export function useGetDeliveryOptions<TData = Awaited<ReturnType<typeof getDeliveryOptions>>, TError = ErrorType<unknown>>(
+ params: GetDeliveryOptionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDeliveryOptions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDeliveryOptionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getCreateCheckoutUrl = () => {
 
